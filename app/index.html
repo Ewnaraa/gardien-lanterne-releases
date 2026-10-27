@@ -350,6 +350,57 @@ td .w svg{width:16px;height:16px;color:var(--amber);flex:none}
 .slider b{min-width:48px;text-align:right;font-variant-numeric:tabular-nums}
 .danger{display:flex;gap:10px;align-items:center;flex-wrap:wrap;padding-top:8px;border-top:1px solid var(--line-soft)}
 #fpsBox{position:fixed;left:50%;top:6px;transform:translateX(-50%);z-index:30;pointer-events:none;font:600 12px "Barlow Semi Condensed",sans-serif;color:#cfe8b8;background:rgba(5,6,5,.6);padding:2px 8px;border-radius:4px;letter-spacing:.03em}
+
+/* ===== Écrans sans défilement sur PC : tout tient dans la fenêtre (grilles larges, onglets) ===== */
+.ctabs{display:flex;gap:6px;border-bottom:1px solid var(--line-soft);margin-bottom:4px}
+.ctab{background:none;border:1px solid transparent;border-bottom:0;color:var(--mute);font:600 15px var(--body);letter-spacing:.06em;padding:8px 16px;border-radius:3px 3px 0 0;cursor:pointer}
+.ctab[aria-selected="true"]{color:var(--amber);border-color:var(--line-soft);background:var(--panel)}
+.ctab:hover{color:var(--bone)}
+.cpane{display:grid;gap:8px;align-content:start}
+@media (min-width:900px){
+  .card.wide{max-width:min(1480px,calc(100vw - 40px));max-height:calc(100vh - 28px);gap:clamp(6px,1.3vh,14px);padding:clamp(14px,2.4vh,26px) clamp(20px,2.6vw,40px)}
+  .card.wide h2{font-size:clamp(28px,5vh,48px)}
+  .card.wide .eyebrow{font-size:12px}
+  .card.wide .mute{margin:0}
+  .cg2{grid-template-columns:repeat(2,minmax(0,1fr))} .cg3{grid-template-columns:repeat(3,minmax(0,1fr))}
+  .crow{padding:7px 10px}
+  /* préparation de la veillée : lieux sur 3 colonnes, gardiens sur 5 */
+  #mapGrid{grid-template-columns:repeat(3,minmax(0,1fr))}
+  #charGrid{grid-template-columns:repeat(5,minmax(0,1fr))}
+  #chars .pick{padding:clamp(7px,1.2vh,12px) 12px;gap:4px}
+  #chars .pick small{font-size:13px;line-height:1.3}
+  #chars .pick b{font-size:16px}
+  /* échoppe, colporteur : grille large */
+  #shopGrid,#mGrid{grid-template-columns:repeat(auto-fill,minmax(210px,1fr))}
+  #shop .pick,#merchant .pick{padding:10px 12px;gap:5px}
+  /* succès : registre sur une ligne, succès sur 3 colonnes */
+  .lstats{grid-template-columns:repeat(8,minmax(0,1fr))}
+  .lstats div{padding:6px 10px}
+  .lstats b{font-size:18px}
+  #achList{grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
+  .arow{padding:6px 10px;gap:10px}
+  .arow small{font-size:13px}
+  .arow .medal{width:30px;height:30px}
+  /* journal : trois colonnes, chaque chapitre reste groupé */
+  #jList{display:block;columns:3;column-gap:14px}
+  #jList > *{break-inside:avoid;margin-bottom:6px}
+  .jrow{padding:6px 10px}
+  /* fin de partie : tableau à côté des stats si besoin */
+  .tablewrap{max-height:34vh;overflow:auto}
+  .overlay{padding-block:12px}
+  .tmenu{box-sizing:border-box;padding-block:clamp(14px,4vh,36px) clamp(12px,3vh,28px)}
+  @media (min-width:1200px){
+    #achList{grid-template-columns:repeat(4,minmax(0,1fr))}
+    .arow{grid-template-columns:auto 1fr}
+    .arow .rw{grid-column:2;text-align:left;max-width:none;font-size:12px;line-height:1.25}
+  }
+  @media (max-height:820px){ #ach .card > p.mute{display:none} #ach .card{gap:6px} .lstats div{padding:4px 10px} }
+  /* écran-titre : tout tient sur 720 px de haut */
+  .tmenu{gap:clamp(10px,2.4vh,24px)}
+  .tlogo h1{font-size:clamp(48px,min(8.6vw,13vh),112px)}
+  .mitem{padding-block:clamp(2px,.7vh,7px)}
+  .mitem span{font-size:clamp(22px,min(3vw,4.4vh),34px)}
+}
 </style>
 
 <canvas id="c" aria-label="Zone de jeu"></canvas>
@@ -1691,7 +1742,7 @@ function update(dt){
     }
   }
 
-  movePlayer(dt); updateSites(dt); updateDoors(dt); updateAmbient(dt);
+  movePlayer(dt); updateSites(dt); updateDoors(dt); updateAmbient(dt); updateVillage(dt);
   if (G.bombs) for (let i = G.bombs.length - 1; i >= 0; i--){       // élite explosif : cercle d'alerte, puis explosion
     const b = G.bombs[i]; b.t += dt;
     if (b.t >= b.max){
@@ -2088,7 +2139,7 @@ function startDawn(){
 }
 function updateDawn(dt){
   G.dawnT += dt;
-  movePlayer(dt); updateSites(dt); updateDoors(dt); updateAmbient(dt);
+  movePlayer(dt); updateSites(dt); updateDoors(dt); updateAmbient(dt); updateVillage(dt);
   let n = 0;
   for (const e of G.enemies){ if (e.dead) continue; if (Math.random() < 0.08 || G.dawnT > 2.2){ killEnemy(e, true); if (++n > 16) break; } }
   G.enemies = G.enemies.filter(e => !e.dead);
@@ -2176,7 +2227,7 @@ function draw(now){
   // Sol peint
   drawGround(ox, oy);
   drawDecor(ox, oy, now);
-  drawWildDecals(ox, oy); drawSiteDecals(ox, oy); drawDoors(X, Y, now); drawCrows(X, Y, now);
+  drawWildDecals(ox, oy); drawSiteDecals(ox, oy); drawDoors(X, Y, now); drawCrows(X, Y, now); drawVillageHints(X, Y, now);
   for (const d of G.decals){
     const x = X(d.x), y = Y(d.y); if (!vis(x,y,d.r*2)) continue;
     const a = Math.min(1, d.life/2)*(d.kind === 'scorch' ? 0.65 : 0.5);
@@ -2297,7 +2348,7 @@ function draw(now){
       ctx.fillStyle = 'rgba(0,0,0,.45)'; ctx.beginPath(); ctx.ellipse(x, y - 2, a.w*0.42, a.w*0.12, 0, 0, TAU); ctx.fill();
       const hide = pFoot < r.y && Math.abs(p.x - r.x) < a.w*0.45 && pFoot > r.y - a.h*0.9;     // ruine devant le Gardien : translucide
       if (hide) ctx.globalAlpha = 0.45; drawEnt(r.id, x, y); ctx.globalAlpha = 1;
-      if (a.lights.length){ const L = a.lights[0]; decoLights.push({x:x + L[0]*a.w, y:y + L[1]*a.h, r:L[2], i:0.75 + (reduce ? 0 : 0.08*Math.sin(now/110 + r.x)), col:L[3], hole:true}); }
+      if (a.lights.length && !(r.lantern && !r.lit)){ const L = a.lights[0]; decoLights.push({x:x + L[0]*a.w, y:y + L[1]*a.h, r:L[2], i:0.75 + (reduce ? 0 : 0.08*Math.sin(now/110 + r.x)), col:L[3], hole:true}); }
     } else { ctx.globalAlpha = 1; drawPlayer(X(p.x), Y(p.y), lx, ly, now); }
   }
   // Feuilles et cendres portées par le vent
@@ -2999,7 +3050,7 @@ const CRYST = {};
 const RAIN = [];
 function drawWeather(now){
   const t = reduce ? 0 : now/1000, p = G.p;
-  if (G.map === 'marais'){
+  if (G.map === 'marais' && !G.room){
     if (!RAIN.length) for (let i=0;i<150;i++) RAIN.push({x:Math.random(), y:Math.random(), s:0.7 + Math.random()*0.6, l:10 + Math.random()*16});
     if (!reduce){
       ctx.strokeStyle = 'rgba(175,205,215,.17)'; ctx.lineWidth = 1; ctx.beginPath();
@@ -3511,7 +3562,8 @@ function guardianUpdate(now){
   const sp = Math.hypot(p.vx || 0, p.vy || 0), moving = sp > 5 && (state === 'play' || state === 'dawn');
   // orientation : direction du déplacement, ou de la visée à la souris si elle est active
   let fx = p.vx || 0, fy = p.vy || 0;
-  if (typeof aiming === 'function' && state === 'play' && aiming()){ const ap = aimPt(); fx = ap.x - p.x; fy = ap.y - p.y; }
+  const aimOn = typeof aiming === 'function' && aiming();          // visée à la souris : le regard suit le curseur, les pas ne le changent pas
+  if (aimOn){ const ap = aimPt(); fx = ap.x - p.x; fy = ap.y - p.y; }
   if (Math.hypot(fx, fy) > 4){ S.view = facingFrom(fx, fy, S.view); S.d8 = dir8From(fx, fy, S.d8); S.d16 = dirNFrom(DIR16, fx, fy, S.d16); }
   const want = moving ? 'walk' : 'idle';
   if (want !== S.anim){ S.prev = S.anim; S.anim = want; S.blend = 0; }
@@ -3521,7 +3573,10 @@ function guardianUpdate(now){
   const shW = C && C.format === 'sheet' && C.sheet.anims.walk;
   const dist = shW && shW.strideSheet ? shW.strideSheet*CHAR_DEFS.guardian.screenHeight/(C.sheet.hoodPx || 192) : (A && A.walk && A.walk.distance) || 100;
   S.walkDist = dist;
-  if (moving) S.walkT = mod(S.walkT + sp*dt/dist, 1);
+  // à reculons (on marche à l'opposé du regard) : le cycle de marche est joué à l'envers, les pieds reculent vraiment
+  const back = aimOn && moving && ((p.vx || 0)*fx + (p.vy || 0)*fy) < -0.25*sp*Math.hypot(fx, fy);
+  S.back = back;
+  if (moving) S.walkT = mod(S.walkT + (back ? -1 : 1)*sp*dt/dist, 1);
   else S.walkT = S.blend < 1 ? S.walkT : 0;
   S.idleT = mod(S.idleT + dt/((A && A.idle && A.idle.duration) || 2.8), 1);
   S.dt = dt; S.moving = moving;
@@ -4105,6 +4160,7 @@ const VILLAGES = {
       ['b_oratoire', -500, -90], ['v_tonneau', -330, 270], ['b_tour', 470, -170], ['forest_log', 300, 300], ['v_caisses', 250, 130]],
     camps:[[330, 220]], decals:[['dec_traces', 60, 420], ['dec_planches', -470, 420], ['dec_cercle_champignons', 520, 380], ['dec_brulure', 330, 225]],
     lights:[[-60, -95, 140, '255,180,100'], [-410, 95, 130, '255,180,100']], smoke:[[-80, -205], [-430, -10]],
+    doors:[{dx:-110, dy:-18, room:'hutte'}],
     core:['forest_tile_stone', 'forest_tile_flagmoss'], edge:['forest_tile_leaves', 'forest_tile_mossy', 'forest_tile_roots']},
   marais:{name:'Village des pêcheurs', r:660, village:true,
     items:[['b_pilotis', -20, -40], ['b_pilotis', -400, 140], ['b_ponton', 230, 100], ['v_passerelle', -210, 70], ['b_barque', 380, 230], ['v_filet', 150, -110],
@@ -4113,6 +4169,7 @@ const VILLAGES = {
       ['b_panneau', 540, 300], ['b_clocher', -560, -200], ['marsh_reeds', 510, 180], ['marsh_reeds', -150, 380]],
     camps:[[-300, 330]], decals:[['dec_traces', 160, 420], ['dec_planches', -80, 400], ['dec_tache', 330, 380], ['dec_os', -470, 410]],
     lights:[[-40, -110, 140, '255,190,110'], [-420, 70, 130, '255,190,110']], smoke:[[-60, -230], [-440, -60]],
+    doors:[{dx:-90, dy:-18, room:'pilotis'}],
     core:['marsh_tile_flagmoss', 'marsh_tile_mud'], edge:['marsh_tile_puddles', 'marsh_tile_reeds', 'marsh_tile_lilies']},
   cimetiere:{name:'Cimetière d’Orme', r:680, village:true,
     items:[['b_chapelle', 0, -110], ['b_ossuaire', 250, -60], ['b_mausolee', -330, 40], ['b_mausolee', 360, 220],
@@ -4163,7 +4220,9 @@ function sitesInView(ox, oy){
   const out = [], x0 = -ox - 400, x1 = -ox + W + 400, y0 = -oy - 400, y1 = -oy + H + 400;
   for (let ci = Math.floor(x0/SC); ci <= Math.floor(x1/SC); ci++) for (let cj = Math.floor(y0/SC); cj <= Math.floor(y1/SC); cj++){
     const s = siteAt(ci, cj, G.map); if (!s || s.x < x0 || s.x > x1 || s.y < y0 || s.y > y1) continue;
-    for (const [id, dx, dy] of s.sc.items) if (ASSET_IMG[id]) out.push({x:s.x + dx, y:s.y + dy, id});
+    s.sc.items.forEach(([id, dx, dy], k) => { if (!ASSET_IMG[id]) return; const o = {x:s.x + dx, y:s.y + dy, id};
+      if (s.sc.village && LANTERN_IDS.has(id)){ o.lantern = true; o.lit = villageLit(s).has(k); }
+      out.push(o); });
     for (const [id, dx, dy] of (s.sc.deco || [])) if (ASSET_IMG[id]) out.push({x:s.x + dx, y:s.y + dy, id, deco:true});
     for (const [dx, dy] of (s.sc.fires || [])) out.push({x:s.x + dx, y:s.y + dy, id:'brazier', fire:true});
     for (const [dx, dy] of (s.sc.camps || [])) out.push({x:s.x + dx, y:s.y + dy, id:'v_feu', camp:true});
@@ -4359,6 +4418,77 @@ function drawWildDecals(ox, oy){
 }
 
 /* =====================================================================
+   RALLUMER LES VILLAGES : les lanternes des villages sont éteintes. Le Gardien les rallume une à une
+   (rester un instant à côté). Toutes allumées → le village devient un SANCTUAIRE :
+   on y guérit, et les ombres qui y entrent brûlent et ralentissent.
+   ===================================================================== */
+const LANTERN_IDS = new Set(['v_poteau_lanterne', 'v_lanterne_perche', 'v_reverbere']);
+const skeyOf = s => s.ci + ',' + s.cj;
+function villageLit(s){ G.vlit = G.vlit || new Map(); const k = skeyOf(s); if (!G.vlit.has(k)) G.vlit.set(k, new Set()); return G.vlit.get(k); }
+function villageLanterns(s){ const out = []; s.sc.items.forEach(([id, dx, dy], k) => { if (LANTERN_IDS.has(id)) out.push({k, x:s.x + dx, y:s.y + dy}); }); return out; }
+const isSanctuary = s => !!(G.vsafe && G.vsafe.has(skeyOf(s)));
+function updateVillage(dt){
+  if (G.room) return;
+  const n = siteNear(G.p.x, G.p.y, 120); G.lanternAt = null;
+  if (!n || !n.s.sc.village) return;
+  const s = n.s, lit = villageLit(s), L = villageLanterns(s), p = G.p;
+  if (!isSanctuary(s)){
+    for (const l of L){
+      if (lit.has(l.k) || Math.hypot(p.x - l.x, p.y - l.y) > 62) continue;
+      G.lanternAt = l; G.lanternT = (G.lanternT || 0) + dt;
+      if (G.lanternT >= 0.7){
+        lit.add(l.k); G.lanternT = 0; burst(l.x, l.y - 40, '#ffc86a', 18, 1.2); SFX.light && SFX.light();
+        floatText(l.x, l.y - 60, lit.size + ' / ' + L.length, '#f2b84b', true);
+        if (lit.size >= L.length){
+          G.vsafe = G.vsafe || new Set(); G.vsafe.add(skeyOf(s));
+          toast(s.sc.name + ' est rallumé : un sanctuaire dans la nuit'); SFX.rare && SFX.rare(); G.flash = 0.4;
+          G.items.push({type:'coffre', x:s.x, y:s.y + s.r*0.3, big:true});
+          spawnFx('fx_niveau', 0, 0, 160, {follow:true, dy:14, bottom:true, dur:1.1});
+        }
+      }
+      break;
+    }
+    if (!G.lanternAt) G.lanternT = 0;
+    return;
+  }
+  // sanctuaire : on y reprend des forces, les ombres y brûlent
+  if (n.k < 1){ p.hp = Math.min(p.max, p.hp + 3*dt); }
+  G.sanctT = (G.sanctT || 0) - dt;
+  if (G.sanctT <= 0){
+    G.sanctT = 0.5;
+    for (const e of G.enemies){
+      if (e.dead || e.boss) continue;
+      const dx = (e.x - s.x)/s.r, dy = (e.y - s.y)/(s.r*0.62); if (dx*dx + dy*dy > 1) continue;
+      e.slowT = Math.max(e.slowT || 0, 0.7); dmgEnemy(e, 6 + G.t/40, 'sanctuaire', 0, 0);
+    }
+  }
+}
+/* indices : petite flamme au-dessus des lanternes éteintes, anneau qui se remplit, liseré doré du sanctuaire */
+function drawVillageHints(X, Y, now){
+  if (G.room) return;
+  const n = siteNear(G.p.x, G.p.y, 500); if (!n || !n.s.sc.village) return;
+  const s = n.s, lit = villageLit(s), pu = 0.5 + 0.5*Math.sin(now/260);
+  if (isSanctuary(s)){
+    ctx.save(); ctx.globalCompositeOperation = 'lighter'; ctx.strokeStyle = `rgba(255,190,110,${0.12 + 0.06*pu})`; ctx.lineWidth = 10;
+    ctx.beginPath(); ctx.ellipse(X(s.x), Y(s.y), s.r, s.r*0.62, 0, 0, TAU); ctx.stroke(); ctx.restore(); return;
+  }
+  for (const l of villageLanterns(s)){
+    if (lit.has(l.k)) continue;
+    const x = X(l.x), y = Y(l.y); if (x < -40 || x > W + 40 || y < -120 || y > H + 40) continue;
+    ctx.strokeStyle = `rgba(255,210,140,${0.25 + 0.35*pu})`; ctx.lineWidth = 2; ctx.beginPath(); ctx.ellipse(x, y, 30, 13, 0, 0, TAU); ctx.stroke();
+    if (G.lanternAt && G.lanternAt.k === l.k && G.lanternAt.x === l.x){ ctx.strokeStyle = 'rgba(255,240,200,.95)'; ctx.lineWidth = 3; ctx.beginPath(); ctx.ellipse(x, y, 30, 13, 0, -Math.PI/2, -Math.PI/2 + TAU*Math.min(1, G.lanternT/0.7)); ctx.stroke(); }
+  }
+  const p = G.p;
+  if (Math.hypot(p.x - s.x, p.y - s.y) < s.r){
+    const L = villageLanterns(s).length, txt = 'Lanternes du village : ' + lit.size + ' / ' + L + '  —  rallume-les pour en faire un sanctuaire';
+    ctx.font = '600 16px "Barlow Semi Condensed", sans-serif'; const tw = ctx.measureText(txt).width;
+    ctx.fillStyle = 'rgba(8,10,9,.78)'; ctx.fillRect(W/2 - tw/2 - 14, H - 112, tw + 28, 30);
+    ctx.strokeStyle = 'rgba(242,184,75,.45)'; ctx.lineWidth = 1; ctx.strokeRect(W/2 - tw/2 - 14, H - 112, tw + 28, 30);
+    ctx.textAlign = 'center'; ctx.fillStyle = '#f2d39a'; ctx.fillText(txt, W/2, H - 91); ctx.textAlign = 'left';
+  }
+}
+
+/* =====================================================================
    INTÉRIEURS : on peut entrer dans certains bâtiments (chapelle, caveau).
    Rester une seconde devant la porte → on entre. La nuit (minuteur, vagues, événements) est
    suspendue pendant qu'on est dedans : la salle a ses propres gardiens et sa récompense.
@@ -4367,6 +4497,14 @@ function drawWildDecals(ox, oy){
    ===================================================================== */
 const ROOM_O = {x:0, y:200000};                                    // les salles sont loin de la carte, hors du monde
 const ROOMS = {
+  hutte:{name:'Cabane du bûcheron', hw:420, hh:230, floor:['forest_tile_flagmoss', 'forest_tile_stone', 'forest_tile_mossy'],
+    props:[['v_bois', -230, -60], ['v_caisses', -120, -140], ['v_tonneau', 40, -170], ['v_tonneau', 90, -150], ['v_banc', 200, -70], ['v_chaudron', 0, -60],
+      ['v_brouette', 280, 30], ['dec_planches', -150, 80], ['dec_traces', 120, 100], ['v_poteau_lanterne', -320, -10]],
+    candles:[[0, -80], [-320, -40], [200, -100]], guards:['ombre', 'ombre', 'ombre', 'ombre', 'goule', 'goule', 'goule'], elite:'ombre'},
+  pilotis:{name:'Maison du pêcheur', hw:420, hh:230, floor:['marsh_tile_flagmoss', 'marsh_tile_mud', 'marsh_tile_moss'],
+    props:[['v_filet', -200, -110], ['v_sechoir', 160, -130], ['v_nasses', -280, -10], ['v_tonneau_vase', 280, -20], ['v_rames', 0, -190], ['v_chaudron', 0, -50],
+      ['v_grigri', -60, -170], ['dec_tache', 130, 90], ['v_lanterne_perche', 330, 20]],
+    candles:[[0, -70], [330, -10], [-200, -130]], guards:['noye', 'noye', 'noye', 'noye', 'noye', 'feufollet', 'feufollet'], elite:'noye'},
   caveau:{name:'Caveau de famille', hw:480, hh:260, floor:['cemetery_tile_flag', 'cemetery_tile_flagmoss', 'cemetery_tile_grave'],
     props:[['v_ange', 0, -215], ['v_sarcophage', 0, -130], ['v_cercueil', -230, -60], ['v_cercueil', 230, -60], ['tomb_candles', -130, -160], ['tomb_candles', 130, -160],
       ['v_urne', -360, 10], ['v_urne', 360, 10], ['v_cercueil', -150, 80], ['dec_os', -110, 120], ['dec_tache', 140, 110], ['v_croix', 230, 60], ['v_colonne_couronne', -300, -90], ['v_colonne_couronne', 300, -90]],
@@ -5147,7 +5285,7 @@ function finish(win, quit){
     : `Les ombres t’ont rattrapé à ${fmt(WIN_TIME - t)} de l’aube.` + (isBest ? ' C’est ta meilleure nuit.' : ` Ton record : ${fmt(SAVE.best)} tenues.`);
   $('#eTime').textContent = fmt(t); $('#eLvl').textContent = G.p.lvl; $('#eKills').textContent = num(G.kills); $('#eGold').textContent = '+' + num(gain);
   const rows = Object.entries(G.dmgBy).filter(([,d]) => d > 0).sort((a,b) => b[1]-a[1]);
-  const label = id => WD[id] ? WD[id].name : ({brasier:'La Tour embrasée', brume:'La Papesse', epines:'Le Chariot', mat:'Le Mat', embrasement:'Embrasement', aube:'Éclat d’aube', renaissance:'Renaissance'})[id] || id;
+  const label = id => WD[id] ? WD[id].name : ({brasier:'La Tour embrasée', brume:'La Papesse', epines:'Le Chariot', mat:'Le Mat', embrasement:'Embrasement', aube:'Éclat d’aube', sanctuaire:'Sanctuaire', renaissance:'Renaissance'})[id] || id;
   $('#dmgTable').innerHTML = rows.map(([id,d]) => {
     const w = G.weapons.find(w => w.id === id);
     const lvl = w ? (WD[id].evolved ? ' ★' : ' ' + ROMAN[w.lv]) : '';
@@ -5277,16 +5415,22 @@ $('#shopGrid').addEventListener('click', e => {
   if ((SAVE.shop[id]||0) >= SH[id].max || SAVE.braises < cost) return;
   SAVE.braises -= cost; SAVE.shop[id] = (SAVE.shop[id]||0) + 1; persist(); SFX.gold(); goShop();
 });
+let G_CODEX_TAB = 0;
+document.addEventListener('click', e => { const t = e.target.closest('.ctab'); if (!t) return; G_CODEX_TAB = +t.dataset.ct; SFX.tick && SFX.tick(); goCodex(); });
 function goCodex(){
   state = 'codex'; show('codex');
   const unlockOf = { corbeaux:'roi', cendres:'lvl30', rayon:'aube' };
-  $('#codexList').innerHTML = ALL_W.map(id => {
+  const SPL = ALL_W.map(id => {
     const d = WD[id], ev = WD[d.evo], known = !!SAVE.evos[d.evo];
     const locked = !BASE_W.includes(id) && !SAVE.unl[id];
     const pairLocked = PD[d.pair].locked && !SAVE.unl[d.pair];
     if (locked) return `<div class="crow"><span class="ico" style="opacity:.4">${icon(id)}</span><span class="recipe"><b class="mute">Sort verrouillé</b><small class="mute">Succès : ${achDef(unlockOf[id]).name} (${lcFirst(achDef(unlockOf[id]).cond)})</small></span></div>`;
     return `<div class="crow"><span class="ico ${known?'evo':''}">${icon(id)}</span><span class="recipe"><b>${d.name}</b><span class="arrow">+</span><span ${pairLocked ? 'class="mute"' : ''}>${PD[d.pair].name}${pairLocked ? ' (verrouillé)' : ''}</span><span class="arrow">→</span>${known ? `<span class="evo-name">${ev.name}</span><small class="mute">${ev.intro}</small>` : '<span class="unknown">? ? ?</span>'}</span></div>`;
-  }).join('') + '<div class="jch">Arcanes</div>' + ARC.map(a => { const ok = !a.req || SAVE.story[a.req]; return ok ? `<div class="crow"><span class="ico evo">${icon(a.ico)}</span><span class="recipe"><b>${a.n} · ${a.name}</b><small class="mute">${a.txt}</small></span></div>` : `<div class="crow"><span class="ico" style="opacity:.4">${icon(a.ico)}</span><span class="recipe"><b class="mute">Arcane ${a.n} voilée</b><small class="mute">Vaincre ${lcFirst(ET[a.req].name)} pour la révéler</small></span></div>`; }).join('') + bestiaryHTML();
+  }).join(''), ARL = ARC.map(a => { const ok = !a.req || SAVE.story[a.req]; return ok ? `<div class="crow"><span class="ico evo">${icon(a.ico)}</span><span class="recipe"><b>${a.n} · ${a.name}</b><small class="mute">${a.txt}</small></span></div>` : `<div class="crow"><span class="ico" style="opacity:.4">${icon(a.ico)}</span><span class="recipe"><b class="mute">Arcane ${a.n} voilée</b><small class="mute">Vaincre ${lcFirst(ET[a.req].name)} pour la révéler</small></span></div>`; }).join(''), BEL = bestiaryHTML().replace('<div class="jch">Bestiaire</div>', '');
+  // onglets : tout tient à l'écran, sans défiler
+  const tab = G_CODEX_TAB || 0, T3 = [['Sorts et évolutions', SPL, 'cg2'], ['Arcanes', ARL, 'cg3'], ['Bestiaire', BEL, 'cg3']];
+  $('#codexList').innerHTML = `<div class="ctabs" role="tablist">${T3.map((t, i) => `<button type="button" role="tab" class="ctab" data-ct="${i}" aria-selected="${i === tab}">${t[0]}</button>`).join('')}</div>`
+    + T3.map((t, i) => `<div class="cpane ${t[2]}" data-cp="${i}" ${i === tab ? '' : 'hidden'}>${t[1]}</div>`).join('');
   focusFirst('codex');
 }
 function goAch(){
