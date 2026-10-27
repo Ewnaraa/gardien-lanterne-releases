@@ -436,6 +436,17 @@ td .w svg{width:16px;height:16px;color:var(--amber);flex:none}
 .pick.locked .portrait{filter:grayscale(.7) brightness(.55)}
 @media (min-width:900px) and (max-height:760px){#mapGrid .pick > small{display:none}#chars .card{gap:5px}#chars .pick{gap:2px}}
 @media (min-width:641px){.arcs{grid-template-columns:repeat(3,min(31%,calc((100vh - 240px)*.6)))!important;justify-content:center}}
+
+/* coopération */
+.coopcode{display:flex;align-items:center;gap:14px;background:var(--panel);border:1px solid var(--line);border-radius:4px;padding:12px 16px}
+.coopcode span{color:var(--mute);font-size:13px;letter-spacing:.12em;text-transform:uppercase}
+.coopcode b{font:700 36px var(--body);letter-spacing:.22em;color:var(--amber);flex:1}
+.coopjoin{display:flex;gap:10px}
+#coopInput{flex:1;background:var(--panel);border:1px solid var(--line);color:var(--amber);font:700 26px var(--body);letter-spacing:.3em;text-transform:uppercase;padding:8px 14px;border-radius:3px;min-width:0}
+.coopsel{display:flex;gap:10px;align-items:center;color:var(--mute);font-size:14px}
+.coopsel select{flex:1;background:var(--panel);color:var(--bone);border:1px solid var(--line-soft);padding:7px;border-radius:3px;font:500 15px var(--body)}
+.coopstatus{min-height:1.3em;color:#9fd0ff;margin:0}.coopstatus.err{color:#ff9a8a}
+.coopwait{padding:28px;text-align:center;color:var(--mute);font-size:17px}
 </style>
 
 <canvas id="c" aria-label="Zone de jeu"></canvas>
@@ -480,6 +491,7 @@ td .w svg{width:16px;height:16px;color:var(--amber);flex:none}
     <button class="press" id="press">Clique ou appuie sur une touche pour allumer la lanterne</button>
     <nav class="mlist" id="mlist" hidden aria-label="Menu principal">
       <button class="mitem primary" id="playBtn"><span>Commencer la veillée</span><small id="playSub"></small></button>
+      <button class="mitem" id="coopBtn"><span>Coopération</span><small>Jouer à deux, chacun sur son PC</small></button>
       <button class="mitem" id="journalBtn"><span>Journal</span><small id="jSub"></small></button>
       <button class="mitem" id="achBtn"><span>Succès</span><small id="aSub"></small></button>
       <button class="mitem" id="shopBtn"><span>Échoppe</span><small id="sSub"></small></button>
@@ -488,6 +500,21 @@ td .w svg{width:16px;height:16px;color:var(--amber);flex:none}
     </nav>
     <div class="quest" id="quest" hidden></div>
     <div class="tfoot" id="menuMeta"></div>
+  </div>
+</div>
+
+<div class="overlay" id="coop" hidden>
+  <div class="card">
+    <div class="eyebrow">À deux dans la nuit</div>
+    <h2>Coopération</h2>
+    <p class="mute">Un joueur héberge la partie et donne son code ; l’autre le tape pour rejoindre. Pas de serveur à installer : les deux PC se relient directement (Internet nécessaire).</p>
+    <label class="coopsel">Ton personnage <select id="coopChar"></select></label>
+    <div id="coopHostBox" hidden>
+      <div class="coopcode"><span>Code du salon</span><b id="coopCode">-----</b><button class="btn ghost small" id="coopCopy">Copier</button></div>
+    </div>
+    <div id="coopJoinBox" class="coopjoin"><input id="coopInput" maxlength="5" placeholder="CODE" autocomplete="off" spellcheck="false"><button class="btn" id="coopJoinBtn">Rejoindre</button></div>
+    <p class="coopstatus" id="coopStatus" role="status"></p>
+    <div class="btns"><button class="btn" id="coopHostBtn">Héberger une partie</button><button class="btn" id="coopGo" hidden>Choisir le lieu et lancer</button><button class="btn ghost" id="coopLeave">Fermer le salon</button><button class="btn ghost" data-back>Retour</button></div>
   </div>
 </div>
 
@@ -1151,7 +1178,7 @@ function newGame(charId, mapId){
 }
 const lvP = id => { const q = G.passives.find(q => q.id===id); return q ? q.lv + 0.5*(q.stars||0) : 0; };
 function computeStats(){
-  const c = CH[G.char].mod, s = SAVE.shop;
+  const c = CH[G.char].mod, s = (G.ctxAlly && G.allyShop) || SAVE.shop;   // coop : le compagnon a ses propres achats
   G.st = {
     might: 1 + (c.might||0) + 0.05*(s.puissance||0) + 0.10*lvP('meche') + (SAVE.bonus.might||0),
     area: 1 + (c.area||0) + 0.05*(s.rayon||0) + 0.10*lvP('racines'),
@@ -1204,7 +1231,7 @@ addEventListener('keydown', e => {
     else if (k==='x') $('#skipBtn').click();
   } else if (state==='chest' && (k==='enter' || k===' ')) { e.preventDefault(); $('#chestBtn').click(); }
   else if (state==='story' && (k==='enter' || k===' ')) { e.preventDefault(); $('#stBtn').click(); }
-  else if (['chars','shop','codex','ach','journal','opts'].includes(state) && k==='escape') goMenu();
+  else if (['chars','shop','codex','ach','journal','opts','coop'].includes(state) && k==='escape') goMenu();
 });
 addEventListener('keyup', e => { const k = KEYMAP[e.key.toLowerCase()]; if (k) keys.delete(k); });
 addEventListener('blur', () => keys.clear());
@@ -1336,7 +1363,7 @@ function makeEnemy(type, x, y, opt){
     if (e.aff === 'rapide'){ e.spd *= 1.6; }
     if (e.aff === 'blinde'){ e.hp *= 1.5; e.max = e.hp; e.kb = 0; }
   }
-  G.enemies.push(e); return e;
+  e.id = (G.eid = (G.eid || 0) + 1); G.enemies.push(e); return e;
 }
 const AFFIX = {rapide:{name:'Rapide', col:'#7fd8e8'}, blinde:{name:'Blindé', col:'#c9c9d6'}, explosif:{name:'Explosif', col:'#ff8a3a'}};
 function spawnAround(type, opt){
@@ -1404,7 +1431,7 @@ function killEnemy(e, silent){
 }
 function hurtPlayer(d){
   const p = G.p;
-  if (p.inv > 0 || state!=='play') return;
+  if (p.inv > 0 || p.down || state!=='play') return;
   p.hp -= Math.max(1, d - G.st.armor);
   p.hurt = 0.2; p.inv = 0.12; G.lastHit = G.t; SFX.hurt(); if (d >= p.max*0.08) G.stop = Math.max(G.stop || 0, 0.05);   // seulement les gros coups, sinon le jeu hacherait
   G.shake = Math.max(G.shake, 0.25);
@@ -1413,7 +1440,8 @@ function hurtPlayer(d){
       p.revives--; p.hp = p.max*0.5; p.inv = 2.2; G.flash = 0.7;
       query(p.x, p.y, 300, e => { if (!e.boss) dmgEnemy(e, 60, 'renaissance', 0, 0); const dx=e.x-p.x, dy=e.y-p.y, dd=Math.hypot(dx,dy)||1; e.kx += dx/dd*500; e.ky += dy/dd*500; });
       toast('Tu te relèves !'); SFX.level();
-    } else finish(false);
+    } else if (G.ally || G.ctxAlly){ coopDown(p); }
+    else finish(false);
   }
 }
 function runEvent(ev){
@@ -1499,8 +1527,8 @@ function takeItem(it){
 }
 
 /* ================= Sorts ================= */
-const aiming = () => !!SAVE.aim && lastPtr === 'mouse' && (state === 'play' || state === 'dawn');
-const aimPt = () => ({x: camX() + (mX*W - W/2), y: camY() + (mY*H - H/2)});   // la souris est lue dans le repère de la caméra
+const aiming = () => G && G.ctxAlly && G.ally && G.ally.input ? !!(G.ally.input.aim) : (!!SAVE.aim && lastPtr === 'mouse' && (state === 'play' || state === 'dawn'));
+const aimPt = () => G && G.ctxAlly && G.ally && G.ally.input && G.ally.input.aim ? {x:G.ally.input.aim[0], y:G.ally.input.aim[1]} : ({x: camX() + (mX*W - W/2), y: camY() + (mY*H - H/2)});   // la souris est lue dans le repère de la caméra
 const aimAng = () => { const a = aimPt(); return Math.atan2(a.y - G.p.y, a.x - G.p.x); };
 function fireBolts(w, s){
   const p = G.p, ev = w.id === 'etoile';
@@ -1537,7 +1565,7 @@ function slash(ang, off, s, src, ev){
     }
   });
   breakBraziers(cx, cy, w/2);
-  G.slashes.push({x:cx, y:cy, w, h, ang, off, life:0.22, ev});
+  G.slashes.push({x:cx, y:cy, w, h, ang, off, life:0.22, ev, own:G.p});
   for (let i=0;i<9 && G.parts.length<520;i++){
     const t = rnd(-1.05,1.05), rr = w*0.85;
     G.parts.push({x:G.p.x + Math.cos(ang+t)*rr, y:G.p.y + Math.sin(ang+t)*rr, vx:Math.cos(ang+t)*70, vy:Math.sin(ang+t)*70, life:.3, max:.3, col:ev ? '#ff7a7a' : '#fff0d0', s:1.8});
@@ -1635,7 +1663,7 @@ function fireSickle(w, s){
   for (let i=0;i<s.n;i++){
     const a = ev ? base + i*TAU/s.n : base + (i===0 ? 0 : (i%2?1:-1)*0.45*Math.ceil(i/2));
     const sp = ev ? 460 : 400;
-    G.shots.push({kind:'sickle', x:p.x, y:p.y, vx:Math.cos(a)*sp, vy:Math.sin(a)*sp, age:0, out:0.6*Math.sqrt(A), r:14*A, dmg:s.dmg, src:w.id, hits:new Map(), ret:0, spin:0, ev, life:1});
+    G.shots.push({kind:'sickle', own:G.p, x:p.x, y:p.y, vx:Math.cos(a)*sp, vy:Math.sin(a)*sp, age:0, out:0.6*Math.sqrt(A), r:14*A, dmg:s.dmg, src:w.id, hits:new Map(), ret:0, spin:0, ev, life:1});
   }
   SFX.shoot(); return true;
 }
@@ -1645,7 +1673,7 @@ function fireRavens(w, s){
   const tg = nearestN(ap.x, ap.y, 400, s.n); if (!tg.length) return false;
   for (let i=0;i<s.n;i++){
     const a = Math.random()*TAU;
-    G.shots.push({kind:'raven', x:p.x+Math.cos(a)*18, y:p.y+Math.sin(a)*18, target:tg[i % tg.length], phase:0, age:0, dmg:s.dmg, pierce:s.pierce||1, hit:new Set(), src:w.id, ev, life:1, vx:0, vy:0, flap:Math.random()*6});
+    G.shots.push({kind:'raven', own:G.p, x:p.x+Math.cos(a)*18, y:p.y+Math.sin(a)*18, target:tg[i % tg.length], phase:0, age:0, dmg:s.dmg, pierce:s.pierce||1, hit:new Set(), src:w.id, ev, life:1, vx:0, vy:0, flap:Math.random()*6});
   }
   return true;
 }
@@ -1669,7 +1697,7 @@ function updRaven(s, dt){
       if (!s.target) s.phase = 1;
     }
   } else {
-    const dx = G.p.x-s.x, dy = G.p.y-s.y, d = Math.hypot(dx,dy)||1, sp = 600;
+    const o = s.own || G.p, dx = o.x-s.x, dy = o.y-s.y, d = Math.hypot(dx,dy)||1, sp = 600;
     s.vx = dx/d*sp; s.vy = dy/d*sp;
     const step = Math.min(d, sp*dt); s.x += dx/d*step; s.y += dy/d*step;
     if (d < 16) s.life = 0;
@@ -1708,10 +1736,8 @@ const FIRE = {eclat:fireBolts, etoile:fireBolts, lame:fireSlash, faux:fireSlash,
 /* ================= Mise à jour ================= */
 function movePlayer(dt){
   const p = G.p;
-  let mx = 0, my = 0;
-  if (keys.has('u')) my -= 1; if (keys.has('d')) my += 1;
-  if (keys.has('l')) mx -= 1; if (keys.has('r')) mx += 1;
-  if (joy){ const jx = (joy.x-joy.x0)/45, jy = (joy.y-joy.y0)/45; if (Math.hypot(jx,jy) > 0.15){ mx += jx; my += jy; } }
+  if (p.down){ p.svx = p.svy = 0; p.vx = p.vy = 0; return; }        // coop : à terre, il attend qu'on le relève
+  let [mx, my] = inputVec();
   const len = Math.hypot(mx,my);
   if (len > 1){ mx /= len; my /= len; }
   let sp = 150*G.st.speed;
@@ -1784,7 +1810,7 @@ function update(dt){
     }
   }
 
-  movePlayer(dt); updateSites(dt); updateDoors(dt); updateAmbient(dt); updateVillage(dt);
+  movePlayer(dt); if (G.ally) allyStep(dt); updateSites(dt); updateDoors(dt); updateAmbient(dt); updateVillage(dt);
   if (G.bombs) for (let i = G.bombs.length - 1; i >= 0; i--){       // élite explosif : cercle d'alerte, puis explosion
     const b = G.bombs[i]; b.t += dt;
     if (b.t >= b.max){
@@ -1845,7 +1871,7 @@ function update(dt){
     if (e.dead) continue;
     e.flash = Math.max(0, e.flash - dt);
     e.slowT = Math.max(0, e.slowT - dt); if (e.castT) e.castT = Math.max(0, e.castT - dt);
-    const dx = p.x-e.x, dy = p.y-e.y, d = Math.hypot(dx,dy)||1;
+    const tp = G.ally ? coopTarget(e, p) : p, dx = tp.x-e.x, dy = tp.y-e.y, d = Math.hypot(dx,dy)||1;
     const decay = Math.exp(-8*dt);
     if (frozen || e.frz > 0){
       e.frz = Math.max(0, e.frz - dt);
@@ -1954,8 +1980,8 @@ function update(dt){
     if (!b.ghost && !e.boss && e.type !== 'chauve' && e.type !== 'feufollet') collideWorld(e, e.r*0.8);   // les spectres et les volants passent au travers
     e.kx *= decay; e.ky *= decay;
     e.atk -= dt;
-    if (d < e.r + p.r && e.atk <= 0){
-      e.atk = 0.6; hurtPlayer(e.dmg); if (e.type === 'noye') p.wet = 1.4;
+    if (d < e.r + p.r && e.atk <= 0 && !tp.down){
+      e.atk = 0.6; hurtWho(tp, e.dmg); if (e.type === 'noye') tp.wet = 1.4;
       if (hasArc('epines') && !e.dead) dmgEnemy(e, e.dmg*3, 'epines', -dx/d*220, -dy/d*220);
       if (b.kamikaze && !e.dead) killEnemy(e);
       if (state !== 'play') return;
@@ -1997,7 +2023,7 @@ function update(dt){
   }
   if (G.map === 'marais' && Math.random() < dt*4){ const x = p.x + rnd(-W/2, W/2), y = p.y + rnd(-H/2, H/2); if (inPuddle(x, y)) G.smoke.push({x, y, vx:0, vy:0, life:1.1, max:1.1, r:1, grow:16, col:'rgba(150,205,195,', a:.55, ring:true}); }
 
-  for (const w of G.weapons){
+  if (!p.down) for (const w of G.weapons){
     const s = wstats(w);
     if (w.id === 'halo' || w.id === 'couronne'){ tickHalo(w, s, dt); continue; }
     if (w.id === 'rayon' || w.id === 'phare'){ tickBeam(w, s, dt); continue; }
@@ -2031,7 +2057,7 @@ function update(dt){
       if (s.age < s.out){ const f = 1 - s.age/s.out; s.x += s.vx*f*dt*1.6; s.y += s.vy*f*dt*1.6; }
       else {
         s.ret = Math.min(820, s.ret + dt*900);
-        const dx = p.x-s.x, dy = p.y-s.y, d = Math.hypot(dx,dy)||1;
+        const o = s.own || p, dx = o.x-s.x, dy = o.y-s.y, d = Math.hypot(dx,dy)||1;
         s.x += dx/d*s.ret*dt; s.y += dy/d*s.ret*dt;
         if (d < 18) s.life = 0;
       }
@@ -2055,7 +2081,8 @@ function update(dt){
 
   for (const s of G.eshots){
     if (!frozen){ s.x += s.vx*dt; s.y += s.vy*dt; s.life -= dt; }
-    if ((s.x-p.x)**2 + (s.y-p.y)**2 < (s.r+p.r-2)**2){ s.life = 0; hurtPlayer(s.dmg); if (state !== 'play') return; }
+    if (!p.down && (s.x-p.x)**2 + (s.y-p.y)**2 < (s.r+p.r-2)**2){ s.life = 0; hurtPlayer(s.dmg); if (state !== 'play') return; }
+    else if (G.ally && !G.ally.p.down && (s.x-G.ally.p.x)**2 + (s.y-G.ally.p.y)**2 < (s.r+12-2)**2){ s.life = 0; hurtWho(G.ally.p, s.dmg); if (state !== 'play') return; }
   }
   G.eshots = G.eshots.filter(s => s.life > 0);
 
@@ -2065,12 +2092,12 @@ function update(dt){
   G.comboT -= dt; if (G.comboT <= 0) G.combo = 0;
   if (G.gems.length > 380){ const a = G.gems.shift(); const b = G.gems.find(g => g.kind === a.kind); if (b) b.v += a.v; }
   for (const g of G.gems){
-    const dx = p.x-g.x, dy = p.y-g.y, d = Math.hypot(dx,dy)||1;
+    const gp = G.ally ? coopNearest(g.x, g.y, p) : p, dx = gp.x-g.x, dy = gp.y-g.y, d = Math.hypot(dx,dy)||1;
     if (g.pull || d < st.magnet){
       g.pull = true; g.sp = (g.sp || 140) + dt*900;
       const step = Math.min(d, g.sp*dt); g.x += dx/d*step; g.y += dy/d*step;
     }
-    if (d < p.r + 8){
+    if (d < 20){
       g.dead = true;
       if (g.kind === 'coin'){ G.gold += g.v; SFX.gold(); }
       else { p.xp += g.v*st.xp; G.combo++; G.comboT = 0.5; SFX.gem(G.combo); }
@@ -2079,6 +2106,7 @@ function update(dt){
   G.gems = G.gems.filter(g => !g.dead);
   for (const it of G.items){
     if ((it.x-p.x)**2 + (it.y-p.y)**2 < (p.r+14)**2){ it.dead = true; takeItem(it); if (state !== 'play') break; }
+    else if (G.ally && (it.x-G.ally.p.x)**2 + (it.y-G.ally.p.y)**2 < 26*26){ it.dead = true; if (it.type === 'coffre') takeItem(it); else withAlly(() => takeItem(it)); if (state !== 'play') break; }
   }
   G.items = G.items.filter(it => !it.dead);
 
@@ -2142,11 +2170,18 @@ function updateCine(dt){
 const MERCH_HELLO = ['Approche, Gardien ! J’ai de quoi garder ta flamme vive.', 'Des braises contre des merveilles. Le marché est honnête, presque.', 'Je ne reste pas longtemps. Les ombres n’aiment pas les marchands.'];
 const MERCH_BYE = ['Reviens vivant, c’est bon pour les affaires.', 'Que ta mèche ne tremble pas.', 'À la prochaine nuit, peut-être.'];
 const dashMax = () => Math.max(0.9, 2.2 - 0.12*lvP('bottes'))*(hasArc('vagabond') ? 0.5 : 1);
+function inputVec(){                                                 // direction voulue : clavier/doigt, ou commandes du compagnon en coop
+  if (G.ctxAlly){ const I = G.ally.input; return [I.mx || 0, I.my || 0]; }
+  let mx = 0, my = 0;
+  if (keys.has('u')) my -= 1; if (keys.has('d')) my += 1;
+  if (keys.has('l')) mx -= 1; if (keys.has('r')) mx += 1;
+  if (joy){ const jx = (joy.x-joy.x0)/45, jy = (joy.y-joy.y0)/45; if (Math.hypot(jx,jy) > 0.15){ mx += jx; my += jy; } }
+  return [mx, my];
+}
 function dash(){
-  const p = G.p; if (p.dashCd > 0 || p.dashT > 0) return;
-  let dx = 0, dy = 0;
-  if (keys.has('u')) dy -= 1; if (keys.has('d')) dy += 1; if (keys.has('l')) dx -= 1; if (keys.has('r')) dx += 1;
-  if (joy){ const jx = joy.x-joy.x0, jy = joy.y-joy.y0; if (Math.hypot(jx,jy) > 8){ dx = jx; dy = jy; } }
+  if (G && G.guest){ NET.send({t:'act', a:'dash'}); return; }
+  const p = G.p; if (p.dashCd > 0 || p.dashT > 0 || p.down) return;
+  let [dx, dy] = inputVec();
   if (!dx && !dy){ if (aiming()){ const a = aimAng(); dx = Math.cos(a); dy = Math.sin(a); } else dx = p.face; }
   const l = Math.hypot(dx,dy) || 1;
   p.dvx = dx/l*640; p.dvy = dy/l*640;
@@ -2157,7 +2192,8 @@ function dash(){
   for (let i=0;i<8;i++) G.smoke.push({x:p.x + rnd(-6,6), y:p.y + 11, vx:-p.dvx*0.08 + rnd(-25,25), vy:rnd(-20,0), life:.5, max:.5, r:3, grow:10, col:'rgba(160,150,130,', a:.35});
 }
 function ult(){
-  if (G.flame < 100) return;
+  if (G && G.guest){ NET.send({t:'act', a:'ult'}); return; }
+  if (G.flame < 100 || G.p.down) return;
   G.flame = 0; const p = G.p; p.joyUntil = performance.now() + 1500;
   if (hasArc('soleil')){ p.hp = Math.min(p.max, p.hp + p.max*0.3); spawnFx('fx_soin', 0, 0, 120, {follow:true, dy:14, bottom:true, dur:0.9}); }
   G.flash = 0.6; G.shake = 1; G.slow = 0.6; SFX.ult();
@@ -2181,7 +2217,7 @@ function startDawn(){
 }
 function updateDawn(dt){
   G.dawnT += dt;
-  movePlayer(dt); updateSites(dt); updateDoors(dt); updateAmbient(dt); updateVillage(dt);
+  movePlayer(dt); if (G.ally) allyStep(dt); updateSites(dt); updateDoors(dt); updateAmbient(dt); updateVillage(dt);
   let n = 0;
   for (const e of G.enemies){ if (e.dead) continue; if (Math.random() < 0.08 || G.dawnT > 2.2){ killEnemy(e, true); if (++n > 16) break; } }
   G.enemies = G.enemies.filter(e => !e.dead);
@@ -2260,6 +2296,32 @@ function edgeArrow(x, y, col){
   ctx.restore();
 }
 
+function drawWeaponVis(px, py, now){                                    // halos et rayons tournent autour de leur Gardien
+  for (const w of G.weapons){
+    if ((w.id === 'halo' || w.id === 'couronne') && w.R){
+      const ev = w.id === 'couronne';
+      for (let i=0;i<w.n;i++){
+        const a = w.a + i*TAU/w.n, x = px + Math.cos(a)*w.R, y = py + Math.sin(a)*w.R;
+        if (hasFx('fx_braise')){ fxDraw('fx_braise', fxLoopFrame('fx_braise', now/1000 + i*0.31), x, y, w.orb*(ev ? 6.5 : 5.2), {rot:a + Math.PI/4}); if (ev) ctx.drawImage(glow('255,220,140', w.orb*1.4), x - w.orb*1.4, y - w.orb*1.4); continue; }
+        ctx.fillStyle = ev ? 'rgba(255,190,80,.35)' : 'rgba(232,103,58,.3)'; ctx.beginPath(); ctx.arc(x,y,w.orb*1.5,0,TAU); ctx.fill();
+        ctx.fillStyle = ev ? '#fff0b0' : '#ffb36b'; ctx.beginPath(); ctx.arc(x,y,w.orb*0.55,0,TAU); ctx.fill();
+      }
+    }
+    if ((w.id === 'rayon' || w.id === 'phare') && w.active > 0 && w.len){
+      const fade = w.id === 'phare' ? 1 : Math.min(1, w.active*4, (w.max - w.active + 0.001)*6);
+      for (let i=0;i<w.n;i++){
+        const a = w.a + i*TAU/w.n, ex2 = px + Math.cos(a)*w.len, ey2 = py + Math.sin(a)*w.len;
+        ctx.lineCap = 'round';
+        ctx.strokeStyle = `rgba(150,180,255,${0.22*fade})`; ctx.lineWidth = 22; ctx.beginPath(); ctx.moveTo(px,py); ctx.lineTo(ex2,ey2); ctx.stroke();
+        ctx.strokeStyle = `rgba(210,225,255,${0.45*fade})`; ctx.lineWidth = 8; ctx.stroke();
+        ctx.strokeStyle = `rgba(255,255,255,${0.9*fade})`; ctx.lineWidth = 2.5; ctx.stroke();
+        ctx.lineCap = 'butt';
+        if (hasFx('fx_rayon')) fxDraw('fx_rayon', 3, (px + ex2)/2, (py + ey2)/2, w.len*1.05, {rot:a, flip:true, h:62, a:fade*0.55});
+        for (let j=0;j<7;j++){ const dd = mod(now*0.35 + j*w.len/7, w.len), jx = px + Math.cos(a)*dd + Math.sin(now/90 + j)*3, jy = py + Math.sin(a)*dd + Math.cos(now/110 + j)*3; ctx.fillStyle = `rgba(230,240,255,${0.8*fade})`; ctx.fillRect(jx-1.5, jy-1.5, 3, 3); }
+      }
+    }
+  }
+}
 function draw(now){
   const p = G.p, P = PAL[G.map];
   let sx = 0, sy = 0;
@@ -2369,6 +2431,7 @@ function draw(now){
   }
   const pFoot = p.y + CHAR_DEFS.guardian.foot;
   DL.push({y:pFoot, k:3});
+  if (G.ally && G.ally.p) DL.push({y:G.ally.p.y + 14, k:6});
   for (const r of ruinsInView(ox, oy)) DL.push({y:r.y, k:4, r});
   DL.sort((a, b) => a.y - b.y || a.k - b.k);
   drawBossAfterimages(X, Y);
@@ -2402,7 +2465,8 @@ function draw(now){
       const half = a.foot || a.w*0.36, deep = r.id === 'b_pilotis' || r.id === 'b_clocher' || r.id === 'b_barque' ? 16 : r.id.startsWith('b_') ? 11 : 8;
       drawSink(r.id, r.x, r.y, x, y, half*1.05, G.map === 'marais' ? deep*1.3 : deep); ctx.globalAlpha = 1;
       if (a.lights.length && !(r.lantern && !r.lit)){ const L = a.lights[0]; decoLights.push({x:x + L[0]*a.w, y:y + L[1]*a.h, r:L[2], i:0.75 + (reduce ? 0 : 0.08*Math.sin(now/110 + r.x)), col:L[3], hole:true}); }
-    } else { ctx.globalAlpha = 1; drawPlayer(X(p.x), Y(p.y), lx, ly, now); }
+    } else if (it.k === 6){ drawAlly(X, Y, now); }
+    else { ctx.globalAlpha = 1; drawPlayer(X(p.x), Y(p.y), lx, ly, now); coopDownMark(G.p, X, Y, now); }
   }
   // Feuilles et cendres portées par le vent
   if (!reduce && G.map !== 'marais'){
@@ -2510,32 +2574,10 @@ function draw(now){
       ctx.fillStyle = '#ffe0a0'; ctx.beginPath(); ctx.arc(mx, my, s.ev ? 8 : 6, 0, TAU); ctx.fill();
     }
   }
-  for (const w of G.weapons){
-    if ((w.id === 'halo' || w.id === 'couronne') && w.R){
-      const ev = w.id === 'couronne';
-      for (let i=0;i<w.n;i++){
-        const a = w.a + i*TAU/w.n, x = px + Math.cos(a)*w.R, y = py + Math.sin(a)*w.R;
-        if (hasFx('fx_braise')){ fxDraw('fx_braise', fxLoopFrame('fx_braise', now/1000 + i*0.31), x, y, w.orb*(ev ? 6.5 : 5.2), {rot:a + Math.PI/4}); if (ev) ctx.drawImage(glow('255,220,140', w.orb*1.4), x - w.orb*1.4, y - w.orb*1.4); continue; }
-        ctx.fillStyle = ev ? 'rgba(255,190,80,.35)' : 'rgba(232,103,58,.3)'; ctx.beginPath(); ctx.arc(x,y,w.orb*1.5,0,TAU); ctx.fill();
-        ctx.fillStyle = ev ? '#fff0b0' : '#ffb36b'; ctx.beginPath(); ctx.arc(x,y,w.orb*0.55,0,TAU); ctx.fill();
-      }
-    }
-    if ((w.id === 'rayon' || w.id === 'phare') && w.active > 0 && w.len){
-      const fade = w.id === 'phare' ? 1 : Math.min(1, w.active*4, (w.max - w.active + 0.001)*6);
-      for (let i=0;i<w.n;i++){
-        const a = w.a + i*TAU/w.n, ex2 = px + Math.cos(a)*w.len, ey2 = py + Math.sin(a)*w.len;
-        ctx.lineCap = 'round';
-        ctx.strokeStyle = `rgba(150,180,255,${0.22*fade})`; ctx.lineWidth = 22; ctx.beginPath(); ctx.moveTo(px,py); ctx.lineTo(ex2,ey2); ctx.stroke();
-        ctx.strokeStyle = `rgba(210,225,255,${0.45*fade})`; ctx.lineWidth = 8; ctx.stroke();
-        ctx.strokeStyle = `rgba(255,255,255,${0.9*fade})`; ctx.lineWidth = 2.5; ctx.stroke();
-        ctx.lineCap = 'butt';
-        if (hasFx('fx_rayon')) fxDraw('fx_rayon', 3, (px + ex2)/2, (py + ey2)/2, w.len*1.05, {rot:a, flip:true, h:62, a:fade*0.55});
-        for (let j=0;j<7;j++){ const dd = mod(now*0.35 + j*w.len/7, w.len), jx = px + Math.cos(a)*dd + Math.sin(now/90 + j)*3, jy = py + Math.sin(a)*dd + Math.cos(now/110 + j)*3; ctx.fillStyle = `rgba(230,240,255,${0.8*fade})`; ctx.fillRect(jx-1.5, jy-1.5, 3, 3); }
-      }
-    }
-  }
+  drawWeaponVis(px, py, now);
+  if (G.ally && G.ally.weapons) coopSwap(() => drawWeaponVis(X(G.p.x), Y(G.p.y), now), true);
   for (const s of G.slashes){
-    const k = s.life/0.22, cx = X(G.p.x) - Math.sin(s.ang)*(s.off||0), cy = Y(G.p.y) + Math.cos(s.ang)*(s.off||0), R = s.w*0.85;
+    const so = s.own || G.p, k = s.life/0.22, cx = X(so.x) - Math.sin(s.ang)*(s.off||0), cy = Y(so.y) + Math.cos(s.ang)*(s.off||0), R = s.w*0.85;
     const a0 = s.ang - 1.05 + (1-k)*0.25, a1 = s.ang + 1.05, sk = s.ev ? 'fx_faux' : 'fx_lame';
     if (hasFx(sk)){ fxDraw(sk, (1 - k)*FX[sk].n, cx + Math.cos(s.ang)*R*0.5, cy + Math.sin(s.ang)*R*0.5, R*1.7, {rot:s.ang, a:0.85}); continue; }
     ctx.lineCap = 'round';
@@ -2995,6 +3037,7 @@ function lightPass(X, Y, lx, ly, L, dk, now){
   };
   const px = X(G.p.x), py = Y(G.p.y);
   add(lx, ly, L*1.12, 1); add(px, py, 80, 0.5);
+  if (G.ally && G.ally.p){ const ap = G.ally.p; add(X(ap.x) + 8*(ap.face || 1), Y(ap.y) - 34, L*1.0, 0.95); }   // la lanterne du compagnon éclaire aussi
   for (const b of G.braz) if (!b.dead) add(X(b.x), Y(b.y) - 12, 200 + (reduce ? 0 : Math.sin(now/90 + b.x)*10), 0.95);
   for (const z of G.zones) if (z.burn) add(X(z.x), Y(z.y), z.R*2.4, 0.7*Math.min(1, z.life));
   for (const s of G.shots){
@@ -3615,7 +3658,7 @@ function guardianUpdate(now){
   const sp = Math.hypot(p.vx || 0, p.vy || 0), moving = sp > 5 && (state === 'play' || state === 'dawn');
   // orientation : direction du déplacement, ou de la visée à la souris si elle est active
   let fx = p.vx || 0, fy = p.vy || 0;
-  const aimOn = typeof aiming === 'function' && aiming();          // visée à la souris : le regard suit le curseur, les pas ne le changent pas
+  const aimOn = typeof aiming === 'function' && !G.drawingAlly && aiming();          // visée à la souris : le regard suit le curseur, les pas ne le changent pas
   if (aimOn){ const ap = aimPt(); fx = ap.x - p.x; fy = ap.y - p.y; }
   if (Math.hypot(fx, fy) > 4){ S.view = facingFrom(fx, fy, S.view); S.d8 = dir8From(fx, fy, S.d8); S.d16 = dirNFrom(DIR16, fx, fy, S.d16); }
   const want = moving ? 'walk' : 'idle';
@@ -4660,6 +4703,7 @@ function enterRoom(d){
   G.room = {d, R, out:{x:d.x, y:d.y + 50, enemies:G.enemies, eshots:G.eshots, zones:G.zones}, cleared:false};
   G.enemies = []; G.eshots = []; G.zones = []; G.doorT = 0; G.doorAt = null;
   p.x = c.x; p.y = c.y + R.hh*0.62; p.svx = p.svy = 0; G.cam = null;
+  if (G.ally){ G.ally.p.x = p.x + 50; G.ally.p.y = p.y; }
   // gardiens : une élite au fond, une meute autour, et le coffre derrière eux
   const el = makeEnemy(R.elite, c.x, c.y - R.hh*0.35, {elite:true});
   R.guards.forEach((t, i) => { const a = Math.PI + i/(R.guards.length - 1 || 1)*Math.PI; makeEnemy(t, c.x + Math.cos(a)*R.hw*0.55, c.y + Math.sin(a)*R.hh*0.55 - 20); });
@@ -4682,6 +4726,7 @@ function leaveRoom(){
   G.gems = G.gems.filter(g => Math.abs(g.y - ROOM_O.y) > 5000 || (G.p.xp += g.v, false));   // ce qui reste dans la salle est ramassé en sortant
   G.enemies = r.out.enemies; G.eshots = r.out.eshots; G.zones = r.out.zones;
   p.x = r.out.x; p.y = r.out.y; p.svx = p.svy = 0; G.cam = null;
+  if (G.ally){ G.ally.p.x = p.x + 50; G.ally.p.y = p.y + 10; }
   for (const e of G.enemies){ const dx = e.x - p.x, dy = e.y - p.y, d = Math.hypot(dx, dy); if (d < 240 && !e.boss){ const k = 240/(d || 1); e.x = p.x + dx*k; e.y = p.y + dy*k; } }   // un peu d'air à la sortie
   G.room = null; toast('De retour dans la nuit');
 }
@@ -4783,7 +4828,7 @@ function spawnFx(k, x, y, w, o){
   const cap = (FX_CAP[k] || 20)*(typeof PCAP === 'function' ? PCAP() : 1);
   let c = 0; for (const f of G.fxs) if (f.k === k) c++;
   if (c >= cap) return;
-  G.fxs.push(Object.assign({k, x, y, w, age:0, dur:(o && o.dur) || FX[k].n/FX[k].fps}, o));
+  G.fxs.push(Object.assign({k, x, y, w, age:0, dur:(o && o.dur) || FX[k].n/FX[k].fps, own:G.p}, o));
 }
 function updateFxSprites(dt){
   if (!G.fxs || !G.fxs.length) return;
@@ -4793,7 +4838,7 @@ function updateFxSprites(dt){
 function drawFxSprites(X, Y){
   if (!G.fxs) return;
   for (const f of G.fxs){
-    const px = f.follow ? G.p.x : f.x, py = f.follow ? G.p.y + (f.dy || 0) : f.y;
+    const fo = f.own || G.p, px = f.follow ? fo.x : f.x, py = f.follow ? fo.y + (f.dy || 0) : f.y;
     const x = X(px), y = Y(py); if (x < -f.w || x > W + f.w || y < -f.w || y > H + f.w) continue;
     const k = f.age/f.dur, F = FX[f.k], f0 = f.f0 || 0;
     fxDraw(f.k, f0 + k*(F.n - f0), x, y, f.w, {bottom:f.bottom, rot:f.rot, a:(f.a == null ? 1 : f.a)*(f.fade ? Math.min(1, (1 - k)*3) : 1)});
@@ -4958,6 +5003,355 @@ function drawEnemyShot(s, x, y, now){
   return true;
 }
 
+/* =====================================================================
+   COOPÉRATION EN LIGNE (2 joueurs, chacun sur son PC)
+   L'HÔTE fait tourner la vraie partie, avec un second Gardien : le compagnon.
+   L'INVITÉ envoie ses commandes (direction, visée, esquive, embrasement) et reçoit ~15 fois
+   par seconde l'état du monde, qu'il dessine en lissant les mouvements.
+   Connexion : code de salon à 5 lettres, liaison directe entre les deux PC (PeerJS / WebRTC),
+   aucun serveur à héberger. Pour essayer sur un seul PC : deux fenêtres, adresse se terminant par #coop-local.
+   ===================================================================== */
+const NET = {role:null, conn:null, peer:null, bc:null, code:'', allyHello:null, last:0, sendT:0,
+  send(o){ const s = JSON.stringify(o); try { if (this.conn && this.conn.open) this.conn.send(s); else if (this.bc) this.bc.postMessage({from:this.role, s}); } catch(e){} },
+  on(s){ let m; try { m = JSON.parse(s); } catch(e){ return; } coopMsg(m); }
+};
+const COOP_LOCAL = () => location.hash.indexOf('coop-local') >= 0;
+function coopCode(){ const A = 'ABCDEFGHJKLMNPQRSTUVWXYZ'; let s = ''; for (let i = 0; i < 5; i++) s += A[Math.floor(Math.random()*A.length)]; return s; }
+function loadPeer(){
+  if (window.Peer) return Promise.resolve();
+  return new Promise((ok, ko) => { const sc = document.createElement('script'); sc.src = ASSET_ROOT + 'lib/peerjs.min.js'; sc.onload = ok; sc.onerror = () => ko(new Error('bibliothèque réseau introuvable')); document.head.appendChild(sc); });
+}
+function coopStatus(t, err){ const el = $('#coopStatus'); if (el){ el.textContent = t; el.classList.toggle('err', !!err); } }
+async function coopHost(){
+  coopReset(); NET.role = 'host'; NET.code = coopCode();
+  $('#coopCode').textContent = NET.code; $('#coopHostBox').hidden = false; $('#coopJoinBox').hidden = true;
+  coopStatus('Ouverture du salon…');
+  if (COOP_LOCAL()){ coopBC(); coopStatus('Salon ouvert (essai local). En attente d’un compagnon…'); return; }
+  try { await loadPeer(); } catch(e){ coopStatus('Impossible de charger la connexion réseau.', true); return; }
+  const peer = NET.peer = new Peer('gardien-lanterne-' + NET.code);
+  peer.on('open', () => coopStatus('Salon ouvert. Donne le code à ton ami. En attente d’un compagnon…'));
+  peer.on('error', e => coopStatus('Erreur réseau : ' + (e.type || e.message || e) + '. Vérifie ta connexion Internet.', true));
+  peer.on('connection', c => { if (NET.conn){ c.close(); return; } NET.conn = c; c.on('data', d => NET.on(d)); c.on('close', coopLost); });
+}
+async function coopJoin(){
+  const code = ($('#coopInput').value || '').trim().toUpperCase().replace(/[^A-Z]/g, '');
+  if (code.length !== 5){ coopStatus('Le code fait 5 lettres.', true); return; }
+  coopReset(); NET.role = 'guest'; NET.code = code;
+  coopStatus('Connexion au salon ' + code + '…');
+  const hello = () => NET.send({t:'hello', char:coopMyChar(), shop:SAVE.shop, name:'Compagnon'});
+  if (COOP_LOCAL()){ coopBC(); hello(); return; }
+  try { await loadPeer(); } catch(e){ coopStatus('Impossible de charger la connexion réseau.', true); return; }
+  const peer = NET.peer = new Peer();
+  peer.on('error', e => coopStatus(e.type === 'peer-unavailable' ? 'Aucun salon avec ce code. Vérifie le code, et que ton ami a bien ouvert le salon.' : 'Erreur réseau : ' + (e.type || e), true));
+  peer.on('open', () => {
+    const c = NET.conn = peer.connect('gardien-lanterne-' + code, {reliable:true});
+    c.on('open', hello); c.on('data', d => NET.on(d)); c.on('close', coopLost);
+  });
+}
+function coopBC(){                                                        // essai sur un seul PC : deux fenêtres reliées par le navigateur
+  NET.bc = new BroadcastChannel('gardien-coop-' + NET.code);
+  NET.bc.onmessage = ev => { if (ev.data.from !== NET.role) NET.on(ev.data.s); };
+}
+function coopReset(){
+  try { if (NET.conn) NET.conn.close(); } catch(e){} try { if (NET.peer) NET.peer.destroy(); } catch(e){} try { if (NET.bc) NET.bc.close(); } catch(e){}
+  Object.assign(NET, {role:null, conn:null, peer:null, bc:null, allyHello:null, snapA:null, snapB:null});
+}
+function coopLost(){
+  if (!NET.role) return;
+  const was = NET.role; NET.conn = null;
+  if (was === 'host' && G && G.ally){ G.ally = null; G.allyShop = null; toast('Ton compagnon s’est déconnecté'); }
+  else if (was === 'guest' && G && G.guest){ G.guest = false; toast('L’hôte a quitté la partie'); setTimeout(() => goMenu(), 1500); }
+  coopStatus('Connexion perdue.', true);
+}
+const coopMyChar = () => (SAVE.chars[SAVE.coopChar] ? SAVE.coopChar : null) || (SAVE.chars[SAVE.lastChar] ? SAVE.lastChar : 'gardien');
+
+/* ---------------- messages ---------------- */
+function coopMsg(m){
+  if (NET.role === 'host'){
+    if (m.t === 'hello'){ NET.allyHello = m; coopStatus('Compagnon connecté : ' + CH[m.char].name + '. Choisis le lieu et ton personnage, puis lance la nuit.'); $('#coopGo').hidden = false; SFX.rare && SFX.rare(); NET.send({t:'welcome'}); }
+    else if (m.t === 'in' && G && G.ally){ Object.assign(G.ally.input, m.i); }
+    else if (m.t === 'act' && G && G.ally && state === 'play'){ if (m.a === 'dash') withAlly(() => dash()); else if (m.a === 'ult') withAlly(() => ult()); }
+    else if (m.t === 'pick' && G && G.ally) coopAllyPick(m.c);
+    else if (m.t === 'char'){ if (NET.allyHello) NET.allyHello.char = m.char; coopStatus('Compagnon connecté : ' + CH[m.char].name + '.'); }
+  } else if (NET.role === 'guest'){
+    if (m.t === 'welcome') coopStatus('Connecté ! L’hôte prépare la nuit… Tu peux changer de personnage en attendant.');
+    else if (m.t === 'start') guestBegin(m);
+    else if (m.t === 's') guestSnap(m);
+    else if (m.t === 'lvl') guestLevel(m);
+    else if (m.t === 'lvldone'){ if (G && G.guest && state === 'levelup'){ show(null); state = 'play'; } }
+    else if (m.t === 'end' && G && G.guest){ G.guest = false; finish(!!m.win, false); }
+    else if (m.t === 'toast') toast(m.s);
+  }
+}
+
+/* ---------------- logique à deux (hôte) ---------------- */
+const CTX_KEYS = ['p', 'weapons', 'passives', 'st', 'char', 'banished', 'rerolls', 'banishes'];
+function coopSwap(fn, drawOnly){                                         // le compagnon devient temporairement « le joueur »
+  const A = G.ally, keys = drawOnly ? ['p', 'weapons'] : CTX_KEYS;
+  const swap = () => { for (const k of keys){ const t = G[k]; G[k] = A[k]; A[k] = t; } };   // vrai échange : pendant le tour du compagnon, G.ally.* désigne l'hôte
+  swap(); if (!drawOnly) G.ctxAlly = true; else G.drawingAlly = true;
+  try { return fn(); } finally { swap(); G.ctxAlly = false; G.drawingAlly = false; }
+}
+const withAlly = fn => G && G.ally ? coopSwap(fn, false) : undefined;
+function makeAlly(charId, shop){
+  const c = CH[charId];
+  G.allyShop = shop || {};
+  G.ally = {char:charId, input:{mx:0, my:0, aim:null},
+    p:{x:60, y:30, r:12, dashCd:0, dashT:0, dvx:0, dvy:0, hp:100, max:100, face:1, hurt:0, step:0, inv:0, revives:(shop && shop.renaissance || 0) + (c.mod.revive || 0), xp:0, lvl:1, need:needFor(1)},
+    weapons:[{id:c.w, lv:1, t:0.6, a:0, stars:0}], passives:[], st:{}, banished:new Set(), rerolls:0, banishes:0};
+  withAlly(() => { computeStats(); G.p.hp = G.p.max; });
+}
+function allyStep(dt){
+  withAlly(() => {
+    const p = G.p, st = G.st;
+    movePlayer(dt);
+    if (p.down) return;
+    p.hp = Math.min(p.max, p.hp + st.regen*dt);
+    p.hurt = Math.max(0, p.hurt - dt); p.inv = Math.max(0, p.inv - dt);
+    for (const w of G.weapons){
+      const s = wstats(w);
+      if (w.id === 'halo' || w.id === 'couronne'){ tickHalo(w, s, dt); continue; }
+      if (w.id === 'rayon' || w.id === 'phare'){ tickBeam(w, s, dt); continue; }
+      w.t -= dt;
+      if (w.t <= 0){ const ok = FIRE[w.id](w, s); w.t = ok === false ? 0.2 : s.cd*st.cd; }
+    }
+  });
+  coopRevive(dt);
+}
+function coopTarget(e, p){                                               // l'ombre fonce sur le Gardien debout le plus proche
+  const a = G.ally.p;
+  if (p.down) return a.down ? p : a; if (a.down) return p;
+  return (a.x - e.x)**2 + (a.y - e.y)**2 < (p.x - e.x)**2 + (p.y - e.y)**2 ? a : p;
+}
+function coopNearest(x, y, p){ const a = G.ally.p; if (a.down) return p; if (p.down) return a; return (a.x - x)**2 + (a.y - y)**2 < (p.x - x)**2 + (p.y - y)**2 ? a : p; }
+function hurtWho(t, d){ if (G.ally && t === G.ally.p) withAlly(() => hurtPlayer(d)); else hurtPlayer(d); }
+function coopDown(p){
+  p.down = true; p.hp = 0; p.reviveT = 0;
+  if (G.p.down && G.ally && G.ally.p.down){                              // les deux Gardiens à terre : la nuit l'emporte
+    setTimeout(() => { if (state === 'play') finish(false); }, 0); return;
+  }
+  toast(G.ctxAlly ? 'Ton compagnon est à terre : va le relever !' : 'Tu es à terre ! Ton compagnon peut te relever');
+  NET.send({t:'toast', s:G.ctxAlly ? 'Tu es à terre ! L’hôte peut te relever' : 'L’hôte est à terre : va le relever !'});
+}
+function coopRevive(dt){                                                 // rester près d'un Gardien à terre pendant 2,5 s le relève
+  if (!G.ally) return;
+  const a = G.p, b = G.ally.p;
+  for (const [down, other] of [[a, b], [b, a]]){
+    if (!down.down) continue;
+    if (!other.down && Math.hypot(down.x - other.x, down.y - other.y) < 70){
+      down.reviveT = (down.reviveT || 0) + dt;
+      if (down.reviveT >= 2.5){ down.down = false; down.hp = down.max*0.4; down.inv = 2; down.reviveT = 0; burst(down.x, down.y, '#ffd27a', 24, 1.4); toast('Gardien relevé !'); NET.send({t:'toast', s:'Gardien relevé !'}); }
+    } else down.reviveT = Math.max(0, (down.reviveT || 0) - dt*2);
+  }
+}
+
+/* ---------------- dessin du compagnon (hôte et invité) ---------------- */
+function drawAlly(X, Y, now){
+  if (!G.ally || !G.ally.p) return;
+  const run = () => {
+    const R = keeperRig(now);
+    if (G.p.down) ctx.globalAlpha = 0.55;
+    drawPlayer(X(G.p.x), Y(G.p.y), X(R.lx), Y(R.ly), now); ctx.globalAlpha = 1;
+    const x = X(G.p.x), y = Y(G.p.y);
+    ctx.font = '600 12px "Barlow Semi Condensed", sans-serif'; ctx.textAlign = 'center';
+    ctx.fillStyle = 'rgba(0,0,0,.55)'; ctx.fillText(G.allyName || 'Compagnon', x + 1, y - 92 + 1);
+    ctx.fillStyle = '#9fd0ff'; ctx.fillText(G.allyName || 'Compagnon', x, y - 92); ctx.textAlign = 'left';
+    ctx.fillStyle = 'rgba(0,0,0,.6)'; ctx.fillRect(x - 18, y - 86, 36, 4); ctx.fillStyle = '#7fd08a'; ctx.fillRect(x - 18, y - 86, 36*Math.max(0, G.p.hp/G.p.max), 4);
+  };
+  if (G.guest || !G.ally.input) coopSwap(run, true); else coopSwap(run, false);
+  coopDownMark(G.ally.p, X, Y, now);
+}
+function coopDownMark(p, X, Y, now){                                     // anneau de relève autour d'un Gardien à terre
+  if (!p || !p.down) return;
+  const x = X(p.x), y = Y(p.y) + 10, k = Math.min(1, (p.reviveT || 0)/2.5), pu = 0.5 + 0.5*Math.sin(now/200);
+  ctx.strokeStyle = `rgba(255,120,100,${0.4 + 0.4*pu})`; ctx.lineWidth = 2; ctx.beginPath(); ctx.ellipse(x, y, 34, 15, 0, 0, TAU); ctx.stroke();
+  if (k > 0){ ctx.strokeStyle = 'rgba(255,230,170,.95)'; ctx.lineWidth = 3; ctx.beginPath(); ctx.ellipse(x, y, 34, 15, 0, -Math.PI/2, -Math.PI/2 + TAU*k); ctx.stroke(); }
+  ctx.font = '600 12px "Barlow Semi Condensed", sans-serif'; ctx.textAlign = 'center'; ctx.fillStyle = '#ffb09a'; ctx.fillText('À terre', x, y + 30); ctx.textAlign = 'left';
+}
+
+/* ---------------- état du monde envoyé par l'hôte ---------------- */
+const R1 = v => Math.round(v*10)/10, R0 = v => Math.round(v);
+function pickF(o, keys){ const r = {}; for (const k of keys){ const v = o[k]; if (v !== undefined && v !== null) r[k] = typeof v === 'number' ? R1(v) : v; } return r; }
+function snapPlayer(p, w, ps, st){
+  return {x:R1(p.x), y:R1(p.y), vx:R0(p.vx || 0), vy:R0(p.vy || 0), hp:R0(p.hp), max:R0(p.max), face:p.face, hurt:R1(p.hurt || 0), down:!!p.down, rv:R1(p.reviveT || 0), dash:p.dashT > 0 ? 1 : 0, sp:R1(st.speed || 1),
+    w:w.map(x => [x.id, x.lv, R1(x.a || 0), R1(x.R || 0), x.n || 0, R1(x.orb || 0), R1(x.active || 0), R1(x.len || 0), R1(x.max || 0), x.stars || 0]),
+    ps:ps.map(q => [q.id, q.lv])};
+}
+const E_KEYS = ['st', 'tele', 'flash', 'frz', 'emerge', 'cx', 'cy', 'castT', 'atk', 'born', 'tt', 'dt', 'cd'];
+function snapEnemy(e){
+  const a = [e.id, e.type, R1(e.x), R1(e.y), R1(e.r), Math.round(100*e.hp/e.max), (e.elite ? 1 : 0) | (e.boss ? 2 : 0) | (e.enraged ? 4 : 0) | (e.dir ? 8 : 0) | (e.dead ? 16 : 0), e.aff || 0];
+  for (const k of E_KEYS) a.push(e[k] == null ? null : R1(e[k]));
+  if (e.beams) a.push(e.beams);
+  return a;
+}
+function coopSnapshot(){
+  NET.seq = (NET.seq || 0) + 1; const slow = NET.seq % 3 === 0;              // lucioles et traces au sol : 1 fois sur 3 (elles bougent peu)
+  const own = o => o === G.p ? 0 : 1, gp = G.ally.p, RR = 1250*1250;            // on n'envoie que ce que l'invité peut voir
+  const near = o => (o.x - gp.x)**2 + (o.y - gp.y)**2 < RR;
+  return {t:'s', T:R1(G.t), map:G.map, fl:R1(G.flame), gold:G.gold, kills:G.kills, pend:G.pending, flash:R1(G.flash), shake:R1(G.shake), zap:R1(G.zap || 0), frz:R1(G.freeze), dawn:R1(G.dawnT || 0),
+    lvl:G.p.lvl, xp:R1(G.p.xp), need:G.p.need, arcs:G.arcs, boss:G.boss ? G.boss.id : 0, st:state,
+    pl:[snapPlayer(G.p, G.weapons, G.passives, G.st), snapPlayer(G.ally.p, G.ally.weapons, G.ally.passives, G.ally.st)],
+    en:G.enemies.filter(near).map(snapEnemy), co:G.corpses.filter(near).map(e => [e.id, e.type, R0(e.x), R0(e.y), R0(e.r), (e.elite ? 1 : 0) | (e.boss ? 2 : 0), R1(e.dt || 0)]),
+    sh:G.shots.filter(near).map(s => Object.assign(pickF(s, ['kind', 'x', 'y', 'vx', 'vy', 'ev', 'spin', 'age', 'T', 'R', 'h', 'r', 'flap', 'x0', 'y0', 'tx', 'ty']), {o:s.own ? own(s.own) : 0})),
+    es:G.eshots.map(s => pickF(s, ['x', 'y', 'vx', 'vy', 'r', 'kind', 'bone', 'life'])),
+    gm:!slow ? null : G.gems.filter(near).flatMap(g => [R0(g.x), R0(g.y), g.v >= 10 ? 3 : g.v >= 3 ? 2 : g.kind === 'coin' ? 1 : 0]),
+    it:G.items.map(i => pickF(i, ['type', 'x', 'y', 'big'])),
+    zo:G.zones.filter(near).map(z => pickF(z, ['x', 'y', 'r', 'R', 'life', 'max', 'burn', 'seed', 'grow'])),
+    ri:G.rings.map(r => pickF(r, ['x', 'y', 'R', 'life', 'frz', 'lv', 'fire'])),
+    bo:G.bolts.map(b => ({pts:b.pts.map(q => [R0(q[0]), R0(q[1])]), life:R1(b.life), max:b.max})),
+    sl:G.slashes.map(s => Object.assign(pickF(s, ['x', 'y', 'w', 'h', 'ang', 'off', 'life', 'ev']), {o:s.own ? own(s.own) : 0})),
+    fx:(G.fxs || []).filter(f => f.follow || near(f)).map(f => { const o = f.own || G.p; return [f.k, R0(f.follow ? o.x : f.x), R0(f.follow ? o.y + (f.dy || 0) : f.y), R0(f.w), R1(f.age), R1(f.dur), f.bottom ? 1 : 0, f.rot ? R1(f.rot) : 0, f.a == null ? 1 : R1(f.a), f.f0 || 0]; }),
+    tx:G.texts.filter(near).slice(-30).map(t => [R0(t.x), R0(t.y), t.v, R1(t.life), t.col || 0, t.big ? 1 : 0]),
+    de:!slow ? null : G.decals.filter(near).slice(-50).flatMap(d => [R0(d.x), R0(d.y), R0(d.r), R0(d.life), R0(d.max), R0(d.seed), d.kind === 'scorch' ? 1 : 0]),
+    gv:G.graves.map(g => pickF(g, ['x', 'y', 't'])), bm:(G.bombs || []).map(b => pickF(b, ['x', 'y', 'R', 't', 'max'])),
+    bfx:G.bfx || null, mer:G.merchant ? pickF(G.merchant, ['x', 'y', 'life']) : null, rel:G.relic ? pickF(G.relic, ['x', 'y', 'name']) : null,
+    brk:[...G.broken].slice(-200), room:G.room ? {id:G.room.d.room, ex:R1(G.room.exitT || 0)} : null,
+    vl:G.vlit ? [...G.vlit].map(([k, s]) => [k, [...s]]) : [], vs:G.vsafe ? [...G.vsafe] : [], seen:G.sitesSeen ? [...G.sitesSeen] : []};
+}
+function coopTick(now){                                                    // appelé à chaque image
+  if (!NET.role || !G) return;
+  if (NET.role === 'host' && G.ally && RUN_STATES.has(state) && now - NET.sendT > 66){ NET.sendT = now; NET.send(coopSnapshot()); }
+  if (NET.role === 'guest' && G.guest && now - NET.sendT > 33){
+    NET.sendT = now;
+    let [mx, my] = state === 'play' ? inputVec() : [0, 0]; const l = Math.hypot(mx, my); if (l > 1){ mx /= l; my /= l; }
+    const aim = SAVE.aim && lastPtr === 'mouse' && state === 'play' ? (() => { const a = aimPt(); return [R0(a.x), R0(a.y)]; })() : null;
+    NET.send({t:'in', i:{mx:R1(mx), my:R1(my), aim}});
+  }
+}
+
+/* ---------------- côté invité : appliquer l'état reçu ---------------- */
+function guestBegin(m){
+  prewarmMap(m.map); selMap = m.map;
+  newGame(coopMyChar(), m.map); G.guest = true; G.allyName = 'Hôte';
+  G.ally = {p:{x:0, y:0, r:12, face:1, hp:100, max:100, vx:0, vy:0}, weapons:[], passives:[], st:{}};
+  state = 'play'; keys.clear(); setHud(true); show(null); G.buildDirty = true; renderMute(); music(m.map);
+  toast('La nuit commence, à deux');
+}
+function guestSnap(m){ NET.snapA = NET.snapB; NET.snapB = m; NET.snapT = performance.now(); if (G && G.guest && !NET.snapA) guestApply(0); }
+function applyPlayer(dst, s, isMe, dt){
+  if (isMe){                                                               // ma position : prédite localement, rattrapée vers celle de l'hôte
+    if (dst._init !== true || Math.hypot(dst.x - s.x, dst.y - s.y) > 160){ dst.x = s.x; dst.y = s.y; dst._init = true; }
+    else { const k = Math.min(1, dt*6); dst.x += (s.x - dst.x)*k; dst.y += (s.y - dst.y)*k; }
+  } else { dst.x = s.x; dst.y = s.y; dst.vx = s.vx; dst.vy = s.vy; }
+  Object.assign(dst, {hp:s.hp, max:s.max, hurt:s.hurt, down:s.down, reviveT:s.rv, r:12});
+  if (!isMe && Math.abs(s.vx) > 8) dst.face = Math.sign(s.vx);
+}
+function weaponsFrom(arr, prev){
+  return arr.map(a => { const o = (prev || []).find(w => w.id === a[0]) || {}; return Object.assign(o, {id:a[0], lv:a[1], a:a[2], R:a[3], n:a[4], orb:a[5], active:a[6], len:a[7], max:a[8], stars:a[9]}); });
+}
+function enemyFrom(a, prev){
+  const e = prev || {kx:0, ky:0, ph:Math.random()*6, born:G.t};
+  Object.assign(e, {id:a[0], type:a[1], x:a[2], y:a[3], r:a[4], hp:a[5], max:100, elite:!!(a[6] & 1), boss:!!(a[6] & 2), enraged:!!(a[6] & 4), dir:(a[6] & 8) ? {x:0, y:0} : null, dead:!!(a[6] & 16), aff:a[7] || null});
+  E_KEYS.forEach((k, i) => { const v = a[8 + i]; if (v == null) delete e[k]; else e[k] = v; });
+  if (a[8 + E_KEYS.length]) e.beams = a[8 + E_KEYS.length];
+  return e;
+}
+function guestApply(dt){
+  const m = NET.snapB; if (!m) return;
+  const A = NET.snapA, k = A ? Math.min(1, (performance.now() - NET.snapT)/70) : 1;      // lissage entre les deux derniers états reçus
+  G.t = m.T; G.flame = m.fl; G.gold = m.gold; G.kills = m.kills; G.flash = Math.max(G.flash, m.flash); G.shake = Math.max(G.shake, m.shake); G.zap = m.zap; G.freeze = m.frz; G.dawnT = m.dawn;
+  G.arcs = m.arcs || []; G.pending = m.pend;
+  const me = G.p, mine = m.pl[1], host = m.pl[0];
+  // ma position avance aussi tout de suite avec mes touches (pas d'attente du réseau)
+  if (state === 'play' && !mine.down){ let [mx, my] = inputVec(); const l = Math.hypot(mx, my); if (l > 1){ mx /= l; my /= l; } const sp = 150*(mine.sp || 1); me.vx = mx*sp; me.vy = my*sp; me.x += me.vx*dt; me.y += me.vy*dt; collideWorld(me, 10); if (Math.abs(me.vx) > 8) me.face = Math.sign(me.vx); }
+  else { me.vx = me.vy = 0; }
+  applyPlayer(me, mine, true, dt);
+  applyPlayer(G.ally.p, host, false, dt);
+  if (A){ const h0 = A.pl[0]; G.ally.p.x = h0.x + (host.x - h0.x)*k; G.ally.p.y = h0.y + (host.y - h0.y)*k; }
+  me.lvl = m.lvl; me.xp = m.xp; me.need = m.need;
+  G.weapons = weaponsFrom(mine.w, G.weapons); G.passives = mine.ps.map(q => ({id:q[0], lv:q[1]}));
+  G.ally.weapons = weaponsFrom(host.w, G.ally.weapons);
+  // ennemis : retrouvés par numéro, position lissée
+  const old = new Map(G.enemies.map(e => [e.id, e])), prevPos = A ? new Map(A.en.map(a => [a[0], a])) : null;
+  G.enemies = m.en.map(a => { const e = enemyFrom(a, old.get(a[0])); const p0 = prevPos && prevPos.get(a[0]); if (p0){ e.x = p0[2] + (a[2] - p0[2])*k; e.y = p0[3] + (a[3] - p0[3])*k; } return e; });
+  const oldC = new Map(G.corpses.map(e => [e.id, e])); G.corpses = m.co.map(a => Object.assign(oldC.get(a[0]) || {kx:0, ky:0, ph:0}, {id:a[0], type:a[1], x:a[2], y:a[3], r:a[4], elite:!!(a[5] & 1), boss:!!(a[5] & 2), dt:a[6], dead:true, hp:0, max:1}));
+  const ownOf = o => o === 1 ? me : G.ally.p;
+  G.shots = m.sh.map(s => Object.assign(s, {own:ownOf(s.o), life:1, hit:new Set(), trail:null}));
+  G.eshots = m.es; G.items = m.it; G.zones = m.zo; G.rings = m.ri; G.bolts = m.bo;
+  G.slashes = m.sl.map(s => Object.assign(s, {own:ownOf(s.o)}));
+  G.fxs = m.fx.map(f => ({k:f[0], x:f[1], y:f[2], w:f[3], age:f[4], dur:f[5], bottom:!!f[6], rot:f[7], a:f[8], f0:f[9]})); G.texts = m.tx.map(t => ({x:t[0], y:t[1], v:t[2], life:t[3], col:t[4] || null, big:!!t[5]}));
+  if (m.de){ G.decals = []; } for (let i = 0; m.de && i < m.de.length; i += 7) G.decals.push({x:m.de[i], y:m.de[i+1], r:m.de[i+2], life:m.de[i+3], max:m.de[i+4], seed:m.de[i+5], kind:m.de[i+6] ? 'scorch' : 'ink'}); G.graves = m.gv; G.bombs = m.bm; G.bfx = m.bfx || G.bfx;
+  if (m.gm) G.gems = []; for (let i = 0; m.gm && i < m.gm.length; i += 3){ const c = m.gm[i+2]; G.gems.push({x:m.gm[i], y:m.gm[i+1], v:c === 3 ? 10 : c === 2 ? 3 : 1, kind:c === 1 ? 'coin' : 'xp'}); }
+  G.merchant = m.mer ? Object.assign(G.merchant || {}, m.mer) : null; G.relic = m.rel;
+  for (const b of m.brk) G.broken.add(b);
+  G.room = m.room ? {R:ROOMS[m.room.id], d:{room:m.room.id, key:''}, exitT:m.room.ex} : null;
+  G.vlit = new Map(m.vl.map(([kk, s]) => [kk, new Set(s)])); G.vsafe = new Set(m.vs); G.sitesSeen = new Set(m.seen);
+  G.boss = m.boss ? G.enemies.find(e => e.id === m.boss) || null : null;
+  if (G.boss && !G.bossBar) G.bossBar = true;
+  if (m.st === 'dawn' && state === 'play'){ state = 'dawn'; }
+}
+function guestUpdate(dt){
+  guestApply(dt);
+  refreshBraziers && refreshBraziers();
+  for (const t of G.texts) t.y -= 0;                                     // les textes viennent de l'hôte
+  G.flash = Math.max(0, G.flash - dt*2.5); G.shake = Math.max(0, G.shake - dt*3);
+  for (const k of G.smoke){ k.x += k.vx*dt; k.y += k.vy*dt; k.life -= dt; } G.smoke = G.smoke.filter(k => k.life > 0);
+  for (const q of G.parts){ q.x += q.vx*dt; q.y += q.vy*dt; q.life -= dt; } G.parts = G.parts.filter(q => q.life > 0);
+  updateAmbient(dt);
+}
+
+/* ---------------- montées de niveau à deux ---------------- */
+// Expérience commune. À chaque niveau, chacun choisit SON amélioration ; la nuit reprend quand les deux ont choisi.
+function coopOfferAlly(){
+  if (!G.ally || NET.role !== 'host') return;
+  const choices = withAlly(() => levelChoices());
+  G.allyOffer = choices; G.allyChosen = false; G.hostChosen = false;
+  NET.send({t:'lvl', lvl:G.p.lvl - G.pending + 1, choices:choices.map(c => ({k:c.k, id:c.id, lv:c.lv, rar:c.rar || 0}))});
+}
+function coopAllyPick(c){
+  if (!G.allyOffer || G.allyChosen) return;
+  const ok = c.k === 'x' || G.allyOffer.some(o => o.k === c.k && o.id === c.id);
+  if (!ok) return;
+  withAlly(() => {
+    const stars = RAR[c.rar || 0].stars;
+    if (c.k === 'w'){ const w = G.weapons.find(w => w.id === c.id); if (w){ w.lv++; w.stars = (w.stars || 0) + stars; } else G.weapons.push({id:c.id, lv:1, t:0.2, a:0, stars}); }
+    else if (c.k === 'p'){ const q = G.passives.find(q => q.id === c.id); if (q){ q.lv++; q.stars = (q.stars || 0) + stars; } else G.passives.push({id:c.id, lv:1, stars}); if (c.id === 'coeur') G.p.hp += 20; computeStats(); }
+    else G.p.hp = Math.min(G.p.max, G.p.hp + 40);
+  });
+  G.allyChosen = true;
+  if (G.hostChosen) coopLevelNext();
+}
+function coopLevelHold(){                                                 // l'hôte a choisi : on attend peut-être le compagnon
+  if (!G.ally || NET.role !== 'host') return false;
+  G.hostChosen = true;
+  if (G.allyChosen) return false;
+  $('#choices').innerHTML = '<div class="coopwait">En attente du choix de ton compagnon…</div>';
+  return true;
+}
+function coopLevelNext(){
+  G.hostChosen = false; G.allyChosen = false; G.allyOffer = null;
+  G.pending--;
+  if (G.pending > 0) openLevelUp();
+  else { show(null); state = 'play'; keys.clear(); NET.send({t:'lvldone'}); }
+}
+function guestLevel(m){
+  if (!G || !G.guest) return;
+  state = 'levelup'; joy = null; keys.clear(); SFX.level();
+  G.banishMode = false; G.rerolls = 0; G.banishes = 0;
+  $('#luEyebrow').textContent = 'Niveau ' + m.lvl;
+  renderChoices(m.choices);
+  show('levelup'); focusFirst('levelup');
+}
+
+/* ---------------- lobby ---------------- */
+function goCoop(){
+  state = 'coop'; show('coop');
+  $('#coopHostBox').hidden = NET.role !== 'host'; $('#coopJoinBox').hidden = NET.role === 'host';
+  $('#coopGo').hidden = !(NET.role === 'host' && NET.allyHello);
+  const own = Object.keys(CH).filter(id => SAVE.chars[id]);
+  $('#coopChar').innerHTML = own.map(id => `<option value="${id}" ${id === coopMyChar() ? 'selected' : ''}>${CH[id].name} — ${WD[CH[id].w].name}</option>`).join('');
+  if (!NET.role) coopStatus('');
+  focusFirst('coop');
+}
+$('#coopBtn').addEventListener('click', () => { audioInit(); goCoop(); });
+$('#coopHostBtn').addEventListener('click', coopHost);
+$('#coopJoinBtn').addEventListener('click', coopJoin);
+$('#coopInput').addEventListener('keydown', e => { if (e.key === 'Enter') coopJoin(); e.stopPropagation(); });
+$('#coopCopy').addEventListener('click', () => { try { navigator.clipboard.writeText(NET.code); coopStatus('Code copié.'); } catch(e){} });
+$('#coopChar').addEventListener('change', e => { SAVE.coopChar = e.target.value; persist(); if (NET.role === 'guest') NET.send({t:'char', char:e.target.value}); });
+$('#coopGo').addEventListener('click', () => { goChars(); });
+$('#coopLeave').addEventListener('click', () => { coopReset(); coopStatus('Salon fermé.'); $('#coopHostBox').hidden = true; $('#coopJoinBox').hidden = false; $('#coopGo').hidden = true; });
+
 /* ================= HUD & mini-carte ================= */
 const hudEls = {xp:$('#xpbar'), lvl:$('#lvl'), kills:$('#kills'), gold:$('#goldc'), clock:$('#clock'), hp:$('#hpbar'), hpt:$('#hptxt'), bossbar:$('#bossbar'), bossname:$('#bossname'), bossfill:$('#bossfill'), dash:$('#dashBtn'), ult:$('#ultBtn')};
 function hud(){
@@ -5075,7 +5469,7 @@ function renderMute(){
 function toggleMute(){ SAVE.mute = SAVE.mute ? 0 : 1; persist(); audioInit(); applyVolume(); renderMute(); if (SAVE.mute) musicStop(); else { const m = MUS.mood || 'menu'; MUS.mood = null; music(m); } }
 
 /* ================= Écrans ================= */
-const OVERLAYS = ['menu','opts','chars','shop','codex','ach','journal','story','levelup','chest','arcana','merchant','pause','end'];
+const OVERLAYS = ['coop','menu','opts','chars','shop','codex','ach','journal','story','levelup','chest','arcana','merchant','pause','end'];
 function show(id){ for (const o of OVERLAYS) $('#'+o).hidden = o !== id; }
 function focusFirst(id){ setTimeout(() => { const el = $('#'+id+' button:not(:disabled)'); if (el) el.focus({preventScroll:true}); }, 30); }
 
@@ -5116,6 +5510,7 @@ function openLevelUp(){
   $('#luEyebrow').textContent = 'Niveau ' + (G.p.lvl - G.pending + 1);
   renderChoices(levelChoices());
   show('levelup'); focusFirst('levelup');
+  coopOfferAlly();
 }
 let lastChoices = [];
 function renderChoices(choices){
@@ -5152,6 +5547,10 @@ function renderChoices(choices){
   $('#banishBtn').textContent = G.banishMode ? 'Annuler le bannissement' : `Bannir (${G.banishes})`; $('#banishBtn').disabled = G.banishes <= 0 && !G.banishMode;
 }
 function choose(c){
+  if (G.guest){                                                         // coop : l'invité envoie son choix à l'hôte
+    NET.send({t:'pick', c:{k:c.k, id:c.id, lv:c.lv, rar:c.rar || 0}});
+    $('#choices').innerHTML = '<div class="coopwait">Choix envoyé. En attente de l’hôte…</div>'; return;
+  }
   if (G.banishMode && c.k !== 'x'){
     G.banished.add(c.id); G.banishes--; G.banishMode = false;
     renderChoices(levelChoices()); focusFirst('levelup'); return;
@@ -5173,13 +5572,14 @@ function choose(c){
   afterLevel();
 }
 function afterLevel(){
+  if (G.ally && NET.role === 'host'){ if (coopLevelHold()) return; coopLevelNext(); return; }
   G.pending--;
   if (G.pending > 0) openLevelUp();
   else { show(null); state = 'play'; keys.clear(); }
 }
 $('#rerollBtn').addEventListener('click', () => { if (G.rerolls <= 0) return; G.rerolls--; G.banishMode = false; renderChoices(levelChoices()); focusFirst('levelup'); });
 $('#banishBtn').addEventListener('click', () => { if (!G.banishMode && G.banishes <= 0) return; G.banishMode = !G.banishMode; renderChoices(lastChoices); focusFirst('levelup'); });
-$('#skipBtn').addEventListener('click', () => { G.p.hp = Math.min(G.p.max, G.p.hp + 15); afterLevel(); });
+$('#skipBtn').addEventListener('click', () => { if (G.guest){ choose({k:'x', id:'repas'}); return; } G.p.hp = Math.min(G.p.max, G.p.hp + 15); afterLevel(); });
 
 /* Coffres */
 function openChest(big){
@@ -5301,6 +5701,7 @@ const ACH_PROGRESS = {
   sauf:      () => fmt(G.t - G.lastHit) + ' / 3:00'
 };
 function togglePause(){
+  if (G && G.guest) return;                                            // seul l'hôte met la nuit en pause
   if (state === 'play'){
     state = 'pause'; joy = null; keys.clear();
     renderPause(); show('pause'); quitArmed = false; $('#quitBtn').textContent = 'Abandonner'; focusFirst('pause');
@@ -5382,6 +5783,7 @@ $('#stBtn').addEventListener('click', () => { if (storyNext) storyNext(); });
 
 /* Fin de partie */
 function finish(win, quit){
+  if (NET.role === 'host' && G && G.ally){ NET.send({t:'end', win:!!win}); }
   state = 'end'; joy = null; keys.clear();
   const t = Math.min(G.t, WIN_TIME);
   const gain = Math.round(G.gold * G.st.gold);
@@ -5420,7 +5822,7 @@ function finish(win, quit){
 }
 
 /* Menu, préparation, boutique, grimoire, succès, journal */
-const MENU_STATES = new Set(['menu','opts','chars','shop','codex','ach','journal','story']);
+const MENU_STATES = new Set(['coop','menu','opts','chars','shop','codex','ach','journal','story']);
 function goMenu(){
   newGame(selChar, selMap); state = 'menu'; setHud(false); show('menu');
   if (titleLit) music('menu');
@@ -5674,6 +6076,7 @@ function beginRun(){
   const go = () => {
     prewarmMap(selMap);
     newGame(selChar, selMap); state = 'play'; keys.clear();
+    if (NET.role === 'host' && NET.allyHello && (NET.conn || NET.bc)){ makeAlly(NET.allyHello.char, NET.allyHello.shop); G.allyName = 'Compagnon'; NET.send({t:'start', map:selMap}); }
     setHud(true); show(null); G.buildDirty = true; renderMute(); music(selMap);
     if (availArc().length >= 3) openArcana(true);
     requestAnimationFrame(() => $('#fade').classList.remove('on'));
@@ -5738,13 +6141,15 @@ function frame(now){
   try {
     if (G && G.slow > 0) G.slow -= dt;
     if (G && G.stop > 0){ G.stop -= dt; }                                           // micro-arrêt (« hit-stop ») sur les gros coups
-    else if (state === 'play') update(dt * (G.slow > 0 ? 0.3 : 1));
-    else if (state === 'dawn') updateDawn(dt);
+    else if (state === 'play') (G.guest ? guestUpdate(dt) : update(dt * (G.slow > 0 ? 0.3 : 1)));
+    else if (state === 'dawn') (G.guest ? guestUpdate(dt) : updateDawn(dt));
+    else if (G && G.guest && RUN_STATES.has(state)) guestApply(0);
     else if (state === 'cine') updateCine(dt);
     if ((MENU_STATES.has(state) && !(state === 'story' && G.t > 0)) || state === 'fading') drawTitle(now, dt);
     else draw(now);
     if (RUN_STATES.has(state)){ hud(); drawMini(); }
   } catch(err){ console.error(err); }
+  try { coopTick(now); } catch(err){ console.error(err); }
   requestAnimationFrame(frame);
 }
 resize();
