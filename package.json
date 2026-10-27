@@ -1,0 +1,62 @@
+{
+  "name": "gardien-de-la-lanterne",
+  "productName": "Gardien de la Lanterne",
+  "version": "0.31.0",
+  "description": "Gardien de la Lanterne — survie dark fantasy",
+  "main": "main.js",
+  "author": "Gardien de la Lanterne",
+  "private": true,
+  "build": {
+    "appId": "fr.gardien.lanterne",
+    "productName": "Gardien de la Lanterne",
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "main.js",
+      "app/**/*"
+    ],
+    "asar": true,
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "icon": "build-icon.ico"
+    },
+    "nsis": {
+      "oneClick": true,
+      "perMachine": false,
+      "allowElevation": false,
+      "deleteAppDataOnUninstall": false,
+      "artifactName": "Gardien-de-la-Lanterne-Setup-${version}.${ext}",
+      "shortcutName": "Gardien de la Lanterne",
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "installerIcon": "build-icon.ico",
+      "uninstallerIcon": "build-icon.ico"
+    },
+    "publish": [
+      {
+        "provider": "github",
+        "owner": "Ewnaraa",
+        "repo": "gardien-lanterne-releases",
+        "releaseType": "release"
+      }
+    ]
+  },
+  "devDependencies": {
+    "@fontsource/barlow-semi-condensed": "^5.3.0",
+    "@fontsource/cormorant-garamond": "^5.3.0",
+    "@fontsource/grenze-gotisch": "^5.3.0",
+    "electron": "^38.8.6",
+    "electron-builder": "^26.18.0"
+  },
+  "dependencies": {
+    "electron-updater": "^6.8.11"
+  }
+}

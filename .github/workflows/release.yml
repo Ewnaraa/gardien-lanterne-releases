@@ -1,0 +1,34 @@
+# Construit l'installateur Windows sur un vrai Windows et publie la version sur GitHub.
+# Se déclenche quand une étiquette de version est poussée (ex. v0.32.0).
+# Les jeux déjà installés trouvent la nouvelle version au lancement et se mettent à jour tout seuls.
+name: Publier une version
+
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - name: Installer les outils
+        run: npm ci
+      - name: Vérifier que la version correspond à l'étiquette
+        if: startsWith(github.ref, 'refs/tags/v')
+        shell: bash
+        run: |
+          V=$(node -p "require('./package.json').version")
+          [ "v$V" = "${GITHUB_REF_NAME}" ] || { echo "package.json dit $V mais l'étiquette est ${GITHUB_REF_NAME}"; exit 1; }
+      - name: Construire et publier
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: npx electron-builder --win --x64 --publish always
