@@ -3700,29 +3700,350 @@ registerAssetData('manifest', {
     ]
    ],
    "status": "art"
+  },
+  "b_hutte": {
+   "name": "Bâtiment",
+   "folder": "environment/buildings/",
+   "art": "b_hutte.png",
+   "placeholder": null,
+   "anchor": [
+    0.5,
+    0.86
+   ],
+   "size": [
+    250,
+    200
+   ],
+   "lights": [],
+   "status": "art"
+  },
+  "b_oratoire": {
+   "name": "Bâtiment",
+   "folder": "environment/buildings/",
+   "art": "b_oratoire.png",
+   "placeholder": null,
+   "anchor": [
+    0.5,
+    0.86
+   ],
+   "size": [
+    105,
+    108
+   ],
+   "lights": [],
+   "status": "art"
+  },
+  "b_tour": {
+   "name": "Bâtiment",
+   "folder": "environment/buildings/",
+   "art": "b_tour.png",
+   "placeholder": null,
+   "anchor": [
+    0.5,
+    0.86
+   ],
+   "size": [
+    230,
+    218
+   ],
+   "lights": [],
+   "status": "art"
+  },
+  "b_puits": {
+   "name": "Bâtiment",
+   "folder": "environment/buildings/",
+   "art": "b_puits.png",
+   "placeholder": null,
+   "anchor": [
+    0.5,
+    0.86
+   ],
+   "size": [
+    135,
+    140
+   ],
+   "lights": [],
+   "status": "art"
+  },
+  "b_bucher": {
+   "name": "Bâtiment",
+   "folder": "environment/buildings/",
+   "art": "b_bucher.png",
+   "placeholder": null,
+   "anchor": [
+    0.5,
+    0.86
+   ],
+   "size": [
+    140,
+    94
+   ],
+   "lights": [],
+   "status": "art"
+  },
+  "b_pilotis": {
+   "name": "Bâtiment",
+   "folder": "environment/buildings/",
+   "art": "b_pilotis.png",
+   "placeholder": null,
+   "anchor": [
+    0.5,
+    0.86
+   ],
+   "size": [
+    240,
+    265
+   ],
+   "lights": [],
+   "status": "art"
+  },
+  "b_ponton": {
+   "name": "Bâtiment",
+   "folder": "environment/buildings/",
+   "art": "b_ponton.png",
+   "placeholder": null,
+   "anchor": [
+    0.5,
+    0.86
+   ],
+   "size": [
+    210,
+    148
+   ],
+   "lights": [],
+   "status": "art"
+  },
+  "b_clocher": {
+   "name": "Bâtiment",
+   "folder": "environment/buildings/",
+   "art": "b_clocher.png",
+   "placeholder": null,
+   "anchor": [
+    0.5,
+    0.86
+   ],
+   "size": [
+    230,
+    247
+   ],
+   "lights": [],
+   "status": "art"
+  },
+  "b_barque": {
+   "name": "Bâtiment",
+   "folder": "environment/buildings/",
+   "art": "b_barque.png",
+   "placeholder": null,
+   "anchor": [
+    0.5,
+    0.86
+   ],
+   "size": [
+    165,
+    87
+   ],
+   "lights": [],
+   "status": "art"
+  },
+  "b_panneau": {
+   "name": "Bâtiment",
+   "folder": "environment/buildings/",
+   "art": "b_panneau.png",
+   "placeholder": null,
+   "anchor": [
+    0.5,
+    0.86
+   ],
+   "size": [
+    85,
+    124
+   ],
+   "lights": [],
+   "status": "art"
+  },
+  "b_mausolee": {
+   "name": "Bâtiment",
+   "folder": "environment/buildings/",
+   "art": "b_mausolee.png",
+   "placeholder": null,
+   "anchor": [
+    0.5,
+    0.86
+   ],
+   "size": [
+    230,
+    255
+   ],
+   "lights": [],
+   "status": "art"
+  },
+  "b_chapelle": {
+   "name": "Bâtiment",
+   "folder": "environment/buildings/",
+   "art": "b_chapelle.png",
+   "placeholder": null,
+   "anchor": [
+    0.5,
+    0.86
+   ],
+   "size": [
+    240,
+    200
+   ],
+   "lights": [],
+   "status": "art"
+  },
+  "b_ossuaire": {
+   "name": "Bâtiment",
+   "folder": "environment/buildings/",
+   "art": "b_ossuaire.png",
+   "placeholder": null,
+   "anchor": [
+    0.5,
+    0.86
+   ],
+   "size": [
+    200,
+    211
+   ],
+   "lights": [],
+   "status": "art"
+  },
+  "b_cabane": {
+   "name": "Bâtiment",
+   "folder": "environment/buildings/",
+   "art": "b_cabane.png",
+   "placeholder": null,
+   "anchor": [
+    0.5,
+    0.86
+   ],
+   "size": [
+    160,
+    132
+   ],
+   "lights": [],
+   "status": "art"
+  },
+  "b_grille": {
+   "name": "Bâtiment",
+   "folder": "environment/buildings/",
+   "art": "b_grille.png",
+   "placeholder": null,
+   "anchor": [
+    0.5,
+    0.86
+   ],
+   "size": [
+    330,
+    124
+   ],
+   "lights": [],
+   "status": "art"
+  },
+  "b_charrette": {
+   "name": "Bâtiment",
+   "folder": "environment/buildings/",
+   "art": "b_charrette.png",
+   "placeholder": null,
+   "anchor": [
+    0.5,
+    0.86
+   ],
+   "size": [
+    170,
+    208
+   ],
+   "lights": [
+    [
+     0.05,
+     -0.45,
+     40,
+     "150,255,170"
+    ]
+   ],
+   "status": "art"
+  },
+  "b_phare_depart": {
+   "name": "Bâtiment",
+   "folder": "environment/buildings/",
+   "art": "b_phare_depart.png",
+   "placeholder": null,
+   "anchor": [
+    0.5,
+    0.86
+   ],
+   "size": [
+    150,
+    192
+   ],
+   "lights": [
+    [
+     0,
+     -0.72,
+     90,
+     "255,196,120"
+    ]
+   ],
+   "status": "art"
+  },
+  "b_cercle": {
+   "name": "Bâtiment",
+   "folder": "environment/buildings/",
+   "art": "b_cercle.png",
+   "placeholder": null,
+   "anchor": [
+    0.5,
+    0.86
+   ],
+   "size": [
+    290,
+    224
+   ],
+   "lights": [],
+   "status": "art"
   }
  },
  "icons": {
+  "bottes": "ui/icons/ic_bottes.webp",
   "cendres": "ui/icons/ic_cendres.webp",
+  "chant": "ui/icons/ic_chant.webp",
+  "coeur": "ui/icons/ic_coeur.webp",
   "corbeaux": "ui/icons/ic_corbeaux.webp",
   "couronne": "ui/icons/ic_couronne.webp",
   "eclat": "ui/icons/ic_eclat.webp",
+  "ecorce": "ui/icons/ic_ecorce.webp",
   "etoile": "ui/icons/ic_etoile.webp",
   "faucille": "ui/icons/ic_faucille.webp",
   "faux": "ui/icons/ic_faux.webp",
   "follet": "ui/icons/ic_follet.webp",
   "glas": "ui/icons/ic_glas.webp",
   "graines": "ui/icons/ic_graines.webp",
+  "grimoire": "ui/icons/ic_grimoire.webp",
   "halo": "ui/icons/ic_halo.webp",
+  "jumelle": "ui/icons/ic_jumelle.webp",
   "lame": "ui/icons/ic_lame.webp",
+  "meche": "ui/icons/ic_meche.webp",
   "meteores": "ui/icons/ic_meteores.webp",
+  "oeil": "ui/icons/ic_oeil.webp",
   "onde": "ui/icons/ic_onde.webp",
   "orage": "ui/icons/ic_orage.webp",
   "parlement": "ui/icons/ic_parlement.webp",
   "phare": "ui/icons/ic_phare.webp",
+  "pierre": "ui/icons/ic_pierre.webp",
+  "racines": "ui/icons/ic_racines.webp",
   "rayon": "ui/icons/ic_rayon.webp",
+  "relic_cimetiere": "ui/icons/ic_relic_cimetiere.webp",
+  "relic_foret": "ui/icons/ic_relic_foret.webp",
+  "relic_marais": "ui/icons/ic_relic_marais.webp",
   "ronceraie": "ui/icons/ic_ronceraie.webp",
+  "sablier": "ui/icons/ic_sablier.webp",
+  "seve": "ui/icons/ic_seve.webp",
+  "trefle": "ui/icons/ic_trefle.webp",
   "vent": "ui/icons/ic_vent.webp"
+ },
+ "arcana": {
+  "lune": "ui/arcana/arc_lune.webp"
  },
  "fx": {
   "fx_ame": {

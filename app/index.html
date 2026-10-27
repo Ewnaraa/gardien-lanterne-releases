@@ -267,6 +267,8 @@ button.jrow:hover{border-color:var(--amber)}
 .tarot .tico{display:grid;place-items:center;color:var(--amber);min-height:0}
 .tarot .tico svg{width:58%;max-width:110px;height:auto;filter:drop-shadow(0 0 18px rgba(242,184,75,.65))}
 .tarot .tt{display:grid;gap:6px}
+.tarot .tart{display:block;min-height:0;border-radius:5px;background:center/cover no-repeat;box-shadow:0 0 0 1px rgba(242,184,75,.4),0 6px 18px rgba(0,0,0,.6)}
+@media (max-width:640px){.tarot .tart{width:46px;height:70px}}
 .tarot b{font-family:var(--display);font-size:clamp(20px,2.4vw,28px);color:var(--amber);line-height:1}
 .tarot small{font-size:14px;line-height:1.35;color:#d8cfb8}
 @media (max-width:640px){.arcs{grid-template-columns:1fr;gap:10px}.tarot{aspect-ratio:auto;grid-template-columns:56px 1fr;grid-template-rows:auto;text-align:left;align-items:center;padding:12px}.tarot .tn{display:none}.tarot .tico svg{width:46px}}
@@ -2279,6 +2281,7 @@ function draw(now){
       ctx.fillStyle = 'rgba(0,0,0,.45)'; ctx.beginPath(); ctx.ellipse(x, y - 2, a.w*0.42, a.w*0.12, 0, 0, TAU); ctx.fill();
       const hide = pFoot < r.y && Math.abs(p.x - r.x) < a.w*0.45 && pFoot > r.y - a.h*0.9;     // ruine devant le Gardien : translucide
       if (hide) ctx.globalAlpha = 0.45; drawEnt(r.id, x, y); ctx.globalAlpha = 1;
+      if (a.lights.length){ const L = a.lights[0]; decoLights.push({x:x + L[0]*a.w, y:y + L[1]*a.h, r:L[2], i:0.75 + (reduce ? 0 : 0.08*Math.sin(now/110 + r.x)), col:L[3], hole:true}); }
     } else { ctx.globalAlpha = 1; drawPlayer(X(p.x), Y(p.y), lx, ly, now); }
   }
   // Feuilles et cendres portées par le vent
@@ -2499,6 +2502,7 @@ function draw(now){
       const gg = ctx.createRadialGradient(x+46, y-30, 0, x+46, y-30, 130); gg.addColorStop(0,'rgba(140,255,170,.24)'); gg.addColorStop(1,'rgba(140,255,170,0)');
       ctx.fillStyle = gg; ctx.fillRect(x-90, y-160, 270, 270); ctx.restore();
       ctx.fillStyle = 'rgba(0,0,0,.45)'; ctx.beginPath(); ctx.ellipse(x+14, y+13, 42, 8, 0, 0, TAU); ctx.fill();
+      drawEnt('b_charrette', x - 58, y + 4);
       drawEnt('merchant', x + 14, y + 13);
       if (m.life < 15 && Math.floor(now/250)%2 === 0){ ctx.strokeStyle = 'rgba(143,224,160,.5)'; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(x+10, y-6, 54, 0, TAU); ctx.stroke(); }
     }
@@ -2880,6 +2884,10 @@ function lightPass(X, Y, lx, ly, L, dk, now){
   for (const r of G.rings){ const k = 1 - r.life/0.45; add(X(r.x), Y(r.y), r.R*(0.4 + 0.8*k), 0.55*(1-k)); }
   for (const s of G.slashes) add(px + Math.cos(s.ang)*s.w*0.6, py + Math.sin(s.ang)*s.w*0.6, s.w*1.1, 0.5*s.life/0.22);
   if (G.merchant) add(X(G.merchant.x) + 56, Y(G.merchant.y) - 30, 210, 0.9);
+  for (const l of decoLights) if (l.hole) add(l.x, l.y, l.r*2.6, 0.85);              // lanternes des bâtiments
+  if (G.fxs) for (const f of G.fxs){                                                 // effets peints lumineux
+    if (f.k === 'fx_explosion' || f.k === 'fx_embrasement' || f.k === 'fx_niveau'){ const k = f.age/f.dur; add(X(f.follow ? G.p.x : f.x), Y(f.follow ? G.p.y : f.y), f.w*0.7, 0.8*(1 - k)); }
+  }
   if (G.relic) add(X(G.relic.x), Y(G.relic.y), 140, 0.75);
   for (const it of G.items) if (it.type === 'coffre') add(X(it.x), Y(it.y), 80, 0.55);
   for (const l of decoLights) add(l.x, l.y, l.r, l.i);
@@ -3976,17 +3984,22 @@ function drawGround(ox, oy){
 }
 /* ---- Ruines (éléments verticaux, triés en profondeur avec les personnages) ---- */
 const LANDMARKS = {                                                  // éléments verticaux de chaque zone
-  foret:['ruin_wall_long', 'ruin_wall_a', 'ruin_wall_b', 'ruin_arch', 'ruin_arch_b', 'ruin_corner_a', 'ruin_corner_b', 'ruin_corner_c', 'ruin_gate', 'broken_column'],
-  marais:['broken_column', 'ruin_corner_d', 'ruin_corner_e', 'ruin_small_door', 'ruin_wall_b'],
-  cimetiere:['gothic_arches', 'knight_statue', 'gate_pillar', 'cage_pillar', 'tomb_candles', 'tomb_candles', 'ruin_arch_c', 'ruin_door_wall', 'broken_column']};
+  foret:['ruin_wall_long', 'ruin_wall_a', 'ruin_wall_b', 'ruin_arch', 'ruin_arch_b', 'ruin_corner_a', 'ruin_corner_b', 'ruin_corner_c', 'ruin_gate', 'broken_column',
+         'b_hutte', 'b_oratoire', 'b_oratoire', 'b_tour', 'b_puits', 'b_bucher', 'b_bucher', 'b_cercle'],
+  marais:['broken_column', 'ruin_corner_d', 'ruin_corner_e', 'ruin_small_door', 'ruin_wall_b',
+          'b_pilotis', 'b_pilotis', 'b_ponton', 'b_ponton', 'b_clocher', 'b_barque', 'b_barque', 'b_panneau', 'b_panneau', 'b_cercle'],
+  cimetiere:['gothic_arches', 'knight_statue', 'gate_pillar', 'cage_pillar', 'tomb_candles', 'tomb_candles', 'ruin_arch_c', 'ruin_door_wall', 'broken_column',
+             'b_mausolee', 'b_mausolee', 'b_chapelle', 'b_ossuaire', 'b_cabane', 'b_grille', 'b_grille']};
 function ruinsInView(ox, oy){
   const RUIN_IDS = (LANDMARKS[G.map] || []).filter(id => ASSET_IMG[id]);
   const out = []; if (!RUIN_IDS.length) return out;
+  if (ASSET_IMG.b_phare_depart){ const x = 0, y = -TH*1.6; if (x + ox > -200 && x + ox < W + 200 && y + oy > -260 && y + oy < H + 200) out.push({x, y, id:'b_phare_depart'}); }   // la grande lanterne du point de départ
   const u0 = Math.floor(2*(-oy - 200)/TH), u1 = Math.ceil(2*(-oy + H + 200)/TH), v0 = Math.floor(2*(-ox - 200)/TW), v1 = Math.ceil(2*(-ox + W + 200)/TW);
   for (let u=u0; u<=u1; u++) for (let v=v0; v<=v1; v++){
     if ((u + v) & 1 || Math.abs(u) < 5 || Math.abs(v) < 4) continue;   // jamais sur le chemin ni au départ
-    if (hash(u*31 + 7, v*17 + 1) > 0.018) continue;
+    if (hash(u*31 + 7, v*17 + 1) > 0.02) continue;
     const id = RUIN_IDS[Math.floor(hash(u + 2, v - 3)*RUIN_IDS.length) % RUIN_IDS.length];
+    if (id[0] === 'b' && id[1] === '_' && hash(u*5 + 3, v*11 - 7) < 0.25) continue;
     if (ASSET_IMG[id]) out.push({x:v*TW/2, y:u*TH/2 + TH*0.25, id});
   }
   return out;
@@ -4525,7 +4538,8 @@ function openArcana(first){
   const ch = pool.slice(0, 3);
   state = 'arcana'; joy = null; keys.clear(); SFX.light();
   $('#arcEyebrow').textContent = first ? 'Avant la nuit' : 'Le boss laisse une carte derrière lui';
-  $('#arcList').innerHTML = ch.map(a => `<button type="button" class="tarot" data-arc="${a.id}"><span class="tn">${a.n}</span><span class="tico">${icon(a.ico)}</span><span class="tt"><b>${a.name}</b><small>${a.txt}</small></span></button>`).join('');
+  const ART = (ASSET_DATA.manifest && ASSET_DATA.manifest.arcana) || {};
+  $('#arcList').innerHTML = ch.map(a => `<button type="button" class="tarot ${ART[a.id] ? 'illu' : ''}" data-arc="${a.id}"><span class="tn">${a.n}</span>${ART[a.id] ? `<span class="tart" style="background-image:url(${ASSET_ROOT}${ART[a.id]})"></span>` : `<span class="tico">${icon(a.ico)}</span>`}<span class="tt"><b>${a.name}</b><small>${a.txt}</small></span></button>`).join('');
   show('arcana'); focusFirst('arcana');
   return true;
 }
@@ -4832,7 +4846,8 @@ function goAch(){
   $('#achList').innerHTML = ACH.map(a => {
     const d = !!SAVE.ach[a.id];
     const rw = [a.rw, a.gold ? `+${a.gold} braises` : ''].filter(Boolean).join(' · ');
-    return `<div class="arow ${d?'done':''}"><span class="medal">${d ? '✓' : '?'}</span><span class="txt"><b>${a.name}</b><small>${a.cond}</small></span><span class="rw">${rw}</span></div>`;
+    const ic = ASSET_DATA.manifest && ASSET_DATA.manifest.icons && ASSET_DATA.manifest.icons[a.id];   // reliques : leur icône peinte
+    return `<div class="arow ${d?'done':''}"><span class="medal">${ic ? `<img src="${ASSET_ROOT}${ic}" alt="" style="width:100%;height:100%;border-radius:50%;object-fit:cover;${d ? '' : 'filter:grayscale(1) brightness(.35)'}">` : d ? '✓' : '?'}</span><span class="txt"><b>${a.name}</b><small>${a.cond}</small></span><span class="rw">${rw}</span></div>`;
   }).join('');
   focusFirst('ach');
 }
