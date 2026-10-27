@@ -1352,6 +1352,7 @@ const BC = 380;
 function brazierAt(i, j){
   if (hash(i*3+11, j*7-5) > 0.5) return null;
   if (Math.abs(i) < 1 && Math.abs(j) < 1) return null;
+  if (G && siteNear(i*BC + BC/2, j*BC + BC/2, 60)) return null;
   return {key:i+','+j, x:i*BC + 60 + hash(i,j+99)*(BC-120), y:j*BC + 60 + hash(i+55,j)*(BC-120)};
 }
 function refreshBraziers(){
@@ -2122,7 +2123,9 @@ function treeAt(i, j){
   const h = hash(i*13+5, j*17+3);
   if (h > 0.17) return null;
   if (Math.abs(i) <= 1 && Math.abs(j) <= 1) return null;
-  return {x:i*TC + 40 + hash(i+1,j*3)*(TC-80), y:j*TC + 40 + hash(i*7,j+2)*(TC-80), s:0.85 + hash(i-3,j+8)*0.55, k:h};
+  const x = i*TC + 40 + hash(i+1,j*3)*(TC-80), y = j*TC + 40 + hash(i*7,j+2)*(TC-80);
+  if (G && siteNear(x, y, 90)) return null;                              // les lieux sont dégagés
+  return {x, y, s:0.85 + hash(i-3,j+8)*0.55, k:h};
 }
 
 
@@ -2747,10 +2750,10 @@ function drawDecor(ox, oy, now){
   if (m === 'marais'){
     const i0 = Math.floor((p.x-W/2)/PC)-1, i1 = Math.floor((p.x+W/2)/PC)+1, j0 = Math.floor((p.y-H/2)/PC)-1, j1 = Math.floor((p.y+H/2)/PC)+1;
     for (let i=i0;i<=i1;i++) for (let j=j0;j<=j1;j++){
-      const q = puddleIn(i,j); if (!q) continue;
+      const q = puddleIn(i,j); if (!q || siteNear(q.x, q.y, q.rx)) continue;
       const x = q.x+ox, y = q.y+oy;
       drawPuddle(q, x, y);                                   // image de flaque (asset) ; les rides restent un effet
-      const rip = reduce ? 0 : (now/1800 + i*0.3) % 1;
+      const rip = reduce ? 0 : mod(now/1800 + i*0.3, 1);                // mod : reste positif à l'ouest de la carte (i négatif)
       ctx.strokeStyle = `rgba(160,210,200,${0.18*(1-rip)})`; ctx.beginPath(); ctx.ellipse(x - q.rx*0.15, y - q.rx*0.1, q.rx*(0.2 + rip*0.4), q.rx*(0.08 + rip*0.16), 0, 0, TAU); ctx.stroke();
       if (hash(i+9, j-9) < 0.7) drawSpr(D.lily[(hash(i,j+4)*3)|0], x + q.rx*0.35, y + q.rx*0.1);
       if (hash(i-2, j+11) < 0.5) drawSpr(D.lily[(hash(i+5,j)*3)|0], x - q.rx*0.4, y - q.rx*0.05);
@@ -2763,6 +2766,7 @@ function drawDecor(ox, oy, now){
     const h = hash(i, j); if (h > 0.3) continue;
     const v = hash(i+3, j+5), gx = i*S + hash(j,i)*S + ox, gy = j*S + hash(i+7,j-3)*S + oy;
     if (gx < -80 || gx > W + 80 || gy < -20 || gy > H + 90) continue;
+    if (siteNear(gx - ox, gy - oy, 10)) continue;                          // herbes et rochers dégagés dans les lieux
     const pick2 = a => a[(v*a.length)|0];
     if (m === 'foret'){
       if (h < 0.15) drawSpr(pick2(D.grass), gx, gy, wind(gx, gy));
@@ -2884,7 +2888,8 @@ function lightPass(X, Y, lx, ly, L, dk, now){
   for (const r of G.rings){ const k = 1 - r.life/0.45; add(X(r.x), Y(r.y), r.R*(0.4 + 0.8*k), 0.55*(1-k)); }
   for (const s of G.slashes) add(px + Math.cos(s.ang)*s.w*0.6, py + Math.sin(s.ang)*s.w*0.6, s.w*1.1, 0.5*s.life/0.22);
   if (G.merchant) add(X(G.merchant.x) + 56, Y(G.merchant.y) - 30, 210, 0.9);
-  for (const l of decoLights) if (l.hole) add(l.x, l.y, l.r*2.6, 0.85);              // lanternes des bâtiments
+  for (const l of decoLights) if (l.hole) add(l.x, l.y, l.r*2.6, 0.85);
+  for (const l of SITE_LIGHTS) add(X(l.x), Y(l.y), l.r*1.8, 0.62 + (reduce ? 0 : 0.05*Math.sin(now/170 + l.x)));   // les lieux se repèrent dans la nuit              // lanternes des bâtiments
   if (G.fxs) for (const f of G.fxs){                                                 // effets peints lumineux
     if (f.k === 'fx_explosion' || f.k === 'fx_embrasement' || f.k === 'fx_niveau'){ const k = f.age/f.dur; add(X(f.follow ? G.p.x : f.x), Y(f.follow ? G.p.y : f.y), f.w*0.7, 0.8*(1 - k)); }
   }
@@ -2908,6 +2913,7 @@ function lightHole(){
   return LHOLE = c;
 }
 function decoGlow(){
+  for (const l of SITE_LIGHTS) decoLights.push({x:l.x + LAST_OX, y:l.y + LAST_OY, r:l.r*1.3, i:0.8, col:l.col});
   for (const l of decoLights){
     const gr = ctx.createRadialGradient(l.x, l.y, 0, l.x, l.y, l.r*0.7);
     gr.addColorStop(0, `rgba(${l.col},${0.32*l.i})`); gr.addColorStop(1, `rgba(${l.col},0)`);
@@ -3935,6 +3941,7 @@ const ISO_SETS = {                                                   // dalles p
 const TW = 128, TH = 64;
 function isoPick(S, u, v){
   if (u === 0 && v === 0 && ASSET_IMG[S.center]) return S.center;
+  const st = siteTile(u, v); if (st && ASSET_IMG[st]) return st;          // sol aménagé des lieux
   const h = hash(u*7 + 3, v*13 - 5);
   if (Math.abs(v) <= 1 || Math.abs(u) <= 1) return S.path[h < 0.5 ? 0 : 1];
   if (h < 0.3) return S.wear[Math.floor(hash(u, v + 9)*S.wear.length) % S.wear.length];
@@ -3984,24 +3991,24 @@ function drawGround(ox, oy){
 }
 /* ---- Ruines (éléments verticaux, triés en profondeur avec les personnages) ---- */
 const LANDMARKS = {                                                  // éléments verticaux de chaque zone
-  foret:['ruin_wall_long', 'ruin_wall_a', 'ruin_wall_b', 'ruin_arch', 'ruin_arch_b', 'ruin_corner_a', 'ruin_corner_b', 'ruin_corner_c', 'ruin_gate', 'broken_column',
-         'b_hutte', 'b_oratoire', 'b_oratoire', 'b_tour', 'b_puits', 'b_bucher', 'b_bucher', 'b_cercle'],
-  marais:['broken_column', 'ruin_corner_d', 'ruin_corner_e', 'ruin_small_door', 'ruin_wall_b',
-          'b_pilotis', 'b_pilotis', 'b_ponton', 'b_ponton', 'b_clocher', 'b_barque', 'b_barque', 'b_panneau', 'b_panneau', 'b_cercle'],
-  cimetiere:['gothic_arches', 'knight_statue', 'gate_pillar', 'cage_pillar', 'tomb_candles', 'tomb_candles', 'ruin_arch_c', 'ruin_door_wall', 'broken_column',
-             'b_mausolee', 'b_mausolee', 'b_chapelle', 'b_ossuaire', 'b_cabane', 'b_grille', 'b_grille']};
+  foret:['ruin_wall_long', 'ruin_wall_a', 'ruin_wall_b', 'ruin_arch', 'ruin_arch_b', 'ruin_corner_a', 'ruin_corner_b', 'ruin_corner_c', 'ruin_gate', 'broken_column'],
+  marais:['broken_column', 'ruin_corner_d', 'ruin_corner_e', 'ruin_small_door', 'ruin_wall_b'],
+  cimetiere:['gothic_arches', 'knight_statue', 'gate_pillar', 'cage_pillar', 'tomb_candles', 'tomb_candles', 'ruin_arch_c', 'ruin_door_wall', 'broken_column']};   // les bâtiments sont dans les lieux (p4s.js)
+let LAST_OX = 0, LAST_OY = 0;
 function ruinsInView(ox, oy){
+  LAST_OX = ox; LAST_OY = oy;
   const RUIN_IDS = (LANDMARKS[G.map] || []).filter(id => ASSET_IMG[id]);
-  const out = []; if (!RUIN_IDS.length) return out;
+  const out = [];
   if (ASSET_IMG.b_phare_depart){ const x = 0, y = -TH*1.6; if (x + ox > -200 && x + ox < W + 200 && y + oy > -260 && y + oy < H + 200) out.push({x, y, id:'b_phare_depart'}); }   // la grande lanterne du point de départ
   const u0 = Math.floor(2*(-oy - 200)/TH), u1 = Math.ceil(2*(-oy + H + 200)/TH), v0 = Math.floor(2*(-ox - 200)/TW), v1 = Math.ceil(2*(-ox + W + 200)/TW);
   for (let u=u0; u<=u1; u++) for (let v=v0; v<=v1; v++){
     if ((u + v) & 1 || Math.abs(u) < 5 || Math.abs(v) < 4) continue;   // jamais sur le chemin ni au départ
-    if (hash(u*31 + 7, v*17 + 1) > 0.02) continue;
+    if (hash(u*31 + 7, v*17 + 1) > 0.018) continue;
+    if (siteNear(v*TW/2, u*TH/2, 140)) continue;                       // pas de ruine isolée au milieu d'un lieu
     const id = RUIN_IDS[Math.floor(hash(u + 2, v - 3)*RUIN_IDS.length) % RUIN_IDS.length];
-    if (id[0] === 'b' && id[1] === '_' && hash(u*5 + 3, v*11 - 7) < 0.25) continue;
     if (ASSET_IMG[id]) out.push({x:v*TW/2, y:u*TH/2 + TH*0.25, id});
   }
+  for (const b of sitesInView(ox, oy)) out.push(b);
   return out;
 }
 
@@ -4042,6 +4049,77 @@ const ITEM_IDS = {coffre:'chest', fiole:'potion', bourse:'purse', aimant:'magnet
 function drawItemAsset(it, x, y){ return drawEnt(it.type === 'coffre' && it.big ? 'chest_big' : ITEM_IDS[it.type], x, y); }
 
 loadArtManifest();
+
+/* =====================================================================
+   LIEUX : les bâtiments ne sont plus semés au hasard. Ils forment des lieux composés
+   (une clairière de bûcheron, une maison de pêcheur, un caveau…), posés sur un sol adapté
+   (dalles, terre battue, gravier), avec les arbres et les herbes dégagés autour.
+   Un lieu au plus par case de 1500 px, jamais sur les deux chemins ni près du départ.
+   ===================================================================== */
+const SC = 1500;
+// chaque élément : [image, décalage x, décalage y] ; r = rayon du lieu ; core/edge = dalles du centre et du pourtour
+const SCENES = {
+  foret:[
+    {name:'Clairière du bûcheron', light:[-10, -40, 150, '255,180,100'], r:270, items:[['b_hutte', 0, 0], ['b_bucher', 185, 60], ['b_puits', -190, 75]], core:['forest_tile_flagmoss', 'forest_tile_mossy'], edge:['forest_tile_leaves', 'forest_tile_roots']},
+    {name:'Tour effondrée', light:[0, -60, 120, '170,190,255'], r:250, items:[['b_tour', 0, 0], ['ruin_wall_a', -175, 55], ['broken_column', 160, 75], ['ruin_corner_b', 130, -95]], core:['forest_tile_stone', 'forest_tile_flagmoss'], edge:['forest_tile_mossy', 'forest_tile_leaves']},
+    {name:'Oratoire du sentier', light:[0, -35, 110, '255,190,120'], r:170, items:[['b_oratoire', 0, 0], ['broken_column', -95, 45]], core:['forest_tile_flagmoss', 'forest_tile_stone'], edge:['forest_tile_shrooms', 'forest_tile_mossy']},
+    {name:'Cercle des anciens', light:[0, -20, 170, '120,200,255'], r:230, items:[['b_cercle', 0, 0]], core:['forest_tile_mossy', 'forest_tile_ferns'], edge:['forest_tile_shrooms', 'forest_tile_mossy']}],
+  marais:[
+    {name:'Maison du pêcheur', light:[-215, -80, 150, '255,190,110'], r:290, items:[['b_pilotis', 0, 0], ['b_ponton', 200, 75], ['b_barque', -175, 100], ['b_panneau', -215, -45]], core:['marsh_tile_mud', 'marsh_tile_roots'], edge:['marsh_tile_puddles', 'marsh_tile_reeds']},
+    {name:'Clocher englouti', light:[0, -120, 140, '150,210,200'], r:250, items:[['b_clocher', 0, 0], ['b_panneau', 175, 65], ['ruin_corner_d', -170, 55]], core:['marsh_tile_flagmoss', 'marsh_tile_water'], edge:['marsh_tile_lilies', 'marsh_tile_water']},
+    {name:'Embarcadère', light:[60, -10, 120, '150,255,190'], r:210, items:[['b_ponton', 0, 0], ['b_barque', 150, 85]], core:['marsh_tile_water', 'marsh_tile_lilies'], edge:['marsh_tile_mud', 'marsh_tile_reeds']},
+    {name:'Cercle des noyés', light:[0, -20, 170, '170,140,255'], r:230, items:[['b_cercle', 0, 0]], core:['marsh_tile_moss', 'marsh_tile_mud'], edge:['marsh_tile_puddles', 'marsh_tile_moss']}],
+  cimetiere:[
+    {name:'Caveau de famille', light:[0, 30, 170, '255,190,110'], r:270, items:[['b_grille', 0, -125], ['b_mausolee', 0, 0], ['tomb_candles', -155, 75], ['tomb_candles', 160, 70]], core:['cemetery_tile_flag', 'cemetery_tile_flagmoss'], edge:['cemetery_tile_gravel', 'cemetery_tile_leaves']},
+    {name:'Chapelle et ossuaire', light:[0, -60, 160, '255,170,120'], r:290, items:[['b_chapelle', 0, 0], ['b_ossuaire', 210, 45], ['knight_statue', -180, 75]], core:['cemetery_tile_flagmoss', 'cemetery_tile_flag'], edge:['cemetery_tile_gravel', 'cemetery_tile_drygrass']},
+    {name:'Remise du fossoyeur', light:[60, 20, 130, '255,190,110'], r:210, items:[['b_cabane', 0, 0], ['gate_pillar', -150, 55], ['tomb_candles', 130, 80]], core:['cemetery_tile_grave', 'cemetery_tile_earth'], edge:['cemetery_tile_gravel', 'cemetery_tile_earth']}]
+};
+const SITE_CACHE = new Map();
+function siteAt(ci, cj, map){
+  const key = map + ':' + ci + ',' + cj;
+  if (SITE_CACHE.has(key)) return SITE_CACHE.get(key);
+  let s = null; const list = SCENES[map];
+  if (list && hash(ci*17 + 3, cj*29 - 11) < 0.6){
+    const sc = list[Math.floor(hash(ci + 7, cj - 3)*list.length) % list.length];
+    let x = ci*SC + SC/2 + (hash(ci, cj + 5) - 0.5)*SC*0.4, y = cj*SC + SC/2 + (hash(ci + 9, cj)*1 - 0.5)*SC*0.4;
+    // jamais sur les deux grands chemins (lignes x = 0 et y = 0) ni près du départ
+    if (Math.abs(x) < sc.r + 110) x = Math.sign(x || 1)*(sc.r + 110);
+    if (Math.abs(y) < sc.r*0.62 + 90) y = Math.sign(y || 1)*(sc.r*0.62 + 90);
+    if (Math.hypot(x, y) > 650) s = {x, y, r:sc.r, sc, ci, cj};
+  }
+  SITE_CACHE.set(key, s); if (SITE_CACHE.size > 4000) SITE_CACHE.clear();
+  return s;
+}
+/* lieu qui contient le point (x, y) dans son ellipse (rayon agrandi de `m`), sinon null ; k = distance relative (0 centre, 1 bord) */
+function siteNear(x, y, m){
+  const ci = Math.floor(x/SC), cj = Math.floor(y/SC);
+  for (let a = ci - 1; a <= ci + 1; a++) for (let b = cj - 1; b <= cj + 1; b++){
+    const s = siteAt(a, b, G.map); if (!s) continue;
+    const R = s.r + (m || 0), dx = (x - s.x)/R, dy = (y - s.y)/(R*0.62), k = dx*dx + dy*dy;
+    if (k < 1) return {s, k};
+  }
+  return null;
+}
+/* lieux visibles, pour poser leurs bâtiments dans la liste triée en profondeur */
+const SITE_LIGHTS = [];
+function sitesInView(ox, oy){
+  SITE_LIGHTS.length = 0;
+  const out = [], x0 = -ox - 400, x1 = -ox + W + 400, y0 = -oy - 400, y1 = -oy + H + 400;
+  for (let ci = Math.floor(x0/SC); ci <= Math.floor(x1/SC); ci++) for (let cj = Math.floor(y0/SC); cj <= Math.floor(y1/SC); cj++){
+    const s = siteAt(ci, cj, G.map); if (!s || s.x < x0 || s.x > x1 || s.y < y0 || s.y > y1) continue;
+    for (const [id, dx, dy] of s.sc.items) if (ASSET_IMG[id]) out.push({x:s.x + dx, y:s.y + dy, id});
+    if (s.sc.light){ const [lx, ly, r, col] = s.sc.light; SITE_LIGHTS.push({x:s.x + lx, y:s.y + ly, r, col}); }
+  }
+  return out;
+}
+/* dalle du sol dans un lieu : centre pavé, pourtour mêlé au sol de la zone, bord irrégulier */
+function siteTile(u, v){
+  const x = v*TW/2, y = u*TH/2, n = siteNear(x, y, 40); if (!n) return null;
+  const jit = (hash(u*3 + 1, v*5 - 2) - 0.5)*0.35;
+  if (n.k + jit > 1) return null;
+  const L = n.k + jit < 0.42 ? n.s.sc.core : n.s.sc.edge;
+  return L[Math.floor(hash(u*7 - 3, v*11 + 5)*L.length) % L.length];
+}
 
 /* =====================================================================
    EFFETS PEINTS : bandes d'images (assets/fx/*.webp, découpées par tools/import_fx_sheet.py)
