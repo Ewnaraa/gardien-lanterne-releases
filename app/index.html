@@ -44,6 +44,7 @@ button:focus-visible{outline:2px solid var(--amber);outline-offset:2px}
 .slotrow{display:flex;gap:4px;flex-wrap:wrap}
 .slot{position:relative;width:28px;height:28px;border-radius:4px;background:rgba(12,18,15,.82);border:1px solid rgba(236,228,207,.16);display:grid;place-items:center;color:var(--amber)}
 .slot svg{width:17px;height:17px}
+svg.pi{border-radius:20%;overflow:hidden;color:initial}
 .slot.pas{color:var(--spectre)}
 .slot.evo{border-color:var(--amber);box-shadow:0 0 10px rgba(242,184,75,.45)}
 .slot.empty{background:rgba(12,18,15,.35);border-style:dashed}
@@ -747,6 +748,9 @@ const IC = {
   muted:'<path d="M4 9h4l5-4v14l-5-4H4z"/><path d="M16 9l5 6M21 9l-5 6" fill="none" stroke-width="2" stroke-linecap="round"/>'
 };
 function icon(id){
+  // icône peinte si elle existe (assets/ui/icons), sinon le pictogramme vectoriel ; dans un <svg> pour garder les tailles de l'interface
+  const M = typeof ASSET_DATA !== 'undefined' && ASSET_DATA.manifest, f = M && M.icons && M.icons[id];
+  if (f) return `<svg class="pi" viewBox="0 0 24 24" aria-hidden="true"><image href="${ASSET_ROOT}${f}" width="24" height="24"/></svg>`;
   const base = (WD[id] && WD[id].base) || id;
   return `<svg viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="0" aria-hidden="true">${IC[base] || IC.eclat}</svg>`;
 }
@@ -1259,6 +1263,7 @@ function dmgEnemy(e, base, src, kx, ky){
   e.kx += (kx||0)*e.kb; e.ky += (ky||0)*e.kb;
   G.dmgBy[src] = (G.dmgBy[src]||0) + d;
   if (G.parts.length < 480*PCAP()){ const a0 = (kx || ky) ? Math.atan2(ky, kx) : Math.random()*TAU; for (let i=0;i<2;i++){ const aa = a0 + rnd(-0.9,0.9), sp = rnd(80,210); G.parts.push({x:e.x, y:e.y, vx:Math.cos(aa)*sp, vy:Math.sin(aa)*sp, life:.22, max:.22, col:crit ? '#ffd27a' : '#ffeccc', s:1.7}); } }
+  if (crit) spawnFx('fx_crit', e.x, e.y - e.r*0.4, e.boss ? 110 : 60, {a:0.8});
   if (SAVE.nums) floatText(e.x+rnd(-6,6), e.y-e.r, Math.round(d), crit ? '#f2b84b' : null, crit);
   SFX.hit();
   if (e.hp <= 0) killEnemy(e);
@@ -1270,6 +1275,7 @@ function killEnemy(e, silent){
   G.decals.push({x:e.x, y:e.y + e.r*0.4, r:e.r*rnd(0.9,1.4)*(e.boss ? 1.6 : 1), life:9, max:9, seed:Math.random()*100, kind:'ink'});
   burst(e.x, e.y, e.boss ? '#ff6a5a' : e.elite ? '#f2b84b' : '#7f94a8', e.boss ? 50 : e.elite ? 20 : 6, e.boss ? 2 : 1);
   if (silent) return;
+  spawnFx('fx_ame', e.x, e.y + e.r*0.5, e.boss ? 150 : e.elite ? 80 : 40, {bottom:true, a:e.boss || e.elite ? 0.9 : 0.5});
   if (e.boss || e.elite) G.stop = Math.max(G.stop || 0, e.boss ? 0.16 : 0.06);
   G.kills++;
   { const was = G.flame; G.flame = Math.min(100, G.flame + (e.boss ? 35 : e.elite ? 14 : 0.6/(1 + G.t/120))*(hasArc('soleil') ? 2 : 1)); if (was < 100 && G.flame >= 100){ toast('La flamme est prête : touche E'); SFX.rare(); } }
@@ -1294,7 +1300,7 @@ function killEnemy(e, silent){
     SFX.boom();
   } else {
     G.gems.push({x:e.x, y:e.y, v:e.xp, kind:'xp'});
-    if (hasArc('brasier') && Math.random() < 0.2){ const x = e.x, y = e.y; G.timers.push({t:0.06, fn:() => { G.rings.push({x, y, R:62, life:0.3, fire:true}); burst(x, y, '#ff9a4a', 10, 1.2); query(x, y, 62, o => { const dx = o.x-x, dy = o.y-y, d = Math.hypot(dx,dy)||1; dmgEnemy(o, 18*(1 + G.t/150), 'brasier', dx/d*160, dy/d*160); }); }}); }
+    if (hasArc('brasier') && Math.random() < 0.2){ const x = e.x, y = e.y; G.timers.push({t:0.06, fn:() => { G.rings.push({x, y, R:62, life:0.3, fire:true}); spawnFx('fx_explosion', x, y, 150); burst(x, y, '#ff9a4a', 10, 1.2); query(x, y, 62, o => { const dx = o.x-x, dy = o.y-y, d = Math.hypot(dx,dy)||1; dmgEnemy(o, 18*(1 + G.t/150), 'brasier', dx/d*160, dy/d*160); }); }}); }
     if (Math.random() < 0.03*(1+L*3)) G.gems.push({x:e.x+6, y:e.y+4, v:1, kind:'coin'});
     if (Math.random() < 0.004*(1+L*3)) G.items.push({type:'fiole', x:e.x, y:e.y});
   }
@@ -1382,7 +1388,7 @@ function inPuddle(x, y){
 function takeItem(it){
   const p = G.p;
   SFX.pickup();
-  if (it.type === 'fiole'){ p.hp = Math.min(p.max, p.hp + 30); floatText(p.x, p.y-24, '+30 PV', '#8fc27a', true); }
+  if (it.type === 'fiole'){ p.hp = Math.min(p.max, p.hp + 30); spawnFx('fx_soin', 0, 0, 120, {follow:true, dy:14, bottom:true, dur:0.9}); floatText(p.x, p.y-24, '+30 PV', '#8fc27a', true); }
   else if (it.type === 'bourse'){ const v = 10 + Math.floor(Math.random()*10); G.gold += v; floatText(p.x, p.y-24, '+'+v+' braises', '#e8673a', true); }
   else if (it.type === 'aimant'){ for (const g of G.gems) g.pull = true; toast('Toutes les lucioles accourent'); }
   else if (it.type === 'bombe'){
@@ -1518,7 +1524,7 @@ function fireStorm(w, s){
       for (const e of G.enemies){ if (e.dead || hit.has(e)) continue; const d = (e.x-cur.x)**2 + (e.y-cur.y)**2; if (d < bd){ bd = d; best = e; } }
       cur = best;
     }
-    G.bolts.push({pts, life:0.2});
+    G.bolts.push({pts, life:0.2, max:0.2});
     for (const pt of pts.slice(1)) for (let i=0;i<3 && G.parts.length<520;i++){ const a = Math.random()*TAU, sp = rnd(60,180); G.parts.push({x:pt[0], y:pt[1], vx:Math.cos(a)*sp, vy:Math.sin(a)*sp, life:.25, max:.25, col:'#cfe9ff', s:1.6}); }
   }
   SFX.zap(); return true;
@@ -1588,7 +1594,7 @@ function updMeteor(s, dt){
   if (s.age < s.T && Math.random() < 0.6){ const k = s.age/s.T; G.smoke.push({x:s.x + (1-k)*170 + rnd(-3,3), y:s.y - (1-k)*340 + rnd(-3,3), vx:rnd(-10,10), vy:rnd(-10,0), life:.5, max:.5, r:3, grow:8, col:'rgba(50,34,26,', a:.45}); }
   if (s.age >= s.T){
     G.decals.push({x:s.x, y:s.y, r:s.R*0.7, life:7, max:7, seed:Math.random()*100, kind:'scorch'});
-    G.rings.push({x:s.x, y:s.y, R:s.R*1.2, life:0.35, fire:true});
+    G.rings.push({x:s.x, y:s.y, R:s.R*1.2, life:0.35, fire:true}); spawnFx('fx_explosion', s.x, s.y, s.R*(s.ev ? 3.2 : 2.6));
     for (let i=0;i<8;i++) G.smoke.push({x:s.x+rnd(-s.R*0.4,s.R*0.4), y:s.y+rnd(-s.R*0.3,s.R*0.3), vx:rnd(-20,20), vy:rnd(-30,-10), life:1, max:1, r:5, grow:16, col:'rgba(40,30,26,', a:.4});
     s.life = 0;
     query(s.x, s.y, s.R, e => { const dx = e.x-s.x, dy = e.y-s.y, d = Math.hypot(dx,dy)||1; dmgEnemy(e, s.dmg, s.src, dx/d*200, dy/d*200); });
@@ -1641,6 +1647,7 @@ function updateFx(dt){
   for (const r of G.rings) r.life -= dt; G.rings = G.rings.filter(r => r.life > 0);
   for (const b of G.bolts) b.life -= dt; G.bolts = G.bolts.filter(b => b.life > 0);
   for (const s of G.slashes) s.life -= dt; G.slashes = G.slashes.filter(s => s.life > 0);
+  updateFxSprites(dt);
   for (const k of G.smoke){ k.x += k.vx*dt; k.y += k.vy*dt; k.life -= dt; }
   G.smoke = G.smoke.filter(k => k.life > 0); { const cap = 300*PCAP(); if (G.smoke.length > cap) G.smoke.splice(0, G.smoke.length - cap); }
   for (const c of G.corpses) c.dt += dt; G.corpses = G.corpses.filter(c => c.dt < (animOf(c.type) ? 0.9 : 0.4));
@@ -1682,7 +1689,7 @@ function update(dt){
   if (G.bombs) for (let i = G.bombs.length - 1; i >= 0; i--){       // élite explosif : cercle d'alerte, puis explosion
     const b = G.bombs[i]; b.t += dt;
     if (b.t >= b.max){
-      G.bombs.splice(i, 1); G.rings.push({x:b.x, y:b.y, R:b.R, life:0.35, fire:true}); burst(b.x, b.y, '#ff8a3a', 30, 1.8); SFX.boom(); G.shake = Math.max(G.shake, 0.4);
+      G.bombs.splice(i, 1); G.rings.push({x:b.x, y:b.y, R:b.R, life:0.35, fire:true}); spawnFx('fx_explosion', b.x, b.y, b.R*2.6); burst(b.x, b.y, '#ff8a3a', 30, 1.8); SFX.boom(); G.shake = Math.max(G.shake, 0.4);
       if (Math.hypot(G.p.x - b.x, G.p.y - b.y) < b.R) hurtPlayer(18 + G.t/20);
       query(b.x, b.y, b.R, o => { if (!o.boss) dmgEnemy(o, 30, 'explosion', 0, 0); });
     }
@@ -1904,7 +1911,7 @@ function update(dt){
       if (G.parts.length < 520*PCAP() && Math.random() < 0.7) G.parts.push({x:s.x, y:s.y, vx:rnd(-20,20) - s.vx*0.05, vy:rnd(-20,20) - s.vy*0.05, life:.25, max:.25, col:s.ev ? '#cfe0ff' : '#ffd27a', s:s.ev ? 2.2 : 1.6});
       query(s.x, s.y, s.r, e => {
         if (s.pierce <= 0 || s.hit.has(e)) return;
-        s.hit.add(e); s.pierce--; dmgEnemy(e, s.dmg, s.src, s.vx*0.1, s.vy*0.1);
+        s.hit.add(e); s.pierce--; dmgEnemy(e, s.dmg, s.src, s.vx*0.1, s.vy*0.1); spawnFx('fx_impact', e.x, e.y, s.ev ? 62 : 44, {a:0.6});
       });
       breakBraziers(s.x, s.y, s.r);
       if (s.pierce <= 0) s.life = 0;
@@ -1994,7 +2001,7 @@ function update(dt){
   if (p.lvl >= 30) unlockAch('lvl30');
   if (G.pending > 0 && state === 'play'){
     query(p.x, p.y, 140, e => { const dx = e.x-p.x, dy = e.y-p.y, d = Math.hypot(dx,dy)||1; e.kx += dx/d*300*e.kb; e.ky += dy/d*300*e.kb; });
-    burst(p.x, p.y, '#a9c3e6', 24, 1.4); G.rings.push({x:p.x, y:p.y, R:150, life:0.45, lv:true});
+    burst(p.x, p.y, '#a9c3e6', 24, 1.4); G.rings.push({x:p.x, y:p.y, R:150, life:0.45, lv:true}); spawnFx('fx_niveau', 0, 0, 160, {follow:true, dy:14, bottom:true, dur:1.1});
     openLevelUp();
   }
 }
@@ -2052,10 +2059,11 @@ function dash(){
 function ult(){
   if (G.flame < 100) return;
   G.flame = 0; const p = G.p; p.joyUntil = performance.now() + 1500;
-  if (hasArc('soleil')) p.hp = Math.min(p.max, p.hp + p.max*0.3);
+  if (hasArc('soleil')){ p.hp = Math.min(p.max, p.hp + p.max*0.3); spawnFx('fx_soin', 0, 0, 120, {follow:true, dy:14, bottom:true, dur:0.9}); }
   G.flash = 0.6; G.shake = 1; G.slow = 0.6; SFX.ult();
   const big = Math.hypot(W, H)*0.6;
-  G.rings.push({x:p.x, y:p.y, R:big, life:0.45, fire:true}); G.rings.push({x:p.x, y:p.y, R:big*0.55, life:0.45, fire:true});
+  if (hasFx('fx_embrasement')) spawnFx('fx_embrasement', p.x, p.y, big*1.5, {dur:1.0, f0:3});
+  else { G.rings.push({x:p.x, y:p.y, R:big, life:0.45, fire:true}); G.rings.push({x:p.x, y:p.y, R:big*0.55, life:0.45, fire:true}); }
   const dmg = 260*(1 + G.t/240);
   for (const e of G.enemies){
     if (e.dead || !onScreen(e.x, e.y, 30)) continue;
@@ -2178,6 +2186,11 @@ function draw(now){
   for (const z of G.zones){
     const x = X(z.x), y = Y(z.y), R = z.R || z.r; if (!vis(x,y,R)) continue;
     const a = Math.min(1, z.life*2, (z.max-z.life)*6);
+    if (z.burn && hasFx('fx_sol_brulant')){ fxDraw('fx_sol_brulant', fxLoopFrame('fx_sol_brulant', now/1000 + z.seed), x, y, R*2.4, {a}); continue; }
+    if (!z.burn && hasFx('fx_ronces')){                              // ronces peintes : poussent, ondulent, puis se fanent
+      const age = z.max - z.life, fi = age < 0.45 ? age/0.45*4 : z.life < 0.6 ? 6 + (1 - z.life/0.6)*2 : 4 + Math.floor(now/300 + z.seed) % 2;
+      fxDraw('fx_ronces', fi, x, y - R*0.2, R*2.5, {a:Math.min(1, z.life*4)}); continue;
+    }
     if (z.burn){
       ctx.globalAlpha = a*0.6; ctx.fillStyle = '#3a1608'; ctx.beginPath(); ctx.arc(x,y,R,0,TAU); ctx.fill();
       ctx.globalAlpha = a; ctx.fillStyle = '#ff8a3a';
@@ -2193,7 +2206,8 @@ function draw(now){
     ctx.globalAlpha = 1;
   }
   for (const r of G.rings){
-    const k = 1 - r.life/0.45;
+    const k = 1 - r.life/0.45, rk = r.frz ? 'fx_glas' : 'fx_onde';
+    if (!r.lv && !r.fire && hasFx(rk)){ fxDraw(rk, k*FX[rk].n, X(r.x), Y(r.y), r.R*2.3, {h:r.R*1.7, a:0.8}); continue; }
     ctx.strokeStyle = r.frz ? `rgba(169,210,255,${0.7*(1-k)})` : r.lv ? `rgba(169,195,230,${0.7*(1-k)})` : r.fire ? `rgba(255,130,60,${0.7*(1-k)})` : `rgba(242,184,75,${0.6*(1-k)})`; ctx.lineWidth = 7*(1-k)+1;
     ctx.beginPath(); ctx.arc(X(r.x),Y(r.y),r.R*(0.3+0.7*k),0,TAU); ctx.stroke();
     ctx.strokeStyle = `rgba(255,250,235,${0.35*(1-k)})`; ctx.lineWidth = 1.2; ctx.beginPath(); ctx.arc(X(r.x),Y(r.y),r.R*(0.15+0.6*k),0,TAU); ctx.stroke();
@@ -2337,7 +2351,11 @@ function draw(now){
   }
   for (const s of G.shots){
     const x = X(s.x), y = Y(s.y);
-    if (s.kind === 'bolt'){
+    if (s.kind === 'bolt' && hasFx('fx_eclat')){
+      const a = Math.atan2(s.vy, s.vx), len = s.ev ? 96 : 70;
+      fxDraw('fx_eclat', 2 + (Math.floor(now/70 + s.x*0.1) & 1), x - Math.cos(a)*len*0.38, y - Math.sin(a)*len*0.38, len, {rot:a});
+      if (s.ev) ctx.drawImage(glow('200,220,255', 16), x - 16, y - 16);
+    } else if (s.kind === 'bolt'){
       const sp = Math.hypot(s.vx, s.vy) || 1, ux = s.vx/sp, uy = s.vy/sp, len = s.ev ? 36 : 26;
       const tg = ctx.createLinearGradient(x, y, x - ux*len, y - uy*len);
       tg.addColorStop(0, s.ev ? 'rgba(210,225,255,.85)' : 'rgba(255,214,140,.8)'); tg.addColorStop(1, 'rgba(255,200,120,0)');
@@ -2345,6 +2363,10 @@ function draw(now){
       const gs = s.ev ? 18 : 13; ctx.drawImage(glow(s.ev ? '200,220,255' : '255,206,120', gs), x - gs, y - gs);
       const rot = now/110 + s.x*0.01, R1 = s.ev ? 7.5 : 5.5, R2 = R1*0.3;
       ctx.fillStyle = '#fffaf0'; ctx.beginPath(); for (let k=0;k<8;k++){ const a = rot + k*Math.PI/4, rr = k%2 ? R2 : R1; ctx.lineTo(x + Math.cos(a)*rr, y + Math.sin(a)*rr); } ctx.closePath(); ctx.fill();
+    } else if (s.kind === 'sickle' && hasFx('fx_faucille')){
+      if (s.trail) s.trail.forEach((q,i) => { ctx.fillStyle = s.ev ? `rgba(242,200,110,${0.05*(i+1)})` : `rgba(220,220,230,${0.04*(i+1)})`; ctx.beginPath(); ctx.arc(X(q.x), Y(q.y), s.r*1.1, 0, TAU); ctx.fill(); });
+      if (s.ev) ctx.drawImage(glow('255,210,120', s.r*1.6), x - s.r*1.6, y - s.r*1.6);
+      fxDraw('fx_faucille', 0, x, y, s.r*3.4, {rot:s.spin});
     } else if (s.kind === 'sickle'){
       if (s.trail) s.trail.forEach((q,i) => { ctx.fillStyle = s.ev ? `rgba(169,230,200,${0.05*(i+1)})` : `rgba(255,200,120,${0.05*(i+1)})`; ctx.beginPath(); ctx.arc(X(q.x), Y(q.y), s.r*1.1, 0, TAU); ctx.fill(); });
       ctx.save(); ctx.translate(x,y); ctx.rotate(s.spin);
@@ -2352,6 +2374,10 @@ function draw(now){
       ctx.fillStyle = s.ev ? '#d8fff0' : '#ffd9a0';
       ctx.beginPath(); ctx.arc(0,0,s.r,0.3,Math.PI*1.7); ctx.arc(s.r*0.35,0,s.r*0.75,Math.PI*1.6,0.4,true); ctx.closePath(); ctx.fill();
       ctx.restore();
+    } else if (s.kind === 'meteor' && hasFx(s.ev ? 'fx_meteore' : 'fx_cendre')){
+      const k = Math.min(1, s.age/s.T), mx = x + (1-k)*170, my = y - (1-k)*340;
+      if (s.ev) fxDraw('fx_meteore', k*5.99, mx + 20, my - 20, 150);
+      else fxDraw('fx_cendre', k*4.99, mx + 14, my - 18, 84, {flip:true});
     } else if (s.kind === 'meteor'){
       const k = Math.min(1, s.age/s.T), mx = x + (1-k)*170, my = y - (1-k)*340;
       ctx.strokeStyle = s.ev ? 'rgba(255,170,90,.55)' : 'rgba(255,140,60,.45)'; ctx.lineWidth = s.ev ? 9 : 6; ctx.lineCap = 'round';
@@ -2364,6 +2390,7 @@ function draw(now){
       const ev = w.id === 'couronne';
       for (let i=0;i<w.n;i++){
         const a = w.a + i*TAU/w.n, x = px + Math.cos(a)*w.R, y = py + Math.sin(a)*w.R;
+        if (hasFx('fx_braise')){ fxDraw('fx_braise', fxLoopFrame('fx_braise', now/1000 + i*0.31), x, y, w.orb*(ev ? 6.5 : 5.2), {rot:a + Math.PI/4}); if (ev) ctx.drawImage(glow('255,220,140', w.orb*1.4), x - w.orb*1.4, y - w.orb*1.4); continue; }
         ctx.fillStyle = ev ? 'rgba(255,190,80,.35)' : 'rgba(232,103,58,.3)'; ctx.beginPath(); ctx.arc(x,y,w.orb*1.5,0,TAU); ctx.fill();
         ctx.fillStyle = ev ? '#fff0b0' : '#ffb36b'; ctx.beginPath(); ctx.arc(x,y,w.orb*0.55,0,TAU); ctx.fill();
       }
@@ -2377,13 +2404,15 @@ function draw(now){
         ctx.strokeStyle = `rgba(210,225,255,${0.45*fade})`; ctx.lineWidth = 8; ctx.stroke();
         ctx.strokeStyle = `rgba(255,255,255,${0.9*fade})`; ctx.lineWidth = 2.5; ctx.stroke();
         ctx.lineCap = 'butt';
+        if (hasFx('fx_rayon')) fxDraw('fx_rayon', 3, (px + ex2)/2, (py + ey2)/2, w.len*1.05, {rot:a, flip:true, h:62, a:fade*0.55});
         for (let j=0;j<7;j++){ const dd = mod(now*0.35 + j*w.len/7, w.len), jx = px + Math.cos(a)*dd + Math.sin(now/90 + j)*3, jy = py + Math.sin(a)*dd + Math.cos(now/110 + j)*3; ctx.fillStyle = `rgba(230,240,255,${0.8*fade})`; ctx.fillRect(jx-1.5, jy-1.5, 3, 3); }
       }
     }
   }
   for (const s of G.slashes){
     const k = s.life/0.22, cx = X(G.p.x) - Math.sin(s.ang)*(s.off||0), cy = Y(G.p.y) + Math.cos(s.ang)*(s.off||0), R = s.w*0.85;
-    const a0 = s.ang - 1.05 + (1-k)*0.25, a1 = s.ang + 1.05;
+    const a0 = s.ang - 1.05 + (1-k)*0.25, a1 = s.ang + 1.05, sk = s.ev ? 'fx_faux' : 'fx_lame';
+    if (hasFx(sk)){ fxDraw(sk, (1 - k)*FX[sk].n, cx + Math.cos(s.ang)*R*0.5, cy + Math.sin(s.ang)*R*0.5, R*1.7, {rot:s.ang, a:0.85}); continue; }
     ctx.lineCap = 'round';
     ctx.strokeStyle = s.ev ? `rgba(255,60,60,${0.35*k})` : `rgba(255,214,150,${0.3*k})`; ctx.lineWidth = s.h*0.75*k + 2;
     ctx.beginPath(); ctx.arc(cx, cy, R*0.75, a0, a1); ctx.stroke();
@@ -2400,6 +2429,7 @@ function draw(now){
     b.pts.forEach((pt,i) => { const x = X(pt[0]) + (i ? rnd(-4,4) : 0), y = Y(pt[1]) + (i ? rnd(-4,4) : 0); i ? ctx.lineTo(x,y) : ctx.moveTo(x,y); });
     ctx.stroke(); ctx.strokeStyle = `rgba(255,255,255,${b.life*4})`; ctx.lineWidth = 1; ctx.stroke();
     ctx.globalAlpha = Math.min(1, b.life*3); for (const pt of b.pts.slice(1)) ctx.drawImage(softDot('190,230,255'), X(pt[0])-16, Y(pt[1])-16, 32, 32); ctx.globalAlpha = 1;
+    if (hasFx('fx_follet')){ const kk = 1 - b.life/(b.max || 0.2); for (const pt of b.pts.slice(1)) fxDraw('fx_follet', 1 + kk*3, X(pt[0]), Y(pt[1]) + 12, 54, {bottom:true}); }
   }
   for (const s of G.eshots){
     const x = X(s.x), y = Y(s.y); if (!vis(x,y,20)) continue;
@@ -2438,6 +2468,7 @@ function draw(now){
     ctx.beginPath(); ctx.arc(X(q.x),Y(q.y),q.s,0,TAU); ctx.fill();
   }
   ctx.globalAlpha = 1;
+  drawFxSprites(X, Y);
   ctx.globalCompositeOperation = 'source-over';
 
   // Brume en parallaxe
@@ -3705,6 +3736,7 @@ async function loadArtManifest(){
   }
   // illustration du titre (interface)
   jobs.push(loadImageOnce(PA.c_gardien).then(im => { PIMG.c_gardien = im; }).catch(() => {}));
+  jobs.push(loadFxSheets());
   await Promise.all(jobs);
   for (const k in DECO) delete DECO[k]; for (const k in TREES) delete TREES[k]; for (const k in CRYST) delete CRYST[k]; for (const k in groundPat) delete groundPat[k];
   ASSETS_READY = true;
@@ -3997,6 +4029,57 @@ const ITEM_IDS = {coffre:'chest', fiole:'potion', bourse:'purse', aimant:'magnet
 function drawItemAsset(it, x, y){ return drawEnt(it.type === 'coffre' && it.big ? 'chest_big' : ITEM_IDS[it.type], x, y); }
 
 loadArtManifest();
+
+/* =====================================================================
+   EFFETS PEINTS : bandes d'images (assets/fx/*.webp, découpées par tools/import_fx_sheet.py)
+   Mode « add » : la lumière s'ajoute au jeu (fond noir = invisible). Mode « solid » : image détourée.
+   Chaque sort garde son ancien dessin si son image d'effet manque.
+   ===================================================================== */
+const FX = {};                                                      // nom → {img, n, w, h, mode, fps, loop}
+async function loadFxSheets(){
+  const M = ASSET_DATA.manifest; if (!M || !M.fx) return;
+  await Promise.all(Object.keys(M.fx).map(k => loadImageOnce(ASSET_ROOT + M.fx[k].file)
+    .then(img => { FX[k] = Object.assign({img}, M.fx[k]); }).catch(() => {})));
+}
+const hasFx = k => !!FX[k];
+/* dessine l'image i de l'effet, centrée en (x, y), largeur w (hauteur proportionnelle) */
+function fxDraw(k, i, x, y, w, o){
+  const F = FX[k]; if (!F) return false;
+  o = o || {};
+  const h = o.h || w*F.h/F.w, fi = Math.max(0, Math.min(F.n - 1, i|0));
+  ctx.save();
+  if (F.mode === 'add') ctx.globalCompositeOperation = 'lighter';
+  ctx.globalAlpha = o.a == null ? 1 : Math.max(0, Math.min(1, o.a));
+  ctx.translate(x, y); if (o.rot) ctx.rotate(o.rot); if (o.flip) ctx.scale(-1, 1);
+  const ay = o.bottom ? -h : -h/2;                                  // bottom : l'effet part du sol
+  ctx.drawImage(F.img, fi*F.w, 0, F.w, F.h, -w/2, ay, w, h);
+  ctx.restore(); return true;
+}
+const fxLoopFrame = (k, t) => FX[k] ? Math.floor(t*FX[k].fps) % FX[k].n : 0;
+/* effets ponctuels dans le monde (impact, coup critique, âme, explosion…) */
+const FX_CAP = {fx_impact:24, fx_crit:12, fx_ame:22, fx_explosion:14, fx_soin:2, fx_niveau:2, fx_embrasement:2};
+function spawnFx(k, x, y, w, o){
+  if (!FX[k] || !G || reduce) return;
+  if (!G.fxs) G.fxs = [];
+  const cap = (FX_CAP[k] || 20)*(typeof PCAP === 'function' ? PCAP() : 1);
+  let c = 0; for (const f of G.fxs) if (f.k === k) c++;
+  if (c >= cap) return;
+  G.fxs.push(Object.assign({k, x, y, w, age:0, dur:(o && o.dur) || FX[k].n/FX[k].fps}, o));
+}
+function updateFxSprites(dt){
+  if (!G.fxs || !G.fxs.length) return;
+  for (const f of G.fxs) f.age += dt;
+  G.fxs = G.fxs.filter(f => f.age < f.dur);
+}
+function drawFxSprites(X, Y){
+  if (!G.fxs) return;
+  for (const f of G.fxs){
+    const px = f.follow ? G.p.x : f.x, py = f.follow ? G.p.y + (f.dy || 0) : f.y;
+    const x = X(px), y = Y(py); if (x < -f.w || x > W + f.w || y < -f.w || y > H + f.w) continue;
+    const k = f.age/f.dur, F = FX[f.k], f0 = f.f0 || 0;
+    fxDraw(f.k, f0 + k*(F.n - f0), x, y, f.w, {bottom:f.bottom, rot:f.rot, a:(f.a == null ? 1 : f.a)*(f.fade ? Math.min(1, (1 - k)*3) : 1)});
+  }
+}
 /* =====================================================================
    EFFETS DES SORTS DE BOSS (technique : lumière, particules, ondes)
    Les boss restent des illustrations ; Canvas dessine seulement la magie autour.

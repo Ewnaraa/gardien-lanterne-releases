@@ -3701,5 +3701,229 @@ registerAssetData('manifest', {
    ],
    "status": "art"
   }
+ },
+ "icons": {
+  "cendres": "ui/icons/ic_cendres.webp",
+  "corbeaux": "ui/icons/ic_corbeaux.webp",
+  "couronne": "ui/icons/ic_couronne.webp",
+  "eclat": "ui/icons/ic_eclat.webp",
+  "etoile": "ui/icons/ic_etoile.webp",
+  "faucille": "ui/icons/ic_faucille.webp",
+  "faux": "ui/icons/ic_faux.webp",
+  "follet": "ui/icons/ic_follet.webp",
+  "glas": "ui/icons/ic_glas.webp",
+  "graines": "ui/icons/ic_graines.webp",
+  "halo": "ui/icons/ic_halo.webp",
+  "lame": "ui/icons/ic_lame.webp",
+  "meteores": "ui/icons/ic_meteores.webp",
+  "onde": "ui/icons/ic_onde.webp",
+  "orage": "ui/icons/ic_orage.webp",
+  "parlement": "ui/icons/ic_parlement.webp",
+  "phare": "ui/icons/ic_phare.webp",
+  "rayon": "ui/icons/ic_rayon.webp",
+  "ronceraie": "ui/icons/ic_ronceraie.webp",
+  "vent": "ui/icons/ic_vent.webp"
+ },
+ "fx": {
+  "fx_ame": {
+   "file": "fx/fx_ame.webp",
+   "n": 6,
+   "w": 128,
+   "h": 256,
+   "mode": "add",
+   "fps": 14,
+   "loop": false,
+   "align": "center"
+  },
+  "fx_braise": {
+   "file": "fx/fx_braise.webp",
+   "n": 4,
+   "w": 222,
+   "h": 201,
+   "mode": "add",
+   "fps": 14,
+   "loop": true,
+   "align": "center"
+  },
+  "fx_cendre": {
+   "file": "fx/fx_cendre.webp",
+   "n": 6,
+   "w": 157,
+   "h": 256,
+   "mode": "solid",
+   "fps": 14,
+   "loop": false,
+   "align": "center"
+  },
+  "fx_crit": {
+   "file": "fx/fx_crit.webp",
+   "n": 4,
+   "w": 181,
+   "h": 256,
+   "mode": "add",
+   "fps": 14,
+   "loop": false,
+   "align": "center"
+  },
+  "fx_eclat": {
+   "file": "fx/fx_eclat.webp",
+   "n": 4,
+   "w": 244,
+   "h": 99,
+   "mode": "add",
+   "fps": 14,
+   "loop": true,
+   "align": "right"
+  },
+  "fx_embrasement": {
+   "file": "fx/fx_embrasement.webp",
+   "n": 8,
+   "w": 256,
+   "h": 242,
+   "mode": "add",
+   "fps": 14,
+   "loop": false,
+   "align": "center"
+  },
+  "fx_explosion": {
+   "file": "fx/fx_explosion.webp",
+   "n": 7,
+   "w": 256,
+   "h": 249,
+   "mode": "add",
+   "fps": 14,
+   "loop": false,
+   "align": "center"
+  },
+  "fx_faucille": {
+   "file": "fx/fx_faucille.webp",
+   "n": 1,
+   "w": 256,
+   "h": 166,
+   "mode": "solid",
+   "fps": 14,
+   "loop": false,
+   "align": "center"
+  },
+  "fx_faux": {
+   "file": "fx/fx_faux.webp",
+   "n": 6,
+   "w": 182,
+   "h": 218,
+   "mode": "add",
+   "fps": 14,
+   "loop": false,
+   "align": "right"
+  },
+  "fx_follet": {
+   "file": "fx/fx_follet.webp",
+   "n": 4,
+   "w": 126,
+   "h": 256,
+   "mode": "add",
+   "fps": 14,
+   "loop": false,
+   "align": "bottom"
+  },
+  "fx_glas": {
+   "file": "fx/fx_glas.webp",
+   "n": 6,
+   "w": 188,
+   "h": 98,
+   "mode": "add",
+   "fps": 14,
+   "loop": false,
+   "align": "center"
+  },
+  "fx_impact": {
+   "file": "fx/fx_impact.webp",
+   "n": 6,
+   "w": 179,
+   "h": 201,
+   "mode": "add",
+   "fps": 14,
+   "loop": false,
+   "align": "center"
+  },
+  "fx_lame": {
+   "file": "fx/fx_lame.webp",
+   "n": 6,
+   "w": 187,
+   "h": 221,
+   "mode": "add",
+   "fps": 14,
+   "loop": false,
+   "align": "right"
+  },
+  "fx_meteore": {
+   "file": "fx/fx_meteore.webp",
+   "n": 9,
+   "w": 256,
+   "h": 251,
+   "mode": "add",
+   "fps": 14,
+   "loop": false,
+   "align": "center"
+  },
+  "fx_niveau": {
+   "file": "fx/fx_niveau.webp",
+   "n": 6,
+   "w": 141,
+   "h": 256,
+   "mode": "add",
+   "fps": 14,
+   "loop": false,
+   "align": "bottom"
+  },
+  "fx_onde": {
+   "file": "fx/fx_onde.webp",
+   "n": 6,
+   "w": 176,
+   "h": 92,
+   "mode": "add",
+   "fps": 14,
+   "loop": false,
+   "align": "center"
+  },
+  "fx_rayon": {
+   "file": "fx/fx_rayon.webp",
+   "n": 5,
+   "w": 256,
+   "h": 141,
+   "mode": "add",
+   "fps": 14,
+   "loop": false,
+   "align": "center"
+  },
+  "fx_ronces": {
+   "file": "fx/fx_ronces.webp",
+   "n": 8,
+   "w": 239,
+   "h": 228,
+   "mode": "solid",
+   "fps": 14,
+   "loop": false,
+   "align": "center"
+  },
+  "fx_soin": {
+   "file": "fx/fx_soin.webp",
+   "n": 6,
+   "w": 139,
+   "h": 256,
+   "mode": "add",
+   "fps": 14,
+   "loop": false,
+   "align": "bottom"
+  },
+  "fx_sol_brulant": {
+   "file": "fx/fx_sol_brulant.webp",
+   "n": 8,
+   "w": 222,
+   "h": 140,
+   "mode": "solid",
+   "fps": 14,
+   "loop": true,
+   "align": "center"
+  }
  }
 });
