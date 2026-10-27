@@ -1630,6 +1630,7 @@ function movePlayer(dt){
   p.svx = (p.svx || 0) + (tvx - (p.svx || 0))*kk; p.svy = (p.svy || 0) + (tvy - (p.svy || 0))*kk;
   if (Math.hypot(p.svx, p.svy) < 2 && len < 0.1){ p.svx = 0; p.svy = 0; }
   p.x += p.svx*dt; p.y += p.svy*dt;
+  collideWorld(p, 10);                                               // bâtiments et ruines : on ne passe plus à travers
   if (Math.abs(p.svx) > 8) p.face = Math.sign(p.svx);
   if (len > 0.1) p.step += dt*10;
   p.vx = p.svx; p.vy = p.svy;
@@ -1688,7 +1689,7 @@ function update(dt){
     }
   }
 
-  movePlayer(dt);
+  movePlayer(dt); updateSites(dt);
   if (G.bombs) for (let i = G.bombs.length - 1; i >= 0; i--){       // élite explosif : cercle d'alerte, puis explosion
     const b = G.bombs[i]; b.t += dt;
     if (b.t >= b.max){
@@ -1855,6 +1856,7 @@ function update(dt){
       }
     }
     e.x += (vx*slow + e.kx)*dt; e.y += (vy*slow + e.ky)*dt;
+    if (!b.ghost && !e.boss && e.type !== 'chauve' && e.type !== 'feufollet') collideWorld(e, e.r*0.8);   // les spectres et les volants passent au travers
     e.kx *= decay; e.ky *= decay;
     e.atk -= dt;
     if (d < e.r + p.r && e.atk <= 0){
@@ -2084,7 +2086,7 @@ function startDawn(){
 }
 function updateDawn(dt){
   G.dawnT += dt;
-  movePlayer(dt);
+  movePlayer(dt); updateSites(dt);
   let n = 0;
   for (const e of G.enemies){ if (e.dead) continue; if (Math.random() < 0.08 || G.dawnT > 2.2){ killEnemy(e, true); if (++n > 16) break; } }
   G.enemies = G.enemies.filter(e => !e.dead);
@@ -2279,6 +2281,11 @@ function draw(now){
       const c = it.e, x = X(c.x), y = Y(c.y), k = c.dt/0.4; ctx.save(); ctx.globalAlpha = Math.max(0, 1 - k);
       ctx.translate(x, y - k*16); ctx.scale(1 + k*0.6, 1 - k*0.55); ctx.translate(-x, -y);
       const fl = c.flash; c.flash = 0.001; drawEnemyBody(c, x, y); c.flash = fl; ctx.restore();
+    } else if (it.k === 4 && it.r.fire){                             // feu de camp d'un lieu
+      const x = X(it.r.x), y = Y(it.r.y); drawBrazier(x, y, now); siteFlame(x, y, now);
+      decoLights.push({x, y:y - 14, r:70, i:0.9, col:'255,150,70', hole:true});
+    } else if (it.k === 4 && it.r.deco){                             // petit décor d'un lieu
+      const r = it.r; drawEnt(r.id, X(r.x), Y(r.y));
     } else if (it.k === 4){
       const r = it.r, x = X(r.x), y = Y(r.y), a = ASSET_IMG[r.id];
       ctx.fillStyle = 'rgba(0,0,0,.45)'; ctx.beginPath(); ctx.ellipse(x, y - 2, a.w*0.42, a.w*0.12, 0, 0, TAU); ctx.fill();
@@ -2333,7 +2340,7 @@ function draw(now){
     ctx.fillStyle = '#ff9a3a'; ctx.beginPath(); ctx.moveTo(x-6,y-5); ctx.quadraticCurveTo(x-2,y-14-fl,x,y-21-fl); ctx.quadraticCurveTo(x+2,y-14-fl,x+6,y-5); ctx.fill();
     ctx.fillStyle = '#ffe08a'; ctx.beginPath(); ctx.moveTo(x-3,y-5); ctx.quadraticCurveTo(x,y-13-fl,x+3,y-5); ctx.fill();
   }
-  decoGlow();
+  decoGlow(); drawSiteLife(X, Y, now);
   for (const z of G.zones){ if (!z.burn) continue; const x = X(z.x), y = Y(z.y), R = z.R; if (!vis(x,y,R)) continue; ctx.globalAlpha = 0.18*Math.min(1, z.life); ctx.drawImage(softDot('255,120,40'), x-R, y-R, R*2, R*2); ctx.globalAlpha = 1; }
   // Lucioles d’ambiance
   if (!reduce){
@@ -4060,19 +4067,19 @@ const SC = 1500;
 // chaque élément : [image, décalage x, décalage y] ; r = rayon du lieu ; core/edge = dalles du centre et du pourtour
 const SCENES = {
   foret:[
-    {name:'Clairière du bûcheron', light:[-10, -40, 150, '255,180,100'], r:270, items:[['b_hutte', 0, 0], ['b_bucher', 185, 60], ['b_puits', -190, 75]], core:['forest_tile_flagmoss', 'forest_tile_mossy'], edge:['forest_tile_leaves', 'forest_tile_roots']},
-    {name:'Tour effondrée', light:[0, -60, 120, '170,190,255'], r:250, items:[['b_tour', 0, 0], ['ruin_wall_a', -175, 55], ['broken_column', 160, 75], ['ruin_corner_b', 130, -95]], core:['forest_tile_stone', 'forest_tile_flagmoss'], edge:['forest_tile_mossy', 'forest_tile_leaves']},
-    {name:'Oratoire du sentier', light:[0, -35, 110, '255,190,120'], r:170, items:[['b_oratoire', 0, 0], ['broken_column', -95, 45]], core:['forest_tile_flagmoss', 'forest_tile_stone'], edge:['forest_tile_shrooms', 'forest_tile_mossy']},
-    {name:'Cercle des anciens', light:[0, -20, 170, '120,200,255'], r:230, items:[['b_cercle', 0, 0]], core:['forest_tile_mossy', 'forest_tile_ferns'], edge:['forest_tile_shrooms', 'forest_tile_mossy']}],
+    {name:'Clairière du bûcheron', deco:[['forest_log', -70, 120], ['forest_log', 110, 150], ['forest_rock', 255, -25], ['forest_mushroom', -255, 5], ['forest_fern', -120, -95], ['forest_grass', 60, -110], ['forest_roots', 230, 120]], fires:[[95, 125]], smoke:[[-35, -165]], light:[-10, -40, 150, '255,180,100'], r:270, items:[['b_hutte', 0, 0], ['b_bucher', 185, 60], ['b_puits', -190, 75]], core:['forest_tile_flagmoss', 'forest_tile_mossy'], edge:['forest_tile_leaves', 'forest_tile_roots']},
+    {name:'Tour effondrée', deco:[['forest_rock', -60, 120], ['forest_rock', 220, 20], ['forest_roots', -230, -30], ['forest_fern', 80, 130], ['forest_fern', -120, -110], ['forest_mushroom', 40, -130]], fires:[[-40, 135]], light:[0, -60, 120, '170,190,255'], r:250, items:[['b_tour', 0, 0], ['ruin_wall_a', -175, 55], ['broken_column', 160, 75], ['ruin_corner_b', 130, -95]], core:['forest_tile_stone', 'forest_tile_flagmoss'], edge:['forest_tile_mossy', 'forest_tile_leaves']},
+    {name:'Oratoire du sentier', deco:[['forest_mushroom', 70, 40], ['forest_mushroom', -50, 85], ['forest_fern', 110, -20], ['forest_grass', -120, -40], ['forest_rock', 120, 75]], light:[0, -35, 110, '255,190,120'], r:170, items:[['b_oratoire', 0, 0], ['broken_column', -95, 45]], core:['forest_tile_flagmoss', 'forest_tile_stone'], edge:['forest_tile_shrooms', 'forest_tile_mossy']},
+    {name:'Cercle des anciens', deco:[['forest_mushroom', -150, 30], ['forest_mushroom', 160, 20], ['forest_mushroom', 10, 125], ['forest_fern', -200, -40], ['forest_fern', 205, -50], ['forest_rock', 120, 120]], fires:[[0, 20]], light:[0, -20, 170, '120,200,255'], r:230, items:[['b_cercle', 0, 0]], core:['forest_tile_mossy', 'forest_tile_ferns'], edge:['forest_tile_shrooms', 'forest_tile_mossy']}],
   marais:[
-    {name:'Maison du pêcheur', light:[-215, -80, 150, '255,190,110'], r:290, items:[['b_pilotis', 0, 0], ['b_ponton', 200, 75], ['b_barque', -175, 100], ['b_panneau', -215, -45]], core:['marsh_tile_mud', 'marsh_tile_roots'], edge:['marsh_tile_puddles', 'marsh_tile_reeds']},
-    {name:'Clocher englouti', light:[0, -120, 140, '150,210,200'], r:250, items:[['b_clocher', 0, 0], ['b_panneau', 175, 65], ['ruin_corner_d', -170, 55]], core:['marsh_tile_flagmoss', 'marsh_tile_water'], edge:['marsh_tile_lilies', 'marsh_tile_water']},
-    {name:'Embarcadère', light:[60, -10, 120, '150,255,190'], r:210, items:[['b_ponton', 0, 0], ['b_barque', 150, 85]], core:['marsh_tile_water', 'marsh_tile_lilies'], edge:['marsh_tile_mud', 'marsh_tile_reeds']},
-    {name:'Cercle des noyés', light:[0, -20, 170, '170,140,255'], r:230, items:[['b_cercle', 0, 0]], core:['marsh_tile_moss', 'marsh_tile_mud'], edge:['marsh_tile_puddles', 'marsh_tile_moss']}],
+    {name:'Maison du pêcheur', deco:[['marsh_reeds', 245, 15], ['marsh_reeds', 290, 130], ['marsh_reeds', -60, 160], ['marsh_lily', 300, 160], ['marsh_lily', 120, 160], ['marsh_rock', -250, 60], ['marsh_mushroom', 90, -110], ['marsh_grass', -120, -110]], fires:[[70, 125]], smoke:[[-10, -190]], light:[-215, -80, 150, '255,190,110'], r:290, items:[['b_pilotis', 0, 0], ['b_ponton', 200, 75], ['b_barque', -175, 100], ['b_panneau', -215, -45]], core:['marsh_tile_mud', 'marsh_tile_roots'], edge:['marsh_tile_puddles', 'marsh_tile_reeds']},
+    {name:'Clocher englouti', deco:[['marsh_reeds', -90, 120], ['marsh_reeds', 130, -80], ['marsh_lily', 60, 140], ['marsh_lily', -40, 165], ['marsh_mushroom', -200, -40], ['marsh_rock', 210, -10]], fires:[[95, 120]], light:[0, -120, 140, '150,210,200'], r:250, items:[['b_clocher', 0, 0], ['b_panneau', 175, 65], ['ruin_corner_d', -170, 55]], core:['marsh_tile_flagmoss', 'marsh_tile_water'], edge:['marsh_tile_lilies', 'marsh_tile_water']},
+    {name:'Embarcadère', deco:[['marsh_reeds', -130, 40], ['marsh_reeds', 230, 40], ['marsh_lily', 40, 110], ['marsh_lily', -40, 90], ['marsh_grass', -160, -40], ['marsh_rock', 190, 120]], fires:[[-110, 95]], light:[60, -10, 120, '150,255,190'], r:210, items:[['b_ponton', 0, 0], ['b_barque', 150, 85]], core:['marsh_tile_water', 'marsh_tile_lilies'], edge:['marsh_tile_mud', 'marsh_tile_reeds']},
+    {name:'Cercle des noyés', deco:[['marsh_mushroom', -150, 30], ['marsh_mushroom', 160, 20], ['marsh_mushroom', 10, 125], ['marsh_reeds', -210, -40], ['marsh_reeds', 210, -50], ['marsh_lily', 120, 125]], light:[0, -20, 170, '170,140,255'], r:230, items:[['b_cercle', 0, 0]], core:['marsh_tile_moss', 'marsh_tile_mud'], edge:['marsh_tile_puddles', 'marsh_tile_moss']}],
   cimetiere:[
-    {name:'Caveau de famille', light:[0, 30, 170, '255,190,110'], r:270, items:[['b_grille', 0, -125], ['b_mausolee', 0, 0], ['tomb_candles', -155, 75], ['tomb_candles', 160, 70]], core:['cemetery_tile_flag', 'cemetery_tile_flagmoss'], edge:['cemetery_tile_gravel', 'cemetery_tile_leaves']},
-    {name:'Chapelle et ossuaire', light:[0, -60, 160, '255,170,120'], r:290, items:[['b_chapelle', 0, 0], ['b_ossuaire', 210, 45], ['knight_statue', -180, 75]], core:['cemetery_tile_flagmoss', 'cemetery_tile_flag'], edge:['cemetery_tile_gravel', 'cemetery_tile_drygrass']},
-    {name:'Remise du fossoyeur', light:[60, 20, 130, '255,190,110'], r:210, items:[['b_cabane', 0, 0], ['gate_pillar', -150, 55], ['tomb_candles', 130, 80]], core:['cemetery_tile_grave', 'cemetery_tile_earth'], edge:['cemetery_tile_gravel', 'cemetery_tile_earth']}]
+    {name:'Caveau de famille', deco:[['cemetery_tomb', -240, 10], ['cemetery_tomb', 240, 0], ['cemetery_tomb', -90, 160], ['cemetery_tomb', 110, 175], ['cemetery_skull', 40, 140], ['cemetery_grass', -190, -80], ['cemetery_grass', 200, -90], ['cemetery_rock', -260, 120]], light:[0, 30, 170, '255,190,110'], r:270, items:[['b_grille', 0, -125], ['b_mausolee', 0, 0], ['tomb_candles', -155, 75], ['tomb_candles', 160, 70]], core:['cemetery_tile_flag', 'cemetery_tile_flagmoss'], edge:['cemetery_tile_gravel', 'cemetery_tile_leaves']},
+    {name:'Chapelle et ossuaire', deco:[['cemetery_tomb', -60, 140], ['cemetery_tomb', 90, 150], ['cemetery_tomb', 280, 140], ['cemetery_skull', 230, 120], ['cemetery_grass', -250, -50], ['cemetery_tree', -300, -40], ['cemetery_rock', 150, -110]], fires:[[-80, 115]], light:[0, -60, 160, '255,170,120'], r:290, items:[['b_chapelle', 0, 0], ['b_ossuaire', 210, 45], ['knight_statue', -180, 75]], core:['cemetery_tile_flagmoss', 'cemetery_tile_flag'], edge:['cemetery_tile_gravel', 'cemetery_tile_drygrass']},
+    {name:'Remise du fossoyeur', deco:[['cemetery_tomb', -120, 120], ['cemetery_tomb', 210, 20], ['cemetery_skull', -40, 140], ['cemetery_skull', 60, 160], ['cemetery_rock', -200, -40], ['cemetery_grass', 120, -80]], fires:[[40, 120]], smoke:[[-20, -120]], light:[60, 20, 130, '255,190,110'], r:210, items:[['b_cabane', 0, 0], ['gate_pillar', -150, 55], ['tomb_candles', 130, 80]], core:['cemetery_tile_grave', 'cemetery_tile_earth'], edge:['cemetery_tile_gravel', 'cemetery_tile_earth']}]
 };
 const SITE_CACHE = new Map();
 function siteAt(ci, cj, map){
@@ -4101,13 +4108,16 @@ function siteNear(x, y, m){
   return null;
 }
 /* lieux visibles, pour poser leurs bâtiments dans la liste triée en profondeur */
-const SITE_LIGHTS = [];
+const SITE_LIGHTS = [], SITE_SMOKE = [];
 function sitesInView(ox, oy){
-  SITE_LIGHTS.length = 0;
+  SITE_LIGHTS.length = 0; SITE_SMOKE.length = 0;
   const out = [], x0 = -ox - 400, x1 = -ox + W + 400, y0 = -oy - 400, y1 = -oy + H + 400;
   for (let ci = Math.floor(x0/SC); ci <= Math.floor(x1/SC); ci++) for (let cj = Math.floor(y0/SC); cj <= Math.floor(y1/SC); cj++){
     const s = siteAt(ci, cj, G.map); if (!s || s.x < x0 || s.x > x1 || s.y < y0 || s.y > y1) continue;
     for (const [id, dx, dy] of s.sc.items) if (ASSET_IMG[id]) out.push({x:s.x + dx, y:s.y + dy, id});
+    for (const [id, dx, dy] of (s.sc.deco || [])) if (ASSET_IMG[id]) out.push({x:s.x + dx, y:s.y + dy, id, deco:true});
+    for (const [dx, dy] of (s.sc.fires || [])) out.push({x:s.x + dx, y:s.y + dy, id:'brazier', fire:true});
+    for (const [dx, dy] of (s.sc.smoke || [])) SITE_SMOKE.push({x:s.x + dx, y:s.y + dy});
     if (s.sc.light){ const [lx, ly, r, col] = s.sc.light; SITE_LIGHTS.push({x:s.x + lx, y:s.y + ly, r, col}); }
   }
   return out;
@@ -4119,6 +4129,95 @@ function siteTile(u, v){
   if (n.k + jit > 1) return null;
   const L = n.k + jit < 0.42 ? n.s.sc.core : n.s.sc.edge;
   return L[Math.floor(hash(u*7 - 3, v*11 + 5)*L.length) % L.length];
+}
+
+/* ---------- Collisions : bâtiments, ruines, statues (empreinte au sol en ellipse) ---------- */
+// [demi-largeur, demi-profondeur, décalage vertical du centre] en pixels du jeu ; 0 = on passe à travers (ponton, cercle)
+const FOOT = {b_hutte:[92, 46, -48], b_tour:[78, 40, -44], b_puits:[44, 24, -26], b_bucher:[54, 25, -22], b_oratoire:[34, 18, -20],
+  b_pilotis:[88, 44, -52], b_clocher:[52, 28, -48], b_barque:[58, 20, -18], b_panneau:[7, 5, -5],
+  b_mausolee:[84, 42, -48], b_chapelle:[88, 44, -48], b_ossuaire:[78, 28, -38], b_cabane:[56, 28, -28], b_grille:[148, 13, -14],
+  b_phare_depart:[46, 25, -24], b_ponton:0, b_cercle:0, b_charrette:0};
+function footOf(id){
+  if (id in FOOT) return FOOT[id];
+  const a = ASSET_IMG[id]; if (!a) return 0;
+  const rx = a.w*0.3; return [rx, rx*0.45, -rx*0.35];                      // ruines et statues : empreinte proportionnelle
+}
+const OB_CELL = 256, OB_CACHE = new Map();
+function obstacleCell(cx, cy){
+  const key = G.map + ':' + cx + ',' + cy; let L = OB_CACHE.get(key);
+  if (L) return L;
+  L = []; const x0 = cx*OB_CELL, y0 = cy*OB_CELL;
+  const push = (id, x, y) => { if (x < x0 || x >= x0 + OB_CELL || y < y0 || y >= y0 + OB_CELL) return; const f = footOf(id); if (f) L.push({x, y:y + f[2], rx:f[0], ry:f[1]}); };
+  for (let ci = Math.floor(x0/SC) - 1; ci <= Math.floor(x0/SC) + 1; ci++) for (let cj = Math.floor(y0/SC) - 1; cj <= Math.floor(y0/SC) + 1; cj++){
+    const s = siteAt(ci, cj, G.map); if (!s) continue;
+    for (const [id, dx, dy] of s.sc.items) push(id, s.x + dx, s.y + dy);
+  }
+  push('b_phare_depart', 0, -TH*1.6);
+  const RIDS = (LANDMARKS[G.map] || []);                                     // ruines isolées : même tirage que l'affichage
+  if (RIDS.length){
+    const u0 = Math.floor(2*y0/TH) - 1, u1 = Math.ceil(2*(y0 + OB_CELL)/TH) + 1, v0 = Math.floor(2*x0/TW) - 1, v1 = Math.ceil(2*(x0 + OB_CELL)/TW) + 1;
+    for (let u = u0; u <= u1; u++) for (let v = v0; v <= v1; v++){
+      if ((u + v) & 1 || Math.abs(u) < 5 || Math.abs(v) < 4) continue;
+      if (hash(u*31 + 7, v*17 + 1) > 0.018) continue;
+      if (siteNear(v*TW/2, u*TH/2, 140)) continue;
+      push(RIDS[Math.floor(hash(u + 2, v - 3)*RIDS.length) % RIDS.length], v*TW/2, u*TH/2 + TH*0.25);
+    }
+  }
+  OB_CACHE.set(key, L); if (OB_CACHE.size > 3000) OB_CACHE.clear();
+  return L;
+}
+/* repousse un corps (x, y, rayon r) hors des obstacles ; il glisse le long des murs */
+function collideWorld(o, r){
+  if (!ASSETS_READY) return;
+  const cx = Math.floor(o.x/OB_CELL), cy = Math.floor(o.y/OB_CELL);
+  for (let a = cx - 1; a <= cx + 1; a++) for (let b = cy - 1; b <= cy + 1; b++){
+    for (const ob of obstacleCell(a, b)){
+      const RX = ob.rx + r, RY = ob.ry + r*0.6, dx = (o.x - ob.x)/RX, dy = (o.y - ob.y)/RY, d2 = dx*dx + dy*dy;
+      if (d2 >= 1) continue;
+      if (d2 < 1e-6){ o.y = ob.y + RY; continue; }
+      const k = 1/Math.sqrt(d2); o.x = ob.x + dx*k*RX; o.y = ob.y + dy*k*RY;
+    }
+  }
+}
+
+/* ---------- Vie des lieux : découverte, récompense, gardien, fumée ---------- */
+const SITE_GUARD = {foret:'ombre', marais:'noye', cimetiere:'spectre'};
+function updateSites(dt){
+  G.siteT = (G.siteT || 0) - dt;
+  for (const sm of SITE_SMOKE) if (Math.random() < dt*7 && G.smoke.length < 260*PCAP())
+    G.smoke.push({x:sm.x + rnd(-6, 6), y:sm.y, vx:rnd(4, 14), vy:rnd(-34, -22), life:2.4, max:2.4, r:5, grow:26, col:'rgba(70,70,76,', a:.32});
+  if (G.siteT > 0) return; G.siteT = 0.25;
+  const n = siteNear(G.p.x, G.p.y, 0); if (!n) return;
+  const s = n.s, key = s.ci + ',' + s.cj; G.sitesSeen = G.sitesSeen || new Set();
+  if (G.sitesSeen.has(key)) return;
+  G.sitesSeen.add(key);
+  toast('Lieu découvert : ' + s.sc.name); SFX.rare();
+  const fx = s.x + rnd(-40, 40), fy = s.y + s.r*0.42;                        // quelque chose a été laissé devant
+  const roll = hash(s.ci*3 + 1, s.cj*5 + 2);
+  G.items.push({type:roll < 0.45 ? 'coffre' : roll < 0.75 ? 'fiole' : 'bourse', x:fx, y:fy});
+  if (roll < 0.6 && G.t > 20){ const e = makeEnemy(SITE_GUARD[G.map] || 'ombre', s.x + rnd(-60, 60), s.y + s.r*0.3, {elite:true}); if (e) toast('Le lieu était gardé'); }
+}
+/* lucioles qui tournent autour des lumières des lieux */
+function drawSiteLife(X, Y, now){
+  if (reduce) return;
+  const t = now/1000;
+  ctx.save(); ctx.globalCompositeOperation = 'lighter';
+  for (const l of SITE_LIGHTS){
+    for (let k = 0; k < 7; k++){
+      const a = t*(0.35 + k*0.07) + k*2.4 + l.x*0.01, rr = l.r*(0.35 + 0.4*((k*37 % 10)/10));
+      const x = X(l.x) + Math.cos(a)*rr, y = Y(l.y) + Math.sin(a*1.3)*rr*0.45 - 10*Math.sin(t*1.7 + k), tw = 0.5 + 0.5*Math.sin(t*3 + k*1.9);
+      ctx.fillStyle = `rgba(${l.col},${0.12*tw})`; ctx.beginPath(); ctx.arc(x, y, 5, 0, TAU); ctx.fill();
+      ctx.fillStyle = `rgba(255,240,200,${0.8*tw})`; ctx.fillRect(x - 1, y - 1, 2, 2);
+    }
+  }
+  ctx.restore();
+}
+/* flamme d'un feu de camp (même dessin que les braseros) */
+function siteFlame(x, y, now){
+  const fl = reduce ? 0 : Math.sin(now/70 + x)*2;
+  ctx.globalAlpha = 0.45; ctx.drawImage(softDot('242,140,60'), x - 50, y - 62, 100, 100); ctx.globalAlpha = 1;
+  ctx.fillStyle = '#ff9a3a'; ctx.beginPath(); ctx.moveTo(x-6,y-5); ctx.quadraticCurveTo(x-2,y-14-fl,x,y-21-fl); ctx.quadraticCurveTo(x+2,y-14-fl,x+6,y-5); ctx.fill();
+  ctx.fillStyle = '#ffe08a'; ctx.beginPath(); ctx.moveTo(x-3,y-5); ctx.quadraticCurveTo(x,y-13-fl,x+3,y-5); ctx.fill();
 }
 
 /* =====================================================================
@@ -4403,6 +4502,11 @@ function drawMini(){
     mctx.fillStyle = 'rgba(30,50,36,.9)';
     const i0 = Math.floor((p.x-world)/TC), i1 = Math.floor((p.x+world)/TC), j0 = Math.floor((p.y-world)/TC), j1 = Math.floor((p.y+world)/TC);
     if (!miniBig) for (let i=i0;i<=i1;i++) for (let j=j0;j<=j1;j++){ const t = treeAt(i,j); if (!t) continue; const [x,y] = P2(t.x,t.y); mctx.beginPath(); mctx.arc(x,y,Math.max(1.5,22*k),0,TAU); mctx.fill(); }
+  }
+  {                                                                   // lieux : dorés une fois découverts
+    const c0 = Math.floor((p.x-world)/SC) - 1, c1 = Math.floor((p.x+world)/SC) + 1, d0 = Math.floor((p.y-world)/SC) - 1, d1 = Math.floor((p.y+world)/SC) + 1;
+    for (let ci=c0;ci<=c1;ci++) for (let cj=d0;cj<=d1;cj++){ const st = siteAt(ci, cj, G.map); if (!st) continue; const [x,y] = P2(st.x, st.y); const seen = G.sitesSeen && G.sitesSeen.has(ci + ',' + cj);
+      mctx.fillStyle = seen ? 'rgba(242,184,75,.9)' : 'rgba(200,200,190,.45)'; mctx.save(); mctx.translate(x, y); mctx.rotate(Math.PI/4); const z = Math.max(2.5, 30*k); mctx.fillRect(-z/2, -z/2, z, z); mctx.restore(); }
   }
   mctx.fillStyle = `rgba(${P.tint},.08)`; mctx.beginPath(); mctx.arc(R,R,250*k,0,TAU); mctx.fill();
   mctx.strokeStyle = 'rgba(236,228,207,.18)'; mctx.lineWidth = 1; mctx.strokeRect(R - W/2*k, R - H/2*k, W*k, H*k);
