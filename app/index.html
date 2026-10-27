@@ -1163,7 +1163,7 @@ function newGame(charId, mapId){
   G = {
     map:mapId, char:charId, hard: !!(SAVE.hard && SAVE.wins > 0),
     t:0, kills:0, gold:0, spawnAcc:0, ev:0,
-    p:{x:0, y:0, r:12, dashCd:0, dashT:0, dvx:0, dvy:0, hp:100, max:100, face:1, hurt:0, step:0, inv:0, revives:(SAVE.shop.renaissance||0) + (c.mod.revive||0), xp:0, lvl:1, need:needFor(1)},
+    p:{pc:charId, x:0, y:0, r:12, dashCd:0, dashT:0, dvx:0, dvy:0, hp:100, max:100, face:1, hurt:0, step:0, inv:0, revives:(SAVE.shop.renaissance||0) + (c.mod.revive||0), xp:0, lvl:1, need:needFor(1)},
     weapons:[{id:c.w, lv:1, t:0.3, a:0, stars:0}], passives:[], acq:{[c.w]:0},
     banished:new Set(),
     rerolls:1 + (SAVE.shop.relance||0) + (c.mod.rerolls||0) + (SAVE.bonus.rerolls||0),
@@ -2430,7 +2430,7 @@ function draw(now){
     const x = X(c.x), y = Y(c.y); if (!vis(x,y,60)) continue;
     DL.push({y:footY(c), k:2, e:c});
   }
-  const pFoot = p.y + CHAR_DEFS.guardian.foot;
+  const pFoot = p.y + CHAR_DEFS[pcKey()].foot;
   DL.push({y:pFoot, k:3});
   if (G.ally && G.ally.p) DL.push({y:G.ally.p.y + 14, k:6});
   for (const r of ruinsInView(ox, oy)) DL.push({y:r.y, k:4, r});
@@ -2622,6 +2622,7 @@ function draw(now){
   if (PAINT_OK) paintTele(X, Y, now);
   drawBossFxLight(X, Y, now);
   drawLanternFx(X, Y, now);
+  if (G.ally && G.ally.p && !G.ally.p.down) coopSwap(() => drawLanternFx(X, Y, now), true);   // halo de la lanterne du compagnon
   if (G.relic){
     const x = X(G.relic.x), y = Y(G.relic.y);
     if (vis(x,y,80)){
@@ -3038,7 +3039,7 @@ function lightPass(X, Y, lx, ly, L, dk, now){
   };
   const px = X(G.p.x), py = Y(G.p.y);
   add(lx, ly, L*1.12, 1); add(px, py, 80, 0.5);
-  if (G.ally && G.ally.p){ const ap = G.ally.p; add(X(ap.x) + 8*(ap.face || 1), Y(ap.y) - 34, L*1.0, 0.95); }   // la lanterne du compagnon éclaire aussi
+  if (G.ally && G.ally.p){ const R = coopSwap(() => keeperRig(now), true); add(X(R.lx), Y(R.ly), L*1.0, 0.95); }   // la lanterne du compagnon éclaire aussi
   for (const b of G.braz) if (!b.dead) add(X(b.x), Y(b.y) - 12, 200 + (reduce ? 0 : Math.sin(now/90 + b.x)*10), 0.95);
   for (const z of G.zones) if (z.burn) add(X(z.x), Y(z.y), z.R*2.4, 0.7*Math.min(1, z.life));
   for (const s of G.shots){
@@ -3514,6 +3515,12 @@ const CHAR_DEFS = {
     foot: 14                                         // les pieds sont à 14 px sous le centre de collision
   }
 };
+/* personnages jouables rendus en 3D : une planche chacun (characters/pc/<id>/), même format que le Gardien */
+const PC_IDS = ['herboriste', 'sonneuse', 'faucheur', 'vagabonde', 'conteuse', 'braisier', 'astronome', 'fossoyeuse', 'revenant'];
+for (const id of PC_IDS) CHAR_DEFS[id] = {folder:'characters/pc/' + id + '/', format:'sheet', files:{sheet:id + '.sheet.js'}, screenHeight:122, foot:14};
+/* planche à utiliser pour le Gardien courant (G.p) : la sienne si elle est prête, sinon celle du Gardien */
+const pcKeyOf = id => (id && id !== 'gardien' && CHARS[id] && CHARS[id].status === 'ready') ? id : 'guardian';
+const pcKey = () => pcKeyOf(G && G.p && G.p.pc);
 const ASSET_DATA = {};
 function registerAssetData(id, data){ ASSET_DATA[id] = data; }
 window.registerAssetData = registerAssetData;
@@ -3654,7 +3661,7 @@ function guardianState(){
   return p.ga;
 }
 function guardianUpdate(now){
-  const p = G.p, S = guardianState(), C = CHARS.guardian;
+  const p = G.p, S = guardianState(), C = CHARS[pcKey()];
   const dt = S.lastNow ? Math.min(0.05, Math.max(0, (now - S.lastNow)/1000)) : 0; S.lastNow = now;
   const sp = Math.hypot(p.vx || 0, p.vy || 0), moving = sp > 5 && (state === 'play' || state === 'dawn');
   // orientation : direction du déplacement, ou de la visée à la souris si elle est active
@@ -3668,7 +3675,7 @@ function guardianUpdate(now){
   const A = C && C.anims;
   // distance parcourue pendant un cycle de marche : mesurée sur le modèle 3D (planche), sinon réglage de l'ancienne animation
   const shW = C && C.format === 'sheet' && C.sheet.anims.walk;
-  const dist = shW && shW.strideSheet ? shW.strideSheet*CHAR_DEFS.guardian.screenHeight/(C.sheet.hoodPx || 192) : (A && A.walk && A.walk.distance) || 100;
+  const dist = shW && shW.strideSheet ? shW.strideSheet*CHAR_DEFS[pcKey()].screenHeight/(C.sheet.hoodPx || 192) : (A && A.walk && A.walk.distance) || 100;
   S.walkDist = dist;
   // à reculons (on marche à l'opposé du regard) : le cycle de marche est joué à l'envers, les pieds reculent vraiment
   const back = aimOn && moving && ((p.vx || 0)*fx + (p.vy || 0)*fy) < -0.25*sp*Math.hypot(fx, fy);
@@ -3683,7 +3690,7 @@ function guardianUpdate(now){
 /* ---------- Image du Gardien pré-réduite à la taille d'écran (une fois par case), au lieu de réduire la grande planche à chaque image ---------- */
 const SHEET_CACHE = new Map();
 function sheetCell(C, col, row, k){
-  const sh = C.sheet, d = DPR(), key = col + ',' + row + '|' + k.toFixed(3) + '|' + d;
+  const sh = C.sheet, d = DPR(), key = C.def.folder + col + ',' + row + '|' + k.toFixed(3) + '|' + d;   // une entrée par personnage
   let c = SHEET_CACHE.get(key); if (c) return c;
   c = document.createElement('canvas'); c.width = Math.max(1, Math.round(sh.frameW*k*d)); c.height = Math.max(1, Math.round(sh.frameH*k*d));
   const g = c.getContext('2d'); g.imageSmoothingQuality = 'high';
@@ -3695,7 +3702,7 @@ function sheetCell(C, col, row, k){
 let GPOSE = null;
 function guardianPose(now){
   if (GPOSE && GPOSE.now === now && GPOSE.p === G.p) return GPOSE;
-  const C = CHARS.guardian, p = G.p, S = guardianUpdate(now), def = CHAR_DEFS.guardian;
+  const C = CHARS[pcKey()], p = G.p, S = guardianUpdate(now), def = CHAR_DEFS[pcKey()];
   const out = {now, p, S, format:C.format, fx:p.x, fy:p.y + def.foot};
   if (C.format === 'rig'){
     const rig = C.rig, vn = S.view, V0 = rig.views[vn], mirror = !!V0.mirror, V = mirror ? rig.views[V0.mirror] : V0;
@@ -3728,6 +3735,7 @@ function guardianPose(now){
     if (sh.glass){                                   // lanterne peinte sur le corps : position du verre mesurée sur chaque image
       const g1 = sh.glass[S.anim][row][fi], g2 = sh.glass[S.anim][row][fj], gp = [g1[0] + (g2[0] - g1[0])*w, g1[1] + (g2[1] - g1[1])*w];
       out.lantern = [out.fx + (gp[0] - sh.anchor[0])*k, out.fy + (gp[1] - sh.anchor[1])*k];
+      out.cold = !!sh.glassCold;                     // verre à lumière froide (bleutée)
       out.lanternHidden = !!(sh.glassHidden && sh.glassHidden[S.anim] && sh.glassHidden[S.anim][row][fi]);   // lanterne derrière le corps (vue de dos)
     } else {                                         // lanterne séparée : accrochée au crochet du bâton
       const hk = sh.hook[S.anim][row][fi];
@@ -3754,7 +3762,7 @@ function guardianPose(now){
   }
   return (GPOSE = out);
 }
-function guardianReady(){ const C = CHARS.guardian; return !!(C && C.status === 'ready' && G && G.p); }
+function guardianReady(){ const C = CHARS[pcKey()]; return !!(C && C.status === 'ready' && G && G.p); }
 
 /* Le jeu demande la position de la lanterne (lumière) avant de dessiner : on la fournit. */
 function keeperRig(now){
@@ -3769,7 +3777,7 @@ function drawLanternSprite(img, L, hx, hy, k, a){
 }
 function drawPlayer(px, py, lx, ly, now){
   if (!guardianReady()) return drawPlayerPainted(px, py, lx, ly, now);
-  const C = CHARS.guardian, P = guardianPose(now), p = G.p, S = P.S;
+  const C = CHARS[pcKey()], P = guardianPose(now), p = G.p, S = P.S;
   const ox = px - p.x, oy = py - p.y;                               // monde → écran
   const blink = p.inv > 0.15 && !(p.dashT > 0) && Math.floor(now/80)%2 === 0;
   // ombre au sol : sous les pieds, légèrement repoussée à l'opposé de la lanterne
@@ -3807,8 +3815,9 @@ function drawLanternFx(X, Y, now){
   const P = guardianPose(now), lx = X(P.lantern[0]), ly = Y(P.lantern[1]);
   const dg = typeof keeperDanger === 'function' ? keeperDanger() : 0, jit = reduce ? 0 : (Math.sin(now/53)*0.5 + Math.sin(now/31)*0.5)*(0.15 + dg*0.85), k = 1 + jit*0.22;
   const hid = P.lanternHidden ? 0.45 : 1;                              // cachée derrière le Gardien : seul le halo déborde
-  pglow(lx, ly, 14*k, '255,150,50', 0.12);
-  if (hid === 1) pglow(lx, ly, 4.5*k, '255,190,100', 0.3); else pglow(lx, ly, 8*k, '255,170,80', 0.08);
+  const c = P.cold ? ['80,140,255', '170,205,255', '110,165,255'] : ['255,150,50', '255,190,100', '255,170,80'];
+  pglow(lx, ly, 14*k, c[0], P.cold ? 0.18 : 0.12);
+  if (hid === 1) pglow(lx, ly, 4.5*k, c[1], 0.3); else pglow(lx, ly, 8*k, c[2], 0.08);
 }
 
 /* ---------- Profondeur : point de référence au sol de chaque élément ---------- */
@@ -3875,6 +3884,7 @@ addEventListener('keydown', e => {
 }, true);
 
 loadCharacter('guardian');
+for (const id of PC_IDS) loadCharacter(id);                           // les planches absentes sont ignorées (le Gardien les remplace)
 /* =====================================================================
    GESTIONNAIRE D'ASSETS : tout ce qui est « dessiné » dans le monde vient
    d'images listées dans assets/manifest.js. Canvas se limite à les afficher,
@@ -5098,7 +5108,7 @@ function makeAlly(charId, shop){
   const c = CH[charId];
   G.allyShop = shop || {};
   G.ally = {char:charId, input:{mx:0, my:0, aim:null},
-    p:{x:60, y:30, r:12, dashCd:0, dashT:0, dvx:0, dvy:0, hp:100, max:100, face:1, hurt:0, step:0, inv:0, revives:(shop && shop.renaissance || 0) + (c.mod.revive || 0), xp:0, lvl:1, need:needFor(1)},
+    p:{pc:charId, x:60, y:30, r:12, dashCd:0, dashT:0, dvx:0, dvy:0, hp:100, max:100, face:1, hurt:0, step:0, inv:0, revives:(shop && shop.renaissance || 0) + (c.mod.revive || 0), xp:0, lvl:1, need:needFor(1)},
     weapons:[{id:c.w, lv:1, t:0.6, a:0, stars:0}], passives:[], st:{}, banished:new Set(), rerolls:0, banishes:0};
   withAlly(() => { computeStats(); G.p.hp = G.p.max; });
 }
@@ -5174,7 +5184,7 @@ function coopDownMark(p, X, Y, now){                                     // anne
 const R1 = v => Math.round(v*10)/10, R0 = v => Math.round(v);
 function pickF(o, keys){ const r = {}; for (const k of keys){ const v = o[k]; if (v !== undefined && v !== null) r[k] = typeof v === 'number' ? R1(v) : v; } return r; }
 function snapPlayer(p, w, ps, st){
-  return {x:R1(p.x), y:R1(p.y), vx:R0(p.vx || 0), vy:R0(p.vy || 0), hp:R0(p.hp), max:R0(p.max), face:p.face, hurt:R1(p.hurt || 0), down:!!p.down, rv:R1(p.reviveT || 0), dash:p.dashT > 0 ? 1 : 0, sp:R1(st.speed || 1),
+  return {pc:p.pc, x:R1(p.x), y:R1(p.y), vx:R0(p.vx || 0), vy:R0(p.vy || 0), hp:R0(p.hp), max:R0(p.max), face:p.face, hurt:R1(p.hurt || 0), down:!!p.down, rv:R1(p.reviveT || 0), dash:p.dashT > 0 ? 1 : 0, sp:R1(st.speed || 1),
     w:w.map(x => [x.id, x.lv, R1(x.a || 0), R1(x.R || 0), x.n || 0, R1(x.orb || 0), R1(x.active || 0), R1(x.len || 0), R1(x.max || 0), x.stars || 0]),
     ps:ps.map(q => [q.id, q.lv])};
 }
@@ -5234,7 +5244,7 @@ function applyPlayer(dst, s, isMe, dt){
     if (dst._init !== true || Math.hypot(dst.x - s.x, dst.y - s.y) > 160){ dst.x = s.x; dst.y = s.y; dst._init = true; }
     else { const k = Math.min(1, dt*6); dst.x += (s.x - dst.x)*k; dst.y += (s.y - dst.y)*k; }
   } else { dst.x = s.x; dst.y = s.y; dst.vx = s.vx; dst.vy = s.vy; }
-  Object.assign(dst, {hp:s.hp, max:s.max, hurt:s.hurt, down:s.down, reviveT:s.rv, r:12});
+  Object.assign(dst, {hp:s.hp, max:s.max, hurt:s.hurt, down:s.down, reviveT:s.rv, r:12, pc:s.pc});
   if (!isMe && Math.abs(s.vx) > 8) dst.face = Math.sign(s.vx);
 }
 function weaponsFrom(arr, prev){
@@ -5953,7 +5963,7 @@ function renderShopStats(){
 function renderShowcase(){
   const c = CH[shopChar], owned = !!SAVE.chars[shopChar];
   $('#scName').textContent = c.name; $('#scSpell').textContent = 'Sort de départ : ' + WD[c.w].name + (owned ? '' : ' · verrouillé');
-  $('#scNote').textContent = shopChar === 'gardien' ? '' : 'Modèle 3D à venir : seul le Gardien a son modèle pour l’instant';
+  $('#scNote').textContent = shopChar === 'gardien' || pcKeyOf(shopChar) !== 'guardian' ? '' : 'Modèle 3D à venir';
   renderShopStats();
 }
 function scDraw(now){
@@ -5962,9 +5972,9 @@ function scDraw(now){
   const cv = $('#scCanvas'), g = cv.getContext('2d'), r = cv.getBoundingClientRect(), d = Math.min(2, DPR());
   const w = Math.max(1, Math.round(r.width*d)), h = Math.max(1, Math.round(r.height*d)); if (cv.width !== w || cv.height !== h){ cv.width = w; cv.height = h; }
   g.clearRect(0, 0, w, h);
-  const C = CHARS.guardian, sh = C && C.sheet, cx = w/2, fy = h*0.9;
+  const key = pcKeyOf(shopChar), C = CHARS[key], sh = C && C.sheet, cx = w/2, fy = h*0.9, hasModel = shopChar === 'gardien' || key !== 'guardian';
   g.fillStyle = 'rgba(0,0,0,.55)'; g.beginPath(); g.ellipse(cx, fy, w*0.2, w*0.055, 0, 0, TAU); g.fill();
-  if (shopChar !== 'gardien' || !C || C.status !== 'ready' || !sh){
+  if (!hasModel || !C || C.status !== 'ready' || !sh){
     // pas encore de modèle : silhouette honnête, couleur de la cape et sort de départ
     const c = CH[shopChar]; g.fillStyle = c.cloak; g.globalAlpha = 0.35; g.beginPath(); g.ellipse(cx, fy - h*0.33, w*0.16, h*0.33, 0, 0, TAU); g.fill(); g.globalAlpha = 1;
     g.fillStyle = 'rgba(236,228,207,.45)'; g.font = `600 ${Math.round(14*d)}px "Barlow Semi Condensed", sans-serif`; g.textAlign = 'center'; g.fillText('Modèle à venir', cx, fy - h*0.33); return;
@@ -5979,7 +5989,7 @@ function scDraw(now){
   g.drawImage(C.sheetImg, (a.col + fi)*sh.frameW, row*sh.frameH, sh.frameW, sh.frameH, cx - sh.anchor[0]*k, fy - sh.anchor[1]*k, dw, dh);
   g.filter = 'none';
   if (sh.glass){ const gp = sh.glass.idle[row][fi], lx = cx + (gp[0] - sh.anchor[0])*k, ly = fy + (gp[1] - sh.anchor[1])*k, hid = sh.glassHidden && sh.glassHidden.idle && sh.glassHidden.idle[row][fi];
-    g.globalCompositeOperation = 'lighter'; const R = 90*d*(hid ? 0.5 : 1), gr = g.createRadialGradient(lx, ly, 0, lx, ly, R); gr.addColorStop(0, 'rgba(255,190,110,.45)'); gr.addColorStop(1, 'rgba(255,190,110,0)'); g.fillStyle = gr; g.fillRect(lx - R, ly - R, R*2, R*2); g.globalCompositeOperation = 'source-over'; }
+    g.globalCompositeOperation = 'lighter'; const R = 90*d*(hid ? 0.5 : 1), gr = g.createRadialGradient(lx, ly, 0, lx, ly, R); const lc = sh.glassCold ? '150,200,255' : '255,190,110'; gr.addColorStop(0, 'rgba(' + lc + ',.45)'); gr.addColorStop(1, 'rgba(' + lc + ',0)'); g.fillStyle = gr; g.fillRect(lx - R, ly - R, R*2, R*2); g.globalCompositeOperation = 'source-over'; }
 }
 function goShop(){
   state = 'shop'; show('shop');

@@ -4744,7 +4744,16 @@ registerAssetData('manifest', {
   "marais": "ui/maps/map_marais.webp"
  },
  "portraits": {
-  "gardien": "ui/portraits/p_gardien.webp"
+  "astronome": "ui/portraits/p_astronome.webp",
+  "braisier": "ui/portraits/p_braisier.webp",
+  "conteuse": "ui/portraits/p_conteuse.webp",
+  "faucheur": "ui/portraits/p_faucheur.webp",
+  "fossoyeuse": "ui/portraits/p_fossoyeuse.webp",
+  "gardien": "ui/portraits/p_gardien.webp",
+  "herboriste": "ui/portraits/p_herboriste.webp",
+  "revenant": "ui/portraits/p_revenant.webp",
+  "sonneuse": "ui/portraits/p_sonneuse.webp",
+  "vagabonde": "ui/portraits/p_vagabonde.webp"
  },
  "fx": {
   "amb_brasero": {
