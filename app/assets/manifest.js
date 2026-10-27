@@ -2392,7 +2392,7 @@ registerAssetData('manifest', {
    ],
    "size": [
     30,
-    23
+    24
    ],
    "lights": [],
    "status": "art",
@@ -2550,7 +2550,7 @@ registerAssetData('manifest', {
    ],
    "size": [
     24,
-    15
+    16
    ],
    "lights": [],
    "status": "art",
@@ -4014,7 +4014,7 @@ registerAssetData('manifest', {
    ],
    "size": [
     78,
-    61
+    62
    ],
    "lights": [],
    "status": "art"
@@ -4046,7 +4046,7 @@ registerAssetData('manifest', {
    ],
    "size": [
     55,
-    71
+    70
    ],
    "lights": [],
    "status": "art"
@@ -4110,7 +4110,7 @@ registerAssetData('manifest', {
    ],
    "size": [
     62,
-    97
+    96
    ],
    "lights": [],
    "status": "art"
@@ -4229,7 +4229,7 @@ registerAssetData('manifest', {
    ],
    "size": [
     66,
-    57
+    56
    ],
    "lights": [],
    "status": "art"
@@ -4245,7 +4245,7 @@ registerAssetData('manifest', {
    ],
    "size": [
     46,
-    81
+    82
    ],
    "lights": [],
    "status": "art"
@@ -4309,7 +4309,7 @@ registerAssetData('manifest', {
    ],
    "size": [
     54,
-    75
+    74
    ],
    "lights": [],
    "status": "art"
@@ -4348,7 +4348,7 @@ registerAssetData('manifest', {
    ],
    "size": [
     92,
-    85
+    86
    ],
    "lights": [],
    "status": "art"
@@ -4435,7 +4435,7 @@ registerAssetData('manifest', {
    ],
    "size": [
     30,
-    59
+    58
    ],
    "lights": [],
    "status": "art"
@@ -4483,7 +4483,7 @@ registerAssetData('manifest', {
    ],
    "size": [
     52,
-    83
+    82
    ],
    "lights": [],
    "status": "art"
@@ -4499,7 +4499,7 @@ registerAssetData('manifest', {
    ],
    "size": [
     104,
-    87
+    88
    ],
    "lights": [],
    "status": "art"
@@ -4547,7 +4547,7 @@ registerAssetData('manifest', {
    ],
    "size": [
     120,
-    71
+    72
    ],
    "lights": [],
    "status": "art"

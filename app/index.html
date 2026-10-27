@@ -2196,6 +2196,15 @@ const PAL = {
   cimetiere:{ground:'#23272a', blot:['#2c3134','#191c1f','#33393e','#272a26'], speck:'#4b5058', fog:'160,160,185', dark:'6,6,10', tint:'236,188,150', tree:'#0d0e12', canopy:'#15161c', canopy2:'#1c1e26', fly:'205,190,255'}
 };
 const texCache = {};
+const ZGRADE = {foret:'rgb(124,128,104)', marais:'rgb(104,124,130)', cimetiere:'rgb(116,112,134)'};   // gris moyen légèrement teinté par zone
+let VIG = null;
+function vignetteSprite(){                                           // vignette précalculée (au lieu d'un dégradé par image)
+  if (VIG && VIG.w === W && VIG.h === H) return VIG.c;
+  const c = document.createElement('canvas'), s = 0.5; c.width = Math.max(1, Math.round(W*s)); c.height = Math.max(1, Math.round(H*s));
+  const g = c.getContext('2d'), vg = g.createRadialGradient(c.width/2, c.height/2, Math.min(c.width, c.height)*0.38, c.width/2, c.height/2, Math.max(c.width, c.height)*0.75);
+  vg.addColorStop(0, 'rgba(0,0,0,0)'); vg.addColorStop(1, 'rgba(0,0,0,.45)'); g.fillStyle = vg; g.fillRect(0, 0, c.width, c.height);
+  VIG = {w:W, h:H, c}; return c;
+}
 function seeded(seed){ let s = seed>>>0; return () => (s = (Math.imul(s,1664525)+1013904223)>>>0)/4294967296; }
 let grainPat = null;
 function grainPattern(){
@@ -2670,9 +2679,9 @@ function draw(now){
   drawWeather(now);
   gradeBloom();
   // Étalonnage final : vignette, grain, effets d’écran
-  const vg = ctx.createRadialGradient(W/2,H/2,Math.min(W,H)*0.38,W/2,H/2,Math.max(W,H)*0.75);
-  vg.addColorStop(0,'rgba(0,0,0,0)'); vg.addColorStop(1,'rgba(0,0,0,.45)');
-  ctx.fillStyle = vg; ctx.fillRect(0,0,W,H);
+  // étalonnage de zone : une même teinte enveloppe sol, décor, bâtiments et personnages (cohérence de l'image)
+  ctx.save(); ctx.globalCompositeOperation = 'soft-light'; ctx.fillStyle = ZGRADE[G.map] || 'rgb(128,128,128)'; ctx.fillRect(0, 0, W, H); ctx.restore();
+  ctx.drawImage(vignetteSprite(), 0, 0, W, H);
   if (G.freeze > 0){ ctx.fillStyle = `rgba(120,170,230,${0.1*Math.min(1,G.freeze)})`; ctx.fillRect(0,0,W,H); }
   if (p.hurt > 0){ ctx.fillStyle = 'rgba(217,83,74,.12)'; ctx.fillRect(0,0,W,H); }
   if (state === 'play' && p.hp/p.max < 0.3){
