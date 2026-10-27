@@ -2915,10 +2915,10 @@ registerAssetData('manifest', {
     "refH": 346
    }
   },
-  "forest_tile_crack": {
+  "forest_tile_ferns": {
    "name": "Dalle",
    "folder": "environment/forest/tiles/",
-   "art": "tile_crack.png",
+   "art": "tile_ferns.png",
    "placeholder": null,
    "anchor": [
     0.5,
@@ -2932,10 +2932,10 @@ registerAssetData('manifest', {
    "lights": [],
    "status": "art"
   },
-  "forest_tile_crackmoss": {
+  "forest_tile_flagmoss": {
    "name": "Dalle",
    "folder": "environment/forest/tiles/",
-   "art": "tile_crackmoss.png",
+   "art": "tile_flagmoss.png",
    "placeholder": null,
    "anchor": [
     0.5,
@@ -2949,10 +2949,10 @@ registerAssetData('manifest', {
    "lights": [],
    "status": "art"
   },
-  "forest_tile_dark": {
+  "forest_tile_leaves": {
    "name": "Dalle",
    "folder": "environment/forest/tiles/",
-   "art": "tile_dark.png",
+   "art": "tile_leaves.png",
    "placeholder": null,
    "anchor": [
     0.5,
@@ -2966,10 +2966,10 @@ registerAssetData('manifest', {
    "lights": [],
    "status": "art"
   },
-  "forest_tile_dark2": {
+  "forest_tile_mossy": {
    "name": "Dalle",
    "folder": "environment/forest/tiles/",
-   "art": "tile_dark2.png",
+   "art": "tile_mossy.png",
    "placeholder": null,
    "anchor": [
     0.5,
@@ -2983,10 +2983,10 @@ registerAssetData('manifest', {
    "lights": [],
    "status": "art"
   },
-  "forest_tile_flag": {
+  "forest_tile_roots": {
    "name": "Dalle",
    "folder": "environment/forest/tiles/",
-   "art": "tile_flag.png",
+   "art": "tile_roots.png",
    "placeholder": null,
    "anchor": [
     0.5,
@@ -3000,10 +3000,10 @@ registerAssetData('manifest', {
    "lights": [],
    "status": "art"
   },
-  "forest_tile_flag2": {
+  "forest_tile_runes": {
    "name": "Dalle",
    "folder": "environment/forest/tiles/",
-   "art": "tile_flag2.png",
+   "art": "tile_runes.png",
    "placeholder": null,
    "anchor": [
     0.5,
@@ -3017,9 +3017,77 @@ registerAssetData('manifest', {
    "lights": [],
    "status": "art"
   },
-  "forest_tile_moss": {
+  "forest_tile_shrooms": {
    "name": "Dalle",
    "folder": "environment/forest/tiles/",
+   "art": "tile_shrooms.png",
+   "placeholder": null,
+   "anchor": [
+    0.5,
+    0.5
+   ],
+   "size": [
+    128,
+    64
+   ],
+   "iso_tile": true,
+   "lights": [],
+   "status": "art"
+  },
+  "forest_tile_stone": {
+   "name": "Dalle",
+   "folder": "environment/forest/tiles/",
+   "art": "tile_stone.png",
+   "placeholder": null,
+   "anchor": [
+    0.5,
+    0.5
+   ],
+   "size": [
+    128,
+    64
+   ],
+   "iso_tile": true,
+   "lights": [],
+   "status": "art"
+  },
+  "marsh_tile_flagmoss": {
+   "name": "Dalle",
+   "folder": "environment/marsh/tiles/",
+   "art": "tile_flagmoss.png",
+   "placeholder": null,
+   "anchor": [
+    0.5,
+    0.5
+   ],
+   "size": [
+    128,
+    64
+   ],
+   "iso_tile": true,
+   "lights": [],
+   "status": "art"
+  },
+  "marsh_tile_lilies": {
+   "name": "Dalle",
+   "folder": "environment/marsh/tiles/",
+   "art": "tile_lilies.png",
+   "placeholder": null,
+   "anchor": [
+    0.5,
+    0.5
+   ],
+   "size": [
+    128,
+    64
+   ],
+   "iso_tile": true,
+   "lights": [],
+   "status": "art"
+  },
+  "marsh_tile_moss": {
+   "name": "Dalle",
+   "folder": "environment/marsh/tiles/",
    "art": "tile_moss.png",
    "placeholder": null,
    "anchor": [
@@ -3034,44 +3102,10 @@ registerAssetData('manifest', {
    "lights": [],
    "status": "art"
   },
-  "forest_tile_mushrooms": {
-   "name": "Dalle",
-   "folder": "environment/forest/tiles/",
-   "art": "tile_mushrooms.png",
-   "placeholder": null,
-   "anchor": [
-    0.5,
-    0.5
-   ],
-   "size": [
-    128,
-    64
-   ],
-   "iso_tile": true,
-   "lights": [],
-   "status": "art"
-  },
-  "forest_tile_rune": {
-   "name": "Dalle",
-   "folder": "environment/forest/tiles/",
-   "art": "tile_rune.png",
-   "placeholder": null,
-   "anchor": [
-    0.5,
-    0.5
-   ],
-   "size": [
-    128,
-    64
-   ],
-   "iso_tile": true,
-   "lights": [],
-   "status": "art"
-  },
-  "marsh_tile_mossflag": {
+  "marsh_tile_mud": {
    "name": "Dalle",
    "folder": "environment/marsh/tiles/",
-   "art": "tile_mossflag.png",
+   "art": "tile_mud.png",
    "placeholder": null,
    "anchor": [
     0.5,
@@ -3085,10 +3119,10 @@ registerAssetData('manifest', {
    "lights": [],
    "status": "art"
   },
-  "marsh_tile_swamp": {
+  "marsh_tile_puddles": {
    "name": "Dalle",
    "folder": "environment/marsh/tiles/",
-   "art": "tile_swamp.png",
+   "art": "tile_puddles.png",
    "placeholder": null,
    "anchor": [
     0.5,
@@ -3102,10 +3136,10 @@ registerAssetData('manifest', {
    "lights": [],
    "status": "art"
   },
-  "marsh_tile_wet": {
+  "marsh_tile_reeds": {
    "name": "Dalle",
    "folder": "environment/marsh/tiles/",
-   "art": "tile_wet.png",
+   "art": "tile_reeds.png",
    "placeholder": null,
    "anchor": [
     0.5,
@@ -3119,10 +3153,10 @@ registerAssetData('manifest', {
    "lights": [],
    "status": "art"
   },
-  "cemetery_tile_bones": {
+  "marsh_tile_roots": {
    "name": "Dalle",
-   "folder": "environment/cemetery/tiles/",
-   "art": "tile_bones.png",
+   "folder": "environment/marsh/tiles/",
+   "art": "tile_roots.png",
    "placeholder": null,
    "anchor": [
     0.5,
@@ -3136,10 +3170,10 @@ registerAssetData('manifest', {
    "lights": [],
    "status": "art"
   },
-  "cemetery_tile_bones2": {
+  "marsh_tile_water": {
    "name": "Dalle",
-   "folder": "environment/cemetery/tiles/",
-   "art": "tile_bones2.png",
+   "folder": "environment/marsh/tiles/",
+   "art": "tile_water.png",
    "placeholder": null,
    "anchor": [
     0.5,
@@ -3153,10 +3187,10 @@ registerAssetData('manifest', {
    "lights": [],
    "status": "art"
   },
-  "cemetery_tile_grate": {
+  "cemetery_tile_drygrass": {
    "name": "Dalle",
    "folder": "environment/cemetery/tiles/",
-   "art": "tile_grate.png",
+   "art": "tile_drygrass.png",
    "placeholder": null,
    "anchor": [
     0.5,
@@ -3170,10 +3204,10 @@ registerAssetData('manifest', {
    "lights": [],
    "status": "art"
   },
-  "cemetery_tile_grate2": {
+  "cemetery_tile_earth": {
    "name": "Dalle",
    "folder": "environment/cemetery/tiles/",
-   "art": "tile_grate2.png",
+   "art": "tile_earth.png",
    "placeholder": null,
    "anchor": [
     0.5,
@@ -3187,10 +3221,10 @@ registerAssetData('manifest', {
    "lights": [],
    "status": "art"
   },
-  "cemetery_tile_pottery": {
+  "cemetery_tile_flag": {
    "name": "Dalle",
    "folder": "environment/cemetery/tiles/",
-   "art": "tile_pottery.png",
+   "art": "tile_flag.png",
    "placeholder": null,
    "anchor": [
     0.5,
@@ -3204,10 +3238,78 @@ registerAssetData('manifest', {
    "lights": [],
    "status": "art"
   },
-  "cemetery_tile_rune2": {
+  "cemetery_tile_flagmoss": {
    "name": "Dalle",
    "folder": "environment/cemetery/tiles/",
-   "art": "tile_rune2.png",
+   "art": "tile_flagmoss.png",
+   "placeholder": null,
+   "anchor": [
+    0.5,
+    0.5
+   ],
+   "size": [
+    128,
+    64
+   ],
+   "iso_tile": true,
+   "lights": [],
+   "status": "art"
+  },
+  "cemetery_tile_grave": {
+   "name": "Dalle",
+   "folder": "environment/cemetery/tiles/",
+   "art": "tile_grave.png",
+   "placeholder": null,
+   "anchor": [
+    0.5,
+    0.5
+   ],
+   "size": [
+    128,
+    64
+   ],
+   "iso_tile": true,
+   "lights": [],
+   "status": "art"
+  },
+  "cemetery_tile_gravel": {
+   "name": "Dalle",
+   "folder": "environment/cemetery/tiles/",
+   "art": "tile_gravel.png",
+   "placeholder": null,
+   "anchor": [
+    0.5,
+    0.5
+   ],
+   "size": [
+    128,
+    64
+   ],
+   "iso_tile": true,
+   "lights": [],
+   "status": "art"
+  },
+  "cemetery_tile_leaves": {
+   "name": "Dalle",
+   "folder": "environment/cemetery/tiles/",
+   "art": "tile_leaves.png",
+   "placeholder": null,
+   "anchor": [
+    0.5,
+    0.5
+   ],
+   "size": [
+    128,
+    64
+   ],
+   "iso_tile": true,
+   "lights": [],
+   "status": "art"
+  },
+  "cemetery_tile_roots": {
+   "name": "Dalle",
+   "folder": "environment/cemetery/tiles/",
+   "art": "tile_roots.png",
    "placeholder": null,
    "anchor": [
     0.5,

@@ -3888,10 +3888,10 @@ function viewFor(V, dx, dy){
 }
 
 /* ---- Sol isométrique : dalles en losange (2:1), chemin de pierre en croix depuis le point de départ ---- */
-const ISO_SETS = {
-  foret:{base:['forest_tile_dark', 'forest_tile_dark2'], wear:['forest_tile_crack', 'forest_tile_moss', 'forest_tile_crackmoss'], path:['forest_tile_flag', 'forest_tile_flag2'], center:'forest_tile_rune'},
-  marais:{base:['marsh_tile_wet', 'marsh_tile_swamp'], wear:['marsh_tile_swamp', 'forest_tile_moss', 'forest_tile_crackmoss'], path:['marsh_tile_mossflag', 'forest_tile_crackmoss'], center:'forest_tile_rune'},
-  cimetiere:{base:['forest_tile_dark', 'forest_tile_dark2'], wear:['cemetery_tile_bones', 'cemetery_tile_bones2', 'cemetery_tile_pottery', 'cemetery_tile_grate', 'forest_tile_crack'], path:['forest_tile_flag', 'forest_tile_flag2'], center:'cemetery_tile_rune2'}};
+const ISO_SETS = {                                                   // dalles peintes de chaque zone (planches découpées par tools/import_tile_sheet.py)
+  foret:{base:['forest_tile_leaves', 'forest_tile_roots'], wear:['forest_tile_mossy', 'forest_tile_mossy', 'forest_tile_ferns', 'forest_tile_ferns', 'forest_tile_shrooms'], path:['forest_tile_stone', 'forest_tile_flagmoss'], center:'forest_tile_runes'},
+  marais:{base:['marsh_tile_mud', 'marsh_tile_moss'], wear:['marsh_tile_puddles', 'marsh_tile_puddles', 'marsh_tile_reeds', 'marsh_tile_roots', 'marsh_tile_lilies', 'marsh_tile_water'], path:['marsh_tile_flagmoss', 'marsh_tile_flagmoss'], center:'forest_tile_runes'},
+  cimetiere:{base:['cemetery_tile_earth', 'cemetery_tile_roots'], wear:['cemetery_tile_drygrass', 'cemetery_tile_drygrass', 'cemetery_tile_gravel', 'cemetery_tile_leaves', 'cemetery_tile_grave'], path:['cemetery_tile_flag', 'cemetery_tile_flagmoss'], center:'forest_tile_runes'}};
 const TW = 128, TH = 64;
 function isoPick(S, u, v){
   if (u === 0 && v === 0 && ASSET_IMG[S.center]) return S.center;
@@ -3912,8 +3912,11 @@ function groundChunk(S, map, cx, cy){
   const u0 = Math.floor(2*(y0 - TH)/TH), u1 = Math.ceil(2*(y0 + GCH + TH)/TH), v0 = Math.floor(2*(x0 - TW)/TW), v1 = Math.ceil(2*(x0 + GCH + TW)/TW);
   for (let u = u0; u <= u1; u++) for (let v = v0; v <= v1; v++){
     if ((u + v) & 1) continue;
-    const a = ASSET_IMG[isoPick(S, u, v)] || ASSET_IMG[S.base[0]];
-    g.drawImage(a.img, v*TW/2 - x0 - TW/2 - 1, u*TH/2 - y0 - TH/2 - 0.5, TW + 2, TH + 1);
+    const id = isoPick(S, u, v), a = ASSET_IMG[id] || ASSET_IMG[S.base[0]];
+    const x = v*TW/2 - x0, y = u*TH/2 - y0;
+    if (id !== S.center && hash(u*5 - 11, v*3 + 7) < 0.5){            // une dalle sur deux en miroir : le motif se répète moins
+      g.save(); g.translate(x, y); g.scale(-1, 1); g.drawImage(a.img, -TW/2 - 1, -TH/2 - 0.5, TW + 2, TH + 1); g.restore();
+    } else g.drawImage(a.img, x - TW/2 - 1, y - TH/2 - 0.5, TW + 2, TH + 1);
   }
   GROUND_CACHE.set(key, c); while (GROUND_CACHE.size > 14) GROUND_CACHE.delete(GROUND_CACHE.keys().next().value);
   return c;
