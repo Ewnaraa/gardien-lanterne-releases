@@ -435,6 +435,7 @@ td .w svg{width:16px;height:16px;color:var(--amber);flex:none}
 .pick .portrait.ph span{position:absolute;bottom:4px;left:0;right:0;text-align:center}
 .pick.locked .portrait{filter:grayscale(.7) brightness(.55)}
 @media (min-width:900px) and (max-height:760px){#mapGrid .pick > small{display:none}#chars .card{gap:5px}#chars .pick{gap:2px}}
+@media (min-width:641px){.arcs{grid-template-columns:repeat(3,min(31%,calc((100vh - 240px)*.6)))!important;justify-content:center}}
 </style>
 
 <canvas id="c" aria-label="Zone de jeu"></canvas>
