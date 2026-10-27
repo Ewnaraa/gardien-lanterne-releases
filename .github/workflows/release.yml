@@ -42,4 +42,11 @@ jobs:
         if: steps.check.outputs.skip == '0'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: npx electron-builder --win --x64 --publish always
+        shell: bash
+        run: |
+          set -o pipefail
+          npx electron-builder --win --x64 --publish always 2>&1 | tee build.log || {
+            # en cas d'échec : les dernières lignes deviennent des annotations lisibles sans le journal complet
+            tail -n 25 build.log | sed 's/%/%25/g' | while IFS= read -r l; do echo "::error::$l"; done
+            exit 1
+          }
