@@ -200,6 +200,9 @@ kbd{font:600 13px var(--body);border:1px solid rgba(236,228,207,.25);border-bott
 .swatch::after{content:"";position:absolute;right:-5px;top:14px;width:9px;height:11px;border-radius:2px;background:var(--amber);box-shadow:0 0 10px var(--amber)}
 .pick b{font-size:18px}
 .pick small{color:var(--mute);font-size:14px;line-height:1.35}
+.pick .tal{color:#c9b6ff;font-size:13px;font-weight:600;letter-spacing:.01em}.pick .tal i{font-style:normal;color:var(--amber);font-weight:500}
+.charinfo{margin:6px 0 0;font-size:14px;line-height:1.35;color:var(--ink,#ece4cf)}.charinfo b{color:#c9b6ff}.charinfo .mute{color:var(--mute)}
+#scBonus .tal{color:#c9b6ff}
 .pick .start{display:flex;gap:6px;align-items:center;color:var(--amber);font-size:14px}
 .pick .start svg{width:16px;height:16px}
 .band{height:54px;border-radius:2px;border:1px solid rgba(0,0,0,.6);position:relative;overflow:hidden}
@@ -356,6 +359,7 @@ td .w svg{width:16px;height:16px;color:var(--amber);flex:none}
 .ctab{background:none;border:1px solid transparent;border-bottom:0;color:var(--mute);font:600 15px var(--body);letter-spacing:.06em;padding:8px 16px;border-radius:3px 3px 0 0;cursor:pointer}
 .ctab[aria-selected="true"]{color:var(--amber);border-color:var(--line-soft);background:var(--panel)}
 .ctab:hover{color:var(--bone)}
+.atabs{grid-column:1/-1}
 .cpane{display:grid;gap:8px;align-content:start}
 @media (min-width:900px){
   .card.wide{max-width:min(1480px,calc(100vw - 40px));max-height:calc(100vh - 28px);gap:clamp(6px,1.3vh,14px);padding:clamp(14px,2.4vh,26px) clamp(20px,2.6vw,40px)}
@@ -550,6 +554,7 @@ td .w svg{width:16px;height:16px;color:var(--amber);flex:none}
     <div class="grid" id="mapGrid"></div>
     <div class="sect">Gardien</div>
     <div class="grid" id="charGrid"></div>
+    <p class="charinfo" id="charInfo"></p>
     <label class="toggle" id="hardWrap" hidden><input type="checkbox" id="hardBox"> Nuit sans lune : ombres +50 % de PV et plus rapides, braises ×1,5</label>
     <div class="btns"><button class="btn" id="goBtn">Commencer la nuit</button><button class="btn ghost" data-back>Retour</button></div>
   </div>
@@ -1170,9 +1175,10 @@ function newGame(charId, mapId){
     banishes:(SAVE.shop.exil||0) + (c.mod.banish||0) + (SAVE.bonus.banish||0),
     enemies:[], shots:[], eshots:[], pools:[], zones:[], bolts:[], slashes:[], rings:[], gems:[], items:[], parts:[], texts:[], timers:[], corpses:[], decals:[], smoke:[], dustT:0, flame:0, slow:0, cine:null, ghosts:[], arcs:[], arcPending:0, merchant:null, mbuys:{},
     broken:new Set(), braz:[], graves:[], graveT:20, relic:null, relicFound:false, relicHint:false, brazBroken:0, lastHit:0, achT:0,
-    bossKilled:new Set(), newPages:[], tipT:2.2, freeze:0, flash:0, shake:0, pending:0, combo:0, comboT:0, dmgBy:{}, healBudget:8,
+    bossKilled:new Set(), newPages:[], tipT:6.5, lineT:1.1, freeze:0, flash:0, shake:0, pending:0, combo:0, comboT:0, dmgBy:{}, healBudget:8,
     buildDirty:true, boss:null, dawnT:0, banishMode:false
   };
+  G.p.mast = hasMastery(charId);                                  // succès de maîtrise : don renforcé
   computeStats(); G.p.hp = G.p.max;
   const rm = MAPS[mapId].relic;
   if (!SAVE.relics[mapId]) G.relic = {x:Math.cos(rm.dir)*rm.dist, y:Math.sin(rm.dir)*rm.dist, name:rm.name};
@@ -1380,8 +1386,8 @@ function dmgEnemy(e, base, src, kx, ky){
   if (e.dead) return;
   const crit = Math.random() < G.st.crit;
   if (crit && hasArc('lune') && !e.boss) e.frz = Math.max(e.frz||0, 1);
-  const d = base * G.st.might * (crit ? 2 : 1) * (e.aff === 'blinde' ? 0.6 : 1);   // blindé : encaisse 40 % de moins
-  e.hp -= d; e.flash = 0.08;
+  const d = base * G.st.might * (crit ? 2 : 1) * (e.aff === 'blinde' ? 0.6 : 1) * talDmgMul(e);   // blindé : encaisse 40 % de moins
+  e.hp -= d; e.flash = 0.08; e.lastSrc = src; talAfterHit(e);
   if (crit && e.boss && !reduce) G.stop = Math.max(G.stop || 0, 0.035);
   e.kx += (kx||0)*e.kb; e.ky += (ky||0)*e.kb;
   G.dmgBy[src] = (G.dmgBy[src]||0) + d;
@@ -1398,6 +1404,7 @@ function killEnemy(e, silent){
   G.decals.push({x:e.x, y:e.y + e.r*0.4, r:e.r*rnd(0.9,1.4)*(e.boss ? 1.6 : 1), life:9, max:9, seed:Math.random()*100, kind:'ink'});
   burst(e.x, e.y, e.boss ? '#ff6a5a' : e.elite ? '#f2b84b' : '#7f94a8', e.boss ? 50 : e.elite ? 20 : 6, e.boss ? 2 : 1);
   if (silent) return;
+  talOnKill(e);
   spawnFx('fx_ame', e.x, e.y + e.r*0.5, e.boss ? 150 : e.elite ? 80 : 40, {bottom:true, a:e.boss || e.elite ? 0.9 : 0.5});
   if (e.boss || e.elite) G.stop = Math.max(G.stop || 0, e.boss ? 0.16 : 0.06);
   G.kills++;
@@ -1434,7 +1441,7 @@ function hurtPlayer(d){
   const p = G.p;
   if (p.inv > 0 || p.down || state!=='play') return;
   p.hp -= Math.max(1, d - G.st.armor);
-  p.hurt = 0.2; p.inv = 0.12; G.lastHit = G.t; SFX.hurt(); if (d >= p.max*0.08) G.stop = Math.max(G.stop || 0, 0.05);   // seulement les gros coups, sinon le jeu hacherait
+  p.hurt = 0.2; p.inv = 0.12; G.lastHit = G.t; talOnHurt(p); SFX.hurt(); if (d >= p.max*0.08) G.stop = Math.max(G.stop || 0, 0.05);   // seulement les gros coups, sinon le jeu hacherait
   G.shake = Math.max(G.shake, 0.25);
   if (p.hp <= 0){
     if (p.revives > 0){
@@ -1741,7 +1748,7 @@ function movePlayer(dt){
   let [mx, my] = inputVec();
   const len = Math.hypot(mx,my);
   if (len > 1){ mx /= len; my /= len; }
-  let sp = 150*G.st.speed;
+  let sp = 150*G.st.speed*talSpeed(p);
   if (p.wet > 0){ p.wet -= dt; sp *= 0.7; if (Math.random() < 0.2) G.parts.push({x:p.x+rnd(-7,7), y:p.y+rnd(-4,8), vx:0, vy:30, life:.35, max:.35, col:'#6fa89c', s:1.3}); }
   if (G.map === 'marais' && inPuddle(p.x, p.y)){ sp *= 0.65; if (len > 0.1 && Math.random() < 0.15) G.parts.push({x:p.x+rnd(-6,6), y:p.y+10, vx:rnd(-20,20), vy:rnd(-30,-10), life:.4, max:.4, col:'#7fb8b0', s:1.5}); }
   p.dashCd = Math.max(0, p.dashCd - dt);
@@ -1811,7 +1818,7 @@ function update(dt){
     }
   }
 
-  movePlayer(dt); if (G.ally) allyStep(dt); updateSites(dt); updateDoors(dt); updateAmbient(dt); updateVillage(dt);
+  movePlayer(dt); talentStep(dt); talentWorld(dt); talRefill(dt); if (G.ally) allyStep(dt); updateSites(dt); updateDoors(dt); updateAmbient(dt); updateVillage(dt);
   if (G.bombs) for (let i = G.bombs.length - 1; i >= 0; i--){       // élite explosif : cercle d'alerte, puis explosion
     const b = G.bombs[i]; b.t += dt;
     if (b.t >= b.max){
@@ -1825,6 +1832,7 @@ function update(dt){
   G.healBudget = Math.min(8, G.healBudget + 8*dt);
   G.freeze = Math.max(0, G.freeze - dt);
 
+  if (G.lineT > 0){ G.lineT -= dt; if (G.lineT <= 0) talIntroLine(); }
   if (G.tipT > 0){ G.tipT -= dt; if (G.tipT <= 0) dialog('Ysolde', pick(TIPS), 5); }
   if (G.map !== 'foret'){
     if (G.stormT == null) G.stormT = rnd(8, 16);
@@ -2170,7 +2178,7 @@ function updateCine(dt){
 }
 const MERCH_HELLO = ['Approche, Gardien ! J’ai de quoi garder ta flamme vive.', 'Des braises contre des merveilles. Le marché est honnête, presque.', 'Je ne reste pas longtemps. Les ombres n’aiment pas les marchands.'];
 const MERCH_BYE = ['Reviens vivant, c’est bon pour les affaires.', 'Que ta mèche ne tremble pas.', 'À la prochaine nuit, peut-être.'];
-const dashMax = () => Math.max(0.9, 2.2 - 0.12*lvP('bottes'))*(hasArc('vagabond') ? 0.5 : 1);
+const dashMax = () => Math.max(0.9, 2.2 - 0.12*lvP('bottes'))*(hasArc('vagabond') ? 0.5 : 1)*(G && G.p && isTal('vagabonde') ? 1 - 0.35*talMul() : 1);
 function inputVec(){                                                 // direction voulue : clavier/doigt, ou commandes du compagnon en coop
   if (G.ctxAlly){ const I = G.ally.input; return [I.mx || 0, I.my || 0]; }
   let mx = 0, my = 0;
@@ -2187,6 +2195,7 @@ function dash(){
   const l = Math.hypot(dx,dy) || 1;
   p.dvx = dx/l*640; p.dvy = dy/l*640;
   p.dashT = 0.17; p.dashCd = dashMax(); p.inv = Math.max(p.inv, 0.32);
+  if (isTal('vagabonde')){ p.rushT = 1.2; talCount('dash'); }
   if (Math.abs(dx) > 0.1) p.face = Math.sign(dx);
   SFX.dash();
   if (hasArc('brume')){ G.rings.push({x:p.x, y:p.y, R:140, life:0.45, frz:true}); query(p.x, p.y, 140, e => { if (!e.boss) e.frz = Math.max(e.frz||0, 1.5*G.st.dur); dmgEnemy(e, 12*(1 + G.t/200), 'brume', 0, 0); }); }
@@ -2661,6 +2670,7 @@ function draw(now){
     ctx.fillStyle = 'rgba(242,184,75,.16)'; ctx.beginPath(); ctx.arc(x,y,16,0,TAU); ctx.fill();
     drawItemAsset(it, x, yy);
   }
+  drawHerbs(X, Y, now);
   if (G.merchant){
     const m = G.merchant, x = X(m.x), y = Y(m.y);
     if (vis(x, y, 120)){
@@ -3798,7 +3808,7 @@ function drawPlayer(px, py, lx, ly, now){
   } else {
     const sh = C.sheet, k = P.k, L = sh.lanternSprite;
     if (P.hook && C.sheetLantern && P.behind) drawLanternSprite(C.sheetLantern, L, P.hook[0] + ox, P.hook[1] + oy, k, S.lanA);
-    const cell = (col, row, al) => { if (al <= 0.01) return; const c = sheetCell(C, col, row, k); ctx.globalAlpha = al; ctx.drawImage(c, fx - sh.anchor[0]*k, fy - sh.anchor[1]*k, sh.frameW*k, sh.frameH*k); };
+    const cell = (col, row, al) => { if (al <= 0.01) return; const c = sheetCell(C, col, row, k); ctx.globalAlpha = al*talAlpha(G.p)*(G.p.down ? 0.55 : 1); ctx.drawImage(c, fx - sh.anchor[0]*k, fy - sh.anchor[1]*k, sh.frameW*k, sh.frameH*k); };
     cell(P.col, P.row, 1);
     if (P.w > 0.02 && P.col2 !== P.col) cell(P.col2, P.row, P.w);
     if (P.from) cell(P.from.cell[1], P.from.cell[0], P.from.a);
@@ -5015,6 +5025,193 @@ function drawEnemyShot(s, x, y, now){
 }
 
 /* =====================================================================
+   DONS DES PERSONNAGES : chaque gardien a une capacité qui lui est propre,
+   des répliques au début de la nuit, et un succès de maîtrise qui renforce son don (×1,3).
+   Tout se calcule pour « le joueur courant » (G.p) : en coop, le compagnon a son propre don.
+   ===================================================================== */
+const TAL = {
+  gardien:   {name:'Phare',              txt:'Les ombres proches de toi subissent +20 % de dégâts.'},
+  herboriste:{name:'Herbes de soin',     txt:'Toutes les 12 s, des champignons soignants poussent près de toi (+12 % de PV).'},
+  sonneuse:  {name:'Glas',               txt:'Toutes les 7 s, ta cloche sonne : les ombres proches sont repoussées et étourdies.'},
+  faucheur:  {name:'Moisson',            txt:'Les ombres sous 12 % de leurs PV sont fauchées net (sauf les boss).'},
+  vagabonde: {name:'Pied léger',         txt:'Esquive 35 % plus souvent, et +30 % de vitesse pendant 1,2 s après chaque esquive.'},
+  conteuse:  {name:'Mille histoires',    txt:'Toujours 4 choix à chaque niveau (maîtrisé : cartes plus rares).'},
+  braisier:  {name:'Traînée de braises', txt:'En marchant, tu sèmes des braises qui brûlent les ombres.'},
+  astronome: {name:'Étoile filante',     txt:'Toutes les 12 s, une étoile s’abat là où les ombres sont les plus nombreuses.'},
+  fossoyeuse:{name:'Pelletée',           txt:'Chaque ombre dissipée près de toi te rend 1 PV.'},
+  revenant:  {name:'Outre-tombe',        txt:'Sous 30 % de PV, tu deviens spectre 3 s : intouchable et plus rapide (une fois par minute).'}
+};
+/* répliques au moment d'allumer la lanterne */
+const TAL_LINES = {
+  gardien:   ['Encore une nuit. La lanterne tiendra.', 'Ysolde, je garde ta flamme.', 'Approchez donc. Je vous vois.'],
+  herboriste:['Les champignons poussent mieux dans le noir. Moi aussi.', 'J’ai de quoi panser cent plaies. Enfin… quelques-unes.', 'La forêt me soigne si je la respecte.'],
+  sonneuse:  ['Chaque coup de cloche, c’est un mort qui se rendort.', 'Écoutez bien. Celle-là sonne pour vous.', 'Le clocher s’est tu. Pas moi.'],
+  faucheur:  ['Les blés sont mûrs.', 'Personne ne m’échappe deux fois.', 'Une nuit de plus. Une moisson de plus.'],
+  vagabonde: ['J’ai dormi dans pire. Enfin, je crois.', 'Rien ne m’attrape quand je cours.', 'Encore une route sans soleil. En avant.'],
+  conteuse:  ['Il était une fois une lanterne qui refusait de s’éteindre…', 'Toutes les histoires finissent à l’aube. Celle-ci aussi.', 'Approchez, les ombres. J’ai un conte pour vous.'],
+  braisier:  ['La forge est froide. Je vais la rallumer avec vous.', 'Du charbon, du fer, et de la colère.', 'Chaque pas que je fais laisse une brûlure.'],
+  astronome: ['Les étoiles sont toujours là, derrière le noir. Je vais vous le prouver.', 'Ce soir, il pleuvra des astres.', 'J’ai compté les étoiles. Il en manque une : la vôtre.'],
+  fossoyeuse:['J’en ai enterré plus que vous n’en serez jamais.', 'Une pelletée pour chacun. Restez couchés.', 'Le cimetière est plein. On va faire de la place.'],
+  revenant:  ['On m’a déjà tué. Ça n’a pas pris.', 'Je connais le chemin du retour.', 'La mort et moi, on se connaît bien.']
+};
+const talOf = p => (p && p.pc && TAL[p.pc]) ? p.pc : 'gardien';
+const talMul = (p) => (p || G.p).mast ? 1.3 : 1;                       // maîtrise : don renforcé
+const isTal = (id, p) => talOf(p || G.p) === id;
+function talCount(k, n, p){ p = p || G.p; p.tc = p.tc || {}; p.tc[k] = (p.tc[k] || 0) + (n || 1); }
+
+/* succès de maîtrise : un par personnage, vérifiés pour le joueur de ce PC */
+const TAL_ACH = [
+  {id:'m_gardien',    ch:'gardien',    name:'Le Phare d’Orme',      cond:'Atteindre l’aube avec Le Gardien'},
+  {id:'m_herboriste', ch:'herboriste', name:'Main verte',           cond:'Cueillir 25 touffes de soin en une nuit', k:'herbe', n:25},
+  {id:'m_sonneuse',   ch:'sonneuse',   name:'Glas funèbre',         cond:'Repousser 600 ombres avec ta cloche en une nuit', k:'glas', n:600},
+  {id:'m_faucheur',   ch:'faucheur',   name:'Grande moisson',       cond:'Faucher 250 ombres en une nuit', k:'moisson', n:250},
+  {id:'m_vagabonde',  ch:'vagabonde',  name:'Insaisissable',        cond:'Esquiver 120 fois en une nuit', k:'dash', n:120},
+  {id:'m_conteuse',   ch:'conteuse',   name:'Mille et une nuits',   cond:'Atteindre le niveau 35 avec La Conteuse', lvl:35},
+  {id:'m_braisier',   ch:'braisier',   name:'Terre brûlée',         cond:'Dissiper 300 ombres avec tes braises en une nuit', k:'braises', n:300},
+  {id:'m_astronome',  ch:'astronome',  name:'Pluie d’étoiles',      cond:'Dissiper 120 ombres avec les étoiles filantes en une nuit', k:'etoile', n:120},
+  {id:'m_fossoyeuse', ch:'fossoyeuse', name:'Pelle et pioche',      cond:'Récupérer 400 PV par tes pelletées en une nuit', k:'pelle', n:400},
+  {id:'m_revenant',   ch:'revenant',   name:'Increvable',           cond:'Devenir spectre 6 fois en une nuit', k:'ghost', n:6}
+];
+for (const a of TAL_ACH) ACH.push({id:a.id, name:a.name, cond:a.cond, rw:'Maîtrise : le don « ' + TAL[a.ch].name + ' » est renforcé', gold:150, apply:() => {}, tal:a.ch});
+const hasMastery = id => !!(SAVE.ach && SAVE.ach['m_' + id]);
+function talCheckAch(){
+  if (!G || G.guest || G.ctxAlly || G.bench) return;
+  const p = G.p, id = talOf(p), a = TAL_ACH.find(x => x.ch === id); if (!a || SAVE.ach[a.id]) return;
+  if (a.k && p.tc && (p.tc[a.k] || 0) >= a.n) unlockAch(a.id);
+  if (a.lvl && p.lvl >= a.lvl) unlockAch(a.id);
+}
+
+/* ---------- chaque image, pour le joueur courant ---------- */
+function talentStep(dt){
+  const p = G.p, id = talOf(p), M = talMul(p);
+  p.tt = p.tt || {};
+  if (p.rushT > 0) p.rushT -= dt;
+  if (p.ghostCd > 0) p.ghostCd -= dt;
+  if (p.ghostT > 0){
+    p.ghostT -= dt; p.inv = Math.max(p.inv, 0.1);
+    if (!reduce && Math.random() < 0.6) G.parts.push({x:p.x + rnd(-8, 8), y:p.y + rnd(-30, 6), vx:rnd(-10, 10), vy:rnd(-40, -15), life:.6, max:.6, col:'#9fc4ff', s:1.6});
+  }
+  if (p.down) return;
+  if (id === 'herboriste'){
+    p.tt.h = (p.tt.h == null ? 5 : p.tt.h) - dt;
+    if (p.tt.h <= 0){ p.tt.h = 12/M; const a = Math.random()*TAU, d = rnd(50, 95); G.herbs = G.herbs || []; if (G.herbs.length < 6) G.herbs.push({x:p.x + Math.cos(a)*d, y:p.y + Math.sin(a)*d*0.7, life:20, age:0}); }
+  }
+  if (id === 'sonneuse'){
+    p.tt.s = (p.tt.s == null ? 3 : p.tt.s) - dt;
+    if (p.tt.s <= 0){ p.tt.s = 7/M; talGlas(p, M); }
+  }
+  if (id === 'braisier' && Math.hypot(p.vx || 0, p.vy || 0) > 40){
+    p.tt.b = (p.tt.b || 0) - dt;
+    if (p.tt.b <= 0){ p.tt.b = 0.3; G.zones.push({x:p.x + rnd(-4, 4), y:p.y + 8, r:17, R:17, life:1.5, max:1.5, dmg:5*(1 + G.t/200)*M, tick:0.3, tt:0, src:'tal_braises', grow:0, seed:Math.random()*1000, burn:true}); }
+  }
+  if (id === 'astronome'){
+    p.tt.a = (p.tt.a == null ? 6 : p.tt.a) - dt;
+    if (p.tt.a <= 0){ p.tt.a = 12/M; talStar(p, M); }
+  }
+  // touffes de soin : n'importe quel joueur peut les cueillir (le compagnon aussi)
+  if (G.herbs) for (const h of G.herbs){
+    if (h.taken) continue;
+    if ((p.x - h.x)**2 + (p.y - h.y)**2 < 26*26){
+      h.taken = true; const v = Math.round(p.max*0.12*(isTal('herboriste', p) ? M : 1)); p.hp = Math.min(p.max, p.hp + v);
+      spawnFx('fx_soin', 0, 0, 110, {follow:true, own:p, dy:14, bottom:true, dur:0.9}); floatText(p.x, p.y - 24, '+' + v + ' PV', '#8fc27a', true); SFX.pickup && SFX.pickup();
+      talCount('herbe', 1, p);
+    }
+  }
+  if ((p.tt.ach = (p.tt.ach || 0) - dt) <= 0){ p.tt.ach = 0.5; talCheckAch(); }
+}
+/* une seule fois par image (pas par joueur) : vieillissement des touffes */
+function talentWorld(dt){
+  if (!G.herbs) return;
+  for (const h of G.herbs){ h.age += dt; h.life -= dt; }
+  G.herbs = G.herbs.filter(h => !h.taken && h.life > 0);
+}
+
+function talGlas(p, M){
+  const R = 125*G.st.area; let n = 0;
+  G.rings.push({x:p.x, y:p.y, R, life:0.45});
+  spawnFx('fx_onde', p.x, p.y, R*2.3, {a:0.75});
+  SFX.wave && SFX.wave();
+  query(p.x, p.y, R, e => {
+    if (e.dead) return; n++;
+    const dx = e.x - p.x, dy = e.y - p.y, d = Math.hypot(dx, dy) || 1;
+    if (!e.boss){ e.kx += dx/d*460; e.ky += dy/d*460; e.frz = Math.max(e.frz || 0, 0.45*M); }
+    dmgEnemy(e, 6*(1 + G.t/200)*M, 'tal_glas', 0, 0);
+  });
+  talCount('glas', n, p);
+}
+function talStar(p, M){
+  let best = null, bn = 0, k = 0;
+  for (const e of G.enemies){                                         // là où les ombres sont les plus nombreuses (élites comptent double)
+    if (e.dead || !onScreen(e.x, e.y, -30)) continue;
+    if (++k > 45) break;
+    let n = e.elite ? 6 : 0; query(e.x, e.y, 90, () => { n++; });
+    if (n > bn){ bn = n; best = e; }
+  }
+  if (!best) return;
+  G.shots.push({kind:'meteor', x:best.x, y:best.y, age:0, T:0.7, R:85*G.st.area, dmg:42*(1 + G.t/150)*M, dur:1.2, src:'tal_etoile', ev:true, life:1});
+}
+/* dégâts : bonus du Phare, et Moisson du Faucheur (appelé par dmgEnemy) */
+function talDmgMul(e){
+  const p = G.p; if (!p || !isTal('gardien', p)) return 1;
+  return (e.x - p.x)**2 + (e.y - p.y)**2 < 170*170 ? 1 + 0.2*talMul(p) : 1;
+}
+function talAfterHit(e){
+  const p = G.p;
+  if (p && isTal('faucheur', p) && !e.boss && e.hp > 0 && e.hp < e.max*0.12*talMul(p)){
+    e.hp = 0; e.lastSrc = 'tal_moisson'; talCount('moisson', 1, p);
+    spawnFx('fx_faux', e.x, e.y - e.r*0.3, e.elite ? 120 : 70, {a:0.85});
+    if (SAVE.nums) floatText(e.x, e.y - e.r - 8, 'Fauché', '#c9d0e8', false);
+  }
+}
+/* une ombre est dissipée : Pelletée de la Fossoyeuse, et comptes des succès */
+function talOnKill(e){
+  const src = e.lastSrc;
+  if (src === 'tal_braises' || src === 'tal_etoile'){
+    const who = [G.p].concat(G.ally && G.ally.p ? [G.ally.p] : []).find(q => isTal(src === 'tal_braises' ? 'braisier' : 'astronome', q));
+    if (who) talCount(src === 'tal_braises' ? 'braises' : 'etoile', 1, who);
+  }
+  for (const q of [G.p].concat(G.ally && G.ally.p ? [G.ally.p] : [])){
+    if (!isTal('fossoyeuse', q) || q.down || q.hp >= q.max) continue;
+    if ((q.x - e.x)**2 + (q.y - e.y)**2 > 120*120) continue;
+    q.digB = Math.min(14, (q.digB == null ? 14 : q.digB));             // au plus ~7 PV/s, même au milieu d'une horde
+    if (q.digB < 1) continue;
+    const v = 1*talMul(q); q.digB -= 1; q.hp = Math.min(q.max, q.hp + v); talCount('pelle', v, q);
+    if (!reduce && Math.random() < 0.3) G.parts.push({x:e.x, y:e.y, vx:(q.x - e.x)*1.5, vy:(q.y - e.y)*1.5, life:.45, max:.45, col:'#8fc27a', s:1.8});
+  }
+}
+function talRefill(dt){ for (const q of [G.p].concat(G.ally && G.ally.p ? [G.ally.p] : [])) if (q.digB != null) q.digB = Math.min(14, q.digB + 7*dt); }
+/* coup reçu : Outre-tombe du Revenant */
+function talOnHurt(p){
+  if (!isTal('revenant', p) || p.hp <= 0 || p.hp >= p.max*0.3 || p.ghostCd > 0) return;
+  p.ghostT = 3; p.ghostCd = 60/talMul(p); p.inv = Math.max(p.inv, 3); talCount('ghost', 1, p);
+  spawnFx('fx_ame', p.x, p.y + 10, 90, {bottom:true, a:0.9}); floatText(p.x, p.y - 40, 'Outre-tombe', '#9fc4ff', true); SFX.rare && SFX.rare();
+}
+/* vitesse : Pied léger et spectre */
+const talSpeed = p => (p.rushT > 0 ? 1.3 : 1)*(p.ghostT > 0 ? 1.4 : 1);
+/* transparence du spectre */
+const talAlpha = p => p && p.ghostT > 0 ? 0.42 + 0.12*Math.sin(performance.now()/90) : 1;
+
+/* touffes de soin au sol */
+function drawHerbs(X, Y, now){
+  if (!G.herbs) return;
+  for (const h of G.herbs){
+    const x = X(h.x), y = Y(h.y); if (x < -40 || y < -40 || x > W + 40 || y > H + 40) continue;
+    const grow = Math.min(1, h.age/0.6), fade = Math.min(1, h.life/2), a = grow*fade;
+    ctx.globalAlpha = a; ctx.globalCompositeOperation = 'lighter';
+    const pu = reduce ? 0 : Math.sin(now/300 + h.x);
+    pglow(x, y - 8, 34 + pu*4, '120,230,140', 0.5 + pu*0.08); pglow(x, y - 10, 12, '200,255,200', 0.45);
+    ctx.globalCompositeOperation = 'source-over';
+    if (!drawEnt('forest_mushroom', x, y, 0.8*grow)){ ctx.fillStyle = '#8fc27a'; ctx.beginPath(); ctx.arc(x, y - 5, 6*grow, 0, TAU); ctx.fill(); }
+    ctx.globalAlpha = 1;
+  }
+}
+/* réplique du début de nuit */
+function talIntroLine(){
+  const id = talOf(G.p), L = TAL_LINES[id]; if (!L) return;
+  dialog(CH[id] ? CH[id].name : 'Le Gardien', pick(L), 4);
+}
+
+/* =====================================================================
    COOPÉRATION EN LIGNE (2 joueurs, chacun sur son PC)
    L'HÔTE fait tourner la vraie partie, avec un second Gardien : le compagnon.
    L'INVITÉ envoie ses commandes (direction, visée, esquive, embrasement) et reçoit ~15 fois
@@ -5049,7 +5246,7 @@ async function coopJoin(){
   if (code.length !== 5){ coopStatus('Le code fait 5 lettres.', true); return; }
   coopReset(); NET.role = 'guest'; NET.code = code;
   coopStatus('Connexion au salon ' + code + '…');
-  const hello = () => NET.send({t:'hello', char:coopMyChar(), shop:SAVE.shop, name:'Compagnon'});
+  const hello = () => NET.send({t:'hello', char:coopMyChar(), shop:SAVE.shop, name:'Compagnon', mast:Object.keys(SAVE.ach).filter(k => k.startsWith('m_'))});
   if (COOP_LOCAL()){ coopBC(); hello(); return; }
   try { await loadPeer(); } catch(e){ coopStatus('Impossible de charger la connexion réseau.', true); return; }
   const peer = NET.peer = new Peer();
@@ -5110,12 +5307,13 @@ function makeAlly(charId, shop){
   G.ally = {char:charId, input:{mx:0, my:0, aim:null},
     p:{pc:charId, x:60, y:30, r:12, dashCd:0, dashT:0, dvx:0, dvy:0, hp:100, max:100, face:1, hurt:0, step:0, inv:0, revives:(shop && shop.renaissance || 0) + (c.mod.revive || 0), xp:0, lvl:1, need:needFor(1)},
     weapons:[{id:c.w, lv:1, t:0.6, a:0, stars:0}], passives:[], st:{}, banished:new Set(), rerolls:0, banishes:0};
+  G.ally.p.mast = !!(NET.allyHello && NET.allyHello.mast && NET.allyHello.mast.includes('m_' + charId));   // maîtrise du compagnon (son propre succès)
   withAlly(() => { computeStats(); G.p.hp = G.p.max; });
 }
 function allyStep(dt){
   withAlly(() => {
     const p = G.p, st = G.st;
-    movePlayer(dt);
+    movePlayer(dt); talentStep(dt);
     if (p.down) return;
     p.hp = Math.min(p.max, p.hp + st.regen*dt);
     p.hurt = Math.max(0, p.hurt - dt); p.inv = Math.max(0, p.inv - dt);
@@ -5184,7 +5382,7 @@ function coopDownMark(p, X, Y, now){                                     // anne
 const R1 = v => Math.round(v*10)/10, R0 = v => Math.round(v);
 function pickF(o, keys){ const r = {}; for (const k of keys){ const v = o[k]; if (v !== undefined && v !== null) r[k] = typeof v === 'number' ? R1(v) : v; } return r; }
 function snapPlayer(p, w, ps, st){
-  return {pc:p.pc, x:R1(p.x), y:R1(p.y), vx:R0(p.vx || 0), vy:R0(p.vy || 0), hp:R0(p.hp), max:R0(p.max), face:p.face, hurt:R1(p.hurt || 0), down:!!p.down, rv:R1(p.reviveT || 0), dash:p.dashT > 0 ? 1 : 0, sp:R1(st.speed || 1),
+  return {pc:p.pc, x:R1(p.x), y:R1(p.y), vx:R0(p.vx || 0), vy:R0(p.vy || 0), hp:R0(p.hp), max:R0(p.max), face:p.face, hurt:R1(p.hurt || 0), down:!!p.down, rv:R1(p.reviveT || 0), dash:p.dashT > 0 ? 1 : 0, sp:R1(st.speed || 1), gh:R1(p.ghostT || 0),
     w:w.map(x => [x.id, x.lv, R1(x.a || 0), R1(x.R || 0), x.n || 0, R1(x.orb || 0), R1(x.active || 0), R1(x.len || 0), R1(x.max || 0), x.stars || 0]),
     ps:ps.map(q => [q.id, q.lv])};
 }
@@ -5206,7 +5404,7 @@ function coopSnapshot(){
     sh:G.shots.filter(near).map(s => Object.assign(pickF(s, ['kind', 'x', 'y', 'vx', 'vy', 'ev', 'spin', 'age', 'T', 'R', 'h', 'r', 'flap', 'x0', 'y0', 'tx', 'ty']), {o:s.own ? own(s.own) : 0})),
     es:G.eshots.map(s => pickF(s, ['x', 'y', 'vx', 'vy', 'r', 'kind', 'bone', 'life'])),
     gm:!slow ? null : G.gems.filter(near).flatMap(g => [R0(g.x), R0(g.y), g.v >= 10 ? 3 : g.v >= 3 ? 2 : g.kind === 'coin' ? 1 : 0]),
-    it:G.items.map(i => pickF(i, ['type', 'x', 'y', 'big'])),
+    it:G.items.map(i => pickF(i, ['type', 'x', 'y', 'big'])), hb:(G.herbs || []).map(h => [R0(h.x), R0(h.y), R1(h.life), R1(h.age)]),
     zo:G.zones.filter(near).map(z => pickF(z, ['x', 'y', 'r', 'R', 'life', 'max', 'burn', 'seed', 'grow'])),
     ri:G.rings.map(r => pickF(r, ['x', 'y', 'R', 'life', 'frz', 'lv', 'fire'])),
     bo:G.bolts.map(b => ({pts:b.pts.map(q => [R0(q[0]), R0(q[1])]), life:R1(b.life), max:b.max})),
@@ -5237,6 +5435,7 @@ function guestBegin(m){
   G.ally = {p:{x:0, y:0, r:12, face:1, hp:100, max:100, vx:0, vy:0}, weapons:[], passives:[], st:{}};
   state = 'play'; keys.clear(); setHud(true); show(null); G.buildDirty = true; renderMute(); music(m.map);
   toast('La nuit commence, à deux');
+  setTimeout(() => { if (G && G.guest) talIntroLine(); }, 1100);
 }
 function guestSnap(m){ NET.snapA = NET.snapB; NET.snapB = m; NET.snapT = performance.now(); if (G && G.guest && !NET.snapA) guestApply(0); }
 function applyPlayer(dst, s, isMe, dt){
@@ -5244,7 +5443,7 @@ function applyPlayer(dst, s, isMe, dt){
     if (dst._init !== true || Math.hypot(dst.x - s.x, dst.y - s.y) > 160){ dst.x = s.x; dst.y = s.y; dst._init = true; }
     else { const k = Math.min(1, dt*6); dst.x += (s.x - dst.x)*k; dst.y += (s.y - dst.y)*k; }
   } else { dst.x = s.x; dst.y = s.y; dst.vx = s.vx; dst.vy = s.vy; }
-  Object.assign(dst, {hp:s.hp, max:s.max, hurt:s.hurt, down:s.down, reviveT:s.rv, r:12, pc:s.pc});
+  Object.assign(dst, {hp:s.hp, max:s.max, hurt:s.hurt, down:s.down, reviveT:s.rv, r:12, pc:s.pc, ghostT:s.gh || 0});
   if (!isMe && Math.abs(s.vx) > 8) dst.face = Math.sign(s.vx);
 }
 function weaponsFrom(arr, prev){
@@ -5278,7 +5477,7 @@ function guestApply(dt){
   const oldC = new Map(G.corpses.map(e => [e.id, e])); G.corpses = m.co.map(a => Object.assign(oldC.get(a[0]) || {kx:0, ky:0, ph:0}, {id:a[0], type:a[1], x:a[2], y:a[3], r:a[4], elite:!!(a[5] & 1), boss:!!(a[5] & 2), dt:a[6], dead:true, hp:0, max:1}));
   const ownOf = o => o === 1 ? me : G.ally.p;
   G.shots = m.sh.map(s => Object.assign(s, {own:ownOf(s.o), life:1, hit:new Set(), trail:null}));
-  G.eshots = m.es; G.items = m.it; G.zones = m.zo; G.rings = m.ri; G.bolts = m.bo;
+  G.eshots = m.es; G.items = m.it; G.herbs = (m.hb || []).map(h => ({x:h[0], y:h[1], life:h[2], age:h[3]})); G.zones = m.zo; G.rings = m.ri; G.bolts = m.bo;
   G.slashes = m.sl.map(s => Object.assign(s, {own:ownOf(s.o)}));
   G.fxs = m.fx.map(f => ({k:f[0], x:f[1], y:f[2], w:f[3], age:f[4], dur:f[5], bottom:!!f[6], rot:f[7], a:f[8], f0:f[9]})); G.texts = m.tx.map(t => ({x:t[0], y:t[1], v:t[2], life:t[3], col:t[4] || null, big:!!t[5]}));
   if (m.de){ G.decals = []; } for (let i = 0; m.de && i < m.de.length; i += 7) G.decals.push({x:m.de[i], y:m.de[i+1], r:m.de[i+2], life:m.de[i+3], max:m.de[i+4], seed:m.de[i+5], kind:m.de[i+6] ? 'scorch' : 'ink'}); G.graves = m.gv; G.bombs = m.bm; G.bfx = m.bfx || G.bfx;
@@ -5508,10 +5707,11 @@ function levelChoices(){
   if (G.weapons.length < 6) for (const id of availW()) if (!hasWeapon(id)) pool.push({k:'w', id, lv:0});
   if (G.passives.length < 6) for (const id of availP()) if (!hasPassive(id)) pool.push({k:'p', id, lv:0});
   const f = pool.filter(c => !G.banished.has(c.id));
-  for (const c of f){ c.r = Math.random() - (c.lv > 0 ? 0.2 : 0); c.rar = rollRarity(); }
+  for (const c of f){ c.r = Math.random() - (c.lv > 0 ? 0.2 : 0); c.rar = rollRarity(); if (isTal('conteuse') && G.p.mast) c.rar = Math.max(c.rar, rollRarity()); }   // Conteuse maîtrisée : cartes plus rares
   f.sort((a,b) => a.r - b.r);
   let n = 3 + (SAVE.relics.foret ? 1 : 0);
   if (n === 3 && Math.random() < G.st.luck) n = 4;
+  if (isTal('conteuse')) n = Math.max(n, 4);
   return f.slice(0, n);
 }
 function openLevelUp(){
@@ -5805,6 +6005,7 @@ function finish(win, quit){
   if (win){
     SAVE.wins++;
     unlockAch('aube');
+    if (talOf(G.p) === 'gardien' && !G.guest) unlockAch('m_gardien');
     if (G.map === 'foret') storyUnlock('ch1');
     if (G.map === 'marais'){ unlockAch('aube_marais'); storyUnlock('ch2'); }
     if (G.map === 'cimetiere'){ unlockAch('cim_aube'); storyUnlock('ch3'); if (SAVE.relics.foret && SAVE.relics.marais && SAVE.relics.cimetiere) storyUnlock('vraie'); }
@@ -5818,7 +6019,7 @@ function finish(win, quit){
     : `Les ombres t’ont rattrapé à ${fmt(WIN_TIME - t)} de l’aube.` + (isBest ? ' C’est ta meilleure nuit.' : ` Ton record : ${fmt(SAVE.best)} tenues.`);
   $('#eTime').textContent = fmt(t); $('#eLvl').textContent = G.p.lvl; $('#eKills').textContent = num(G.kills); $('#eGold').textContent = '+' + num(gain);
   const rows = Object.entries(G.dmgBy).filter(([,d]) => d > 0).sort((a,b) => b[1]-a[1]);
-  const label = id => WD[id] ? WD[id].name : ({brasier:'La Tour embrasée', brume:'La Papesse', epines:'Le Chariot', mat:'Le Mat', embrasement:'Embrasement', aube:'Éclat d’aube', sanctuaire:'Sanctuaire', renaissance:'Renaissance'})[id] || id;
+  const label = id => WD[id] ? WD[id].name : ({brasier:'La Tour embrasée', brume:'La Papesse', epines:'Le Chariot', mat:'Le Mat', embrasement:'Embrasement', aube:'Éclat d’aube', sanctuaire:'Sanctuaire', renaissance:'Renaissance', tal_glas:'Glas (don)', tal_braises:'Traînée de braises (don)', tal_etoile:'Étoile filante (don)', tal_moisson:'Moisson (don)'})[id] || id;
   $('#dmgTable').innerHTML = rows.map(([id,d]) => {
     const w = G.weapons.find(w => w.id === id);
     const lvl = w ? (WD[id].evolved ? ' ★' : ' ' + ROMAN[w.lv]) : '';
@@ -5898,12 +6099,17 @@ function goChars(){
     return `<button type="button" class="pick ${owned?'':'locked'}" data-char="${id}" aria-pressed="${id===selChar}">
       ${PORTRAIT(id) ? `<span class="portrait" style="background-image:url(${PORTRAIT(id)})"></span>` : `<span class="portrait ph" style="background:linear-gradient(160deg,${c.cloak},#0b0e0c 75%)">${icon(c.w)}<span>Portrait à venir</span></span>`}
       <span class="head"><b>${c.name}</b></span>
-      <span class="start">${icon(c.w)} ${WD[c.w].name}</span><small>${c.bonus}</small>${lock}
+      <span class="start">${icon(c.w)} ${WD[c.w].name}</span><span class="tal">✦ ${TAL[id].name}${hasMastery(id) ? ' <i>maîtrisé</i>' : ''}</span><small>${c.bonus}</small>${lock}
     </button>`;
   }).join('');
+  renderCharInfo();
   $('#hardWrap').hidden = SAVE.wins <= 0;
   $('#hardBox').checked = !!SAVE.hard;
   updateGo(); focusFirst('chars');
+}
+function renderCharInfo(){                                             // don du personnage sélectionné, en clair
+  const t = TAL[selChar] || TAL.gardien, a = TAL_ACH.find(x => x.ch === selChar);
+  $('#charInfo').innerHTML = `<b>${CH[selChar].name} · ${t.name}${hasMastery(selChar) ? ' (maîtrisé)' : ''}</b> — ${t.txt}` + (a && !hasMastery(selChar) ? ` <span class="mute">Maîtrise : ${lcFirst(a.cond)}.</span>` : '');
 }
 function updateGo(){
   const owned = !!SAVE.chars[selChar], c = CH[selChar], go = $('#goBtn');
@@ -5915,7 +6121,7 @@ $('#charGrid').addEventListener('click', e => {
   const b = e.target.closest('[data-char]'); if (!b) return;
   selChar = b.dataset.char;
   for (const el of $('#charGrid').children) el.setAttribute('aria-pressed', el.dataset.char === selChar);
-  updateGo();
+  renderCharInfo(); updateGo();
 });
 $('#mapGrid').addEventListener('click', e => {
   const b = e.target.closest('[data-map]'); if (!b || !SAVE.maps[b.dataset.map]) return;
@@ -5958,7 +6164,7 @@ function charStats(cid, shop){
 function renderShopStats(){
   const cur = charStats(shopChar, SAVE.shop), pre = SC_PREVIEW ? charStats(shopChar, Object.assign({}, SAVE.shop, {[SC_PREVIEW]:(SAVE.shop[SC_PREVIEW]||0) + 1})) : null;
   $('#scStats').innerHTML = cur.map(([n, v, f], i) => { const d = pre && Math.abs(pre[i][1] - v) > 1e-9; return `<div class="strow"><span>${n}</span><b>${f(v)}${d ? `<em>→ ${f(pre[i][1])}</em>` : ''}</b></div>`; }).join('');
-  $('#scBonus').textContent = 'Bonus du personnage : ' + CH[shopChar].bonus;
+  { const t = TAL[shopChar] || TAL.gardien; $('#scBonus').innerHTML = `<b class="tal">✦ ${t.name}${hasMastery(shopChar) ? ' (maîtrisé)' : ''}</b> — ${t.txt}<br>Bonus : ${CH[shopChar].bonus}`; }
 }
 function renderShowcase(){
   const c = CH[shopChar], owned = !!SAVE.chars[shopChar];
@@ -6021,7 +6227,8 @@ $('#shopGrid').addEventListener('click', e => {
   SAVE.braises -= cost; SAVE.shop[id] = (SAVE.shop[id]||0) + 1; persist(); SFX.gold(); goShop();
 });
 let G_CODEX_TAB = 0;
-document.addEventListener('click', e => { const t = e.target.closest('.ctab'); if (!t) return; G_CODEX_TAB = +t.dataset.ct; SFX.tick && SFX.tick(); goCodex(); });
+let G_ACH_TAB = 0;
+document.addEventListener('click', e => { const t = e.target.closest('.ctab'); if (!t) return; SFX.tick && SFX.tick(); if (t.dataset.at != null){ G_ACH_TAB = +t.dataset.at; goAch(); return; } G_CODEX_TAB = +t.dataset.ct; goCodex(); });
 function goCodex(){
   state = 'codex'; show('codex');
   const unlockOf = { corbeaux:'roi', cendres:'lvl30', rayon:'aube' };
@@ -6045,12 +6252,15 @@ function goAch(){
   const L = [['Nuits veillées', num(SAVE.runs)], ['Aubes atteintes', num(SAVE.wins)], ['Ombres dissipées', num(SAVE.kills)], ['Temps de veille', fmt(st.time||0)],
     ['Boss vaincus', num(st.bosses||0)], ['Coffres ouverts', num(st.chests||0)], ['Braises gagnées', num(st.gold||0)], ['Évolutions', Object.keys(SAVE.evos).length + ' / 10']];
   $('#lifeStats').innerHTML = L.map(([k,v]) => `<div><span>${k}</span><b>${v}</b></div>`).join('');
-  $('#achList').innerHTML = ACH.map(a => {
+  // deux onglets : succès de la veillée, et maîtrises des gardiens (tout tient à l'écran, sans défiler)
+  const row = a => {
     const d = !!SAVE.ach[a.id];
     const rw = [a.rw, a.gold ? `+${a.gold} braises` : ''].filter(Boolean).join(' · ');
     const ic = ASSET_DATA.manifest && ASSET_DATA.manifest.icons && ASSET_DATA.manifest.icons[a.id];   // reliques : leur icône peinte
     return `<div class="arow ${d?'done':''}"><span class="medal">${ic ? `<img src="${ASSET_ROOT}${ic}" alt="" style="width:100%;height:100%;border-radius:50%;object-fit:cover;${d ? '' : 'filter:grayscale(1) brightness(.35)'}">` : d ? '✓' : '?'}</span><span class="txt"><b>${a.name}</b><small>${a.cond}</small></span><span class="rw">${rw}</span></div>`;
-  }).join('');
+  };
+  const tab = G_ACH_TAB || 0, gen = ACH.filter(a => !a.tal), mas = ACH.filter(a => a.tal), cnt = L2 => `${L2.filter(a => SAVE.ach[a.id]).length}/${L2.length}`;
+  $('#achList').innerHTML = `<div class="ctabs atabs" role="tablist"><button type="button" role="tab" class="ctab" data-at="0" aria-selected="${tab === 0}">Succès · ${cnt(gen)}</button><button type="button" role="tab" class="ctab" data-at="1" aria-selected="${tab === 1}">Maîtrises des gardiens · ${cnt(mas)}</button></div>` + (tab === 0 ? gen : mas).map(row).join('');
   focusFirst('ach');
 }
 function goJournal(){
