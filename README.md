@@ -16,4 +16,4 @@ Commandes : déplacements ZQSD / flèches, **Espace** esquive, **E** flamme, **F
 
 - `app/` : le jeu (HTML Canvas + JavaScript) et ses images.
 - `main.js` : la fenêtre du jeu (Electron) et la mise à jour automatique.
-- `.github/workflows/release.yml` : construit l'installateur sur Windows et publie la version quand une étiquette `vX.Y.Z` est poussée.
+- `.github/workflows/release.yml` : construit l'installateur sur Windows et publie la version quand le numéro de version de `package.json` change.

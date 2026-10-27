@@ -1,11 +1,12 @@
 # Construit l'installateur Windows sur un vrai Windows et publie la version sur GitHub.
-# Se déclenche quand une étiquette de version est poussée (ex. v0.32.0).
+# Se déclenche à chaque envoi sur la branche main : si la version de package.json n'est pas encore publiée,
+# l'installateur est construit et la version vX.Y.Z est créée (avec son étiquette). Sinon, rien ne se passe.
 # Les jeux déjà installés trouvent la nouvelle version au lancement et se mettent à jour tout seuls.
 name: Publier une version
 
 on:
   push:
-    tags: ['v*']
+    branches: [main]
   workflow_dispatch:
 
 permissions:
@@ -16,19 +17,29 @@ jobs:
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
+      - name: Cette version est-elle déjà publiée ?
+        id: check
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          V=$(node -p "require('./package.json').version")
+          echo "version=$V" >> "$GITHUB_OUTPUT"
+          if gh release view "v$V" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            echo "La version $V est déjà publiée : rien à faire."; echo "skip=1" >> "$GITHUB_OUTPUT"
+          else
+            echo "Nouvelle version $V : construction."; echo "skip=0" >> "$GITHUB_OUTPUT"
+          fi
       - uses: actions/setup-node@v4
+        if: steps.check.outputs.skip == '0'
         with:
           node-version: 22
           cache: npm
       - name: Installer les outils
+        if: steps.check.outputs.skip == '0'
         run: npm ci
-      - name: Vérifier que la version correspond à l'étiquette
-        if: startsWith(github.ref, 'refs/tags/v')
-        shell: bash
-        run: |
-          V=$(node -p "require('./package.json').version")
-          [ "v$V" = "${GITHUB_REF_NAME}" ] || { echo "package.json dit $V mais l'étiquette est ${GITHUB_REF_NAME}"; exit 1; }
       - name: Construire et publier
+        if: steps.check.outputs.skip == '0'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: npx electron-builder --win --x64 --publish always
