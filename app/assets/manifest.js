@@ -2343,12 +2343,12 @@ registerAssetData('manifest', {
     1.0
    ],
    "size": [
-    150,
+    131,
     190
    ],
    "lights": [],
-   "status": "placeholder",
-   "art": null
+   "status": "art",
+   "art": "forest_tree.png"
   },
   "forest_grass": {
    "name": "Herbe",
@@ -2360,11 +2360,11 @@ registerAssetData('manifest', {
    ],
    "size": [
     34,
-    22
+    27
    ],
    "lights": [],
-   "status": "placeholder",
-   "art": null
+   "status": "art",
+   "art": "forest_grass.png"
   },
   "forest_fern": {
    "name": "Fougère",
@@ -2375,12 +2375,12 @@ registerAssetData('manifest', {
     1.0
    ],
    "size": [
-    40,
-    28
+    24,
+    40
    ],
    "lights": [],
-   "status": "placeholder",
-   "art": null
+   "status": "art",
+   "art": "forest_fern.png"
   },
   "forest_rock": {
    "name": "Rocher",
@@ -2392,11 +2392,11 @@ registerAssetData('manifest', {
    ],
    "size": [
     30,
-    22
+    23
    ],
    "lights": [],
-   "status": "placeholder",
-   "art": null
+   "status": "art",
+   "art": "forest_rock.png"
   },
   "forest_mushroom": {
    "name": "Champignon",
@@ -2408,7 +2408,7 @@ registerAssetData('manifest', {
    ],
    "size": [
     18,
-    18
+    14
    ],
    "lights": [
     [
@@ -2418,8 +2418,8 @@ registerAssetData('manifest', {
      "110,225,240"
     ]
    ],
-   "status": "placeholder",
-   "art": null
+   "status": "art",
+   "art": "forest_mushroom.png"
   },
   "forest_roots": {
    "name": "Racines",
@@ -2431,11 +2431,11 @@ registerAssetData('manifest', {
    ],
    "size": [
     40,
-    16
+    29
    ],
    "lights": [],
-   "status": "placeholder",
-   "art": null
+   "status": "art",
+   "art": "forest_roots.png"
   },
   "forest_log": {
    "name": "Tronc",
@@ -2447,11 +2447,11 @@ registerAssetData('manifest', {
    ],
    "size": [
     56,
-    22
+    26
    ],
    "lights": [],
-   "status": "placeholder",
-   "art": null
+   "status": "art",
+   "art": "forest_log.png"
   },
   "marsh_tree": {
    "name": "Saule",
@@ -2462,12 +2462,12 @@ registerAssetData('manifest', {
     1.0
    ],
    "size": [
-    150,
+    137,
     190
    ],
    "lights": [],
-   "status": "placeholder",
-   "art": null
+   "status": "art",
+   "art": "marsh_tree.png"
   },
   "marsh_grass": {
    "name": "Herbe",
@@ -2479,11 +2479,11 @@ registerAssetData('manifest', {
    ],
    "size": [
     34,
-    24
+    30
    ],
    "lights": [],
-   "status": "placeholder",
-   "art": null
+   "status": "art",
+   "art": "marsh_grass.png"
   },
   "marsh_reeds": {
    "name": "Roseaux",
@@ -2494,12 +2494,12 @@ registerAssetData('manifest', {
     1.0
    ],
    "size": [
-    28,
+    27,
     44
    ],
    "lights": [],
-   "status": "placeholder",
-   "art": null
+   "status": "art",
+   "art": "marsh_reeds.png"
   },
   "marsh_rock": {
    "name": "Rocher",
@@ -2514,8 +2514,8 @@ registerAssetData('manifest', {
     22
    ],
    "lights": [],
-   "status": "placeholder",
-   "art": null
+   "status": "art",
+   "art": "marsh_rock.png"
   },
   "marsh_mushroom": {
    "name": "Champignon",
@@ -2527,7 +2527,7 @@ registerAssetData('manifest', {
    ],
    "size": [
     18,
-    18
+    15
    ],
    "lights": [
     [
@@ -2537,8 +2537,8 @@ registerAssetData('manifest', {
      "160,255,120"
     ]
    ],
-   "status": "placeholder",
-   "art": null
+   "status": "art",
+   "art": "marsh_mushroom.png"
   },
   "marsh_lily": {
    "name": "Nénuphar",
@@ -2550,11 +2550,11 @@ registerAssetData('manifest', {
    ],
    "size": [
     24,
-    10
+    15
    ],
    "lights": [],
-   "status": "placeholder",
-   "art": null
+   "status": "art",
+   "art": "marsh_lily.png"
   },
   "cemetery_tree": {
    "name": "Arbre mort",
@@ -2565,12 +2565,12 @@ registerAssetData('manifest', {
     1.0
    ],
    "size": [
-    140,
+    137,
     190
    ],
    "lights": [],
-   "status": "placeholder",
-   "art": null
+   "status": "art",
+   "art": "cemetery_tree.png"
   },
   "cemetery_grass": {
    "name": "Herbe",
@@ -2582,11 +2582,11 @@ registerAssetData('manifest', {
    ],
    "size": [
     30,
-    20
+    24
    ],
    "lights": [],
-   "status": "placeholder",
-   "art": null
+   "status": "art",
+   "art": "cemetery_grass.png"
   },
   "cemetery_tomb": {
    "name": "Tombe",
@@ -2601,8 +2601,8 @@ registerAssetData('manifest', {
     44
    ],
    "lights": [],
-   "status": "placeholder",
-   "art": null
+   "status": "art",
+   "art": "cemetery_tomb.png"
   },
   "cemetery_skull": {
    "name": "Crâne",
@@ -2614,11 +2614,11 @@ registerAssetData('manifest', {
    ],
    "size": [
     16,
-    12
+    11
    ],
    "lights": [],
-   "status": "placeholder",
-   "art": null
+   "status": "art",
+   "art": "cemetery_skull.png"
   },
   "cemetery_rock": {
    "name": "Rocher",
@@ -2630,11 +2630,11 @@ registerAssetData('manifest', {
    ],
    "size": [
     30,
-    22
+    23
    ],
    "lights": [],
-   "status": "placeholder",
-   "art": null
+   "status": "art",
+   "art": "cemetery_rock.png"
   },
   "brazier": {
    "name": "Brasero",
@@ -2645,12 +2645,12 @@ registerAssetData('manifest', {
     1.0
    ],
    "size": [
-    30,
-    34
+    34,
+    30
    ],
    "lights": [],
-   "status": "placeholder",
-   "art": null
+   "status": "art",
+   "art": "brazier.png"
   },
   "xp_small": {
    "name": "XP",
@@ -2665,8 +2665,8 @@ registerAssetData('manifest', {
     16
    ],
    "lights": [],
-   "status": "placeholder",
-   "art": null
+   "status": "art",
+   "art": "xp_small.png"
   },
   "xp_mid": {
    "name": "XP",
@@ -2681,8 +2681,8 @@ registerAssetData('manifest', {
     19
    ],
    "lights": [],
-   "status": "placeholder",
-   "art": null
+   "status": "art",
+   "art": "xp_mid.png"
   },
   "xp_big": {
    "name": "XP+",
@@ -2693,12 +2693,12 @@ registerAssetData('manifest', {
     0.5
    ],
    "size": [
-    17,
+    19,
     23
    ],
    "lights": [],
-   "status": "placeholder",
-   "art": null
+   "status": "art",
+   "art": "xp_big.png"
   },
   "ember_coin": {
    "name": "Braise",
@@ -2709,12 +2709,12 @@ registerAssetData('manifest', {
     0.5
    ],
    "size": [
-    11,
+    13,
     13
    ],
    "lights": [],
-   "status": "placeholder",
-   "art": null
+   "status": "art",
+   "art": "ember_coin.png"
   },
   "chest": {
    "name": "Coffre",
@@ -2726,11 +2726,11 @@ registerAssetData('manifest', {
    ],
    "size": [
     26,
-    20
+    25
    ],
    "lights": [],
-   "status": "placeholder",
-   "art": null
+   "status": "art",
+   "art": "chest.png"
   },
   "chest_big": {
    "name": "Coffre",
@@ -2742,11 +2742,11 @@ registerAssetData('manifest', {
    ],
    "size": [
     32,
-    24
+    31
    ],
    "lights": [],
-   "status": "placeholder",
-   "art": null
+   "status": "art",
+   "art": "chest_big.png"
   },
   "potion": {
    "name": "Fiole",
@@ -2757,12 +2757,12 @@ registerAssetData('manifest', {
     0.5
    ],
    "size": [
-    12,
+    10,
     17
    ],
    "lights": [],
-   "status": "placeholder",
-   "art": null
+   "status": "art",
+   "art": "potion.png"
   },
   "purse": {
    "name": "Bourse",
@@ -2773,12 +2773,12 @@ registerAssetData('manifest', {
     0.5
    ],
    "size": [
-    16,
+    15,
     16
    ],
    "lights": [],
-   "status": "placeholder",
-   "art": null
+   "status": "art",
+   "art": "purse.png"
   },
   "magnet": {
    "name": "Aimant",
@@ -2790,11 +2790,11 @@ registerAssetData('manifest', {
    ],
    "size": [
     18,
-    16
+    12
    ],
    "lights": [],
-   "status": "placeholder",
-   "art": null
+   "status": "art",
+   "art": "magnet.png"
   },
   "bomb": {
    "name": "Aube",
@@ -2809,8 +2809,8 @@ registerAssetData('manifest', {
     18
    ],
    "lights": [],
-   "status": "placeholder",
-   "art": null
+   "status": "art",
+   "art": "bomb.png"
   },
   "frost": {
    "name": "Givre",
@@ -2821,12 +2821,12 @@ registerAssetData('manifest', {
     0.5
    ],
    "size": [
-    14,
+    12,
     18
    ],
    "lights": [],
-   "status": "placeholder",
-   "art": null
+   "status": "art",
+   "art": "frost.png"
   },
   "relic": {
    "name": "Relique",
@@ -2837,12 +2837,12 @@ registerAssetData('manifest', {
     0.5
    ],
    "size": [
-    18,
+    24,
     26
    ],
    "lights": [],
-   "status": "placeholder",
-   "art": null
+   "status": "art",
+   "art": "relic.png"
   },
   "marsh_puddle": {
    "name": "Flaque",
@@ -2854,11 +2854,11 @@ registerAssetData('manifest', {
    ],
    "size": [
     140,
-    84
+    69
    ],
    "lights": [],
-   "status": "placeholder",
-   "art": null
+   "status": "art",
+   "art": "marsh_puddle.png"
   },
   "merchant": {
    "name": "Colporteur",
