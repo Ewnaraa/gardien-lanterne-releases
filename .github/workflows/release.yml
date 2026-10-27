@@ -1,12 +1,13 @@
 # Construit l'installateur Windows sur un vrai Windows et publie la version sur GitHub.
-# Se déclenche à chaque envoi sur la branche main : si la version de package.json n'est pas encore publiée,
-# l'installateur est construit et la version vX.Y.Z est créée (avec son étiquette). Sinon, rien ne se passe.
+# Ne se déclenche QUE sur la branche « publication » : la branche main sert au travail en cours, sans rien publier.
+# Pour publier (sur feu vert du propriétaire) : pousser main vers publication. Si la version de package.json
+# n'est pas encore publiée, l'installateur est construit et la version vX.Y.Z est créée (avec son étiquette).
 # Les jeux déjà installés trouvent la nouvelle version au lancement et se mettent à jour tout seuls.
 name: Publier une version
 
 on:
   push:
-    branches: [main]
+    branches: [publication]
   workflow_dispatch:
 
 permissions:
