@@ -39,15 +39,29 @@ jobs:
       - name: Installer les outils
         if: steps.check.outputs.skip == '0'
         run: npm ci
-      - name: Construire et publier
+      - name: Construire l'installateur
+        if: steps.check.outputs.skip == '0'
+        shell: bash
+        run: |
+          set -o pipefail
+          npx electron-builder --win --x64 --publish never 2>&1 | tee build.log || {
+            grep -iE "error|⨯|failed|status|message" build.log | tail -n 10 | sed 's/%/%25/g' | while IFS= read -r l; do echo "::error::$l"; done
+            exit 1
+          }
+          ls -la dist
+      - name: Publier la version (installateur + fichiers de mise à jour)
         if: steps.check.outputs.skip == '0'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         shell: bash
         run: |
-          set -o pipefail
-          npx electron-builder --win --x64 --publish always 2>&1 | tee build.log || {
-            # en cas d'échec : les dernières lignes deviennent des annotations lisibles sans le journal complet
-            tail -n 25 build.log | sed 's/%/%25/g' | while IFS= read -r l; do echo "::error::$l"; done
-            exit 1
-          }
+          V=${{ steps.check.outputs.version }}
+          EXE="dist/Gardien-de-la-Lanterne-Setup-$V.exe"
+          # latest.yml : c'est ce fichier que les jeux installés lisent pour se mettre à jour tout seuls
+          if [ ! -f dist/latest.yml ]; then
+            node -e "const fs=require('fs'),c=require('crypto'),f=process.argv[1],b=fs.readFileSync(f),h=c.createHash('sha512').update(b).digest('base64'),n=require('path').basename(f);fs.writeFileSync('dist/latest.yml','version: '+process.argv[2]+'\nfiles:\n  - url: '+n+'\n    sha512: '+h+'\n    size: '+b.length+'\npath: '+n+'\nsha512: '+h+'\nreleaseDate: \''+new Date().toISOString()+'\'\n')" "$EXE" "$V"
+          fi
+          cat dist/latest.yml
+          FILES="$EXE dist/latest.yml"; [ -f "$EXE.blockmap" ] && FILES="$FILES $EXE.blockmap"
+          gh release create "v$V" $FILES --repo "$GITHUB_REPOSITORY" --title "$V" --notes "Version $V du Gardien de la Lanterne" --target "$GITHUB_SHA"
+          gh release view "v$V" --repo "$GITHUB_REPOSITORY" --json assets --jq '.assets[].name'
