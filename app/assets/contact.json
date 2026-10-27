@@ -1,8 +1,8 @@
 {
 "environment/buildings/b_barque.png": [
-0.4594,
-0.84,
-0.3746
+0.3816,
+0.8467,
+0.2862
 ],
 "environment/buildings/b_bucher.png": [
 0.516,
@@ -10,33 +10,33 @@
 0.3345
 ],
 "environment/buildings/b_cabane.png": [
-0.5889,
+0.587,
 0.8739,
-0.2333
+0.2315
 ],
 "environment/buildings/b_cercle.png": [
-0.5522,
+0.5509,
 0.8378,
-0.2963
+0.295
 ],
 "environment/buildings/b_chapelle.png": [
-0.5363,
+0.5347,
 0.8972,
-0.2624
+0.2607
 ],
 "environment/buildings/b_charrette.png": [
-0.4548,
+0.4533,
 0.8906,
-0.3707
+0.3692
 ],
 "environment/buildings/b_clocher.png": [
-0.5912,
+0.5896,
 0.8576,
-0.3762
+0.3746
 ],
 "environment/buildings/b_grille.png": [
 0.6472,
-0.8342,
+0.8291,
 0.3415
 ],
 "environment/buildings/b_hutte.png": [
@@ -45,9 +45,9 @@
 0.2373
 ],
 "environment/buildings/b_mausolee.png": [
-0.5225,
+0.5206,
 0.9257,
-0.3127
+0.3109
 ],
 "environment/buildings/b_oratoire.png": [
 0.6946,
@@ -56,7 +56,7 @@
 ],
 "environment/buildings/b_ossuaire.png": [
 0.747,
-0.9049,
+0.9011,
 0.2369
 ],
 "environment/buildings/b_panneau.png": [
@@ -65,9 +65,9 @@
 0.4194
 ],
 "environment/buildings/b_phare_depart.png": [
-0.5617,
-0.9193,
-0.3617
+0.5584,
+0.9209,
+0.3584
 ],
 "environment/buildings/b_pilotis.png": [
 0.4625,
@@ -76,7 +76,7 @@
 ],
 "environment/buildings/b_ponton.png": [
 0.34,
-0.799,
+0.7938,
 0.3218
 ],
 "environment/buildings/b_puits.png": [
@@ -85,9 +85,9 @@
 0.3557
 ],
 "environment/buildings/b_tour.png": [
-0.5773,
+0.5755,
 0.8783,
-0.3327
+0.3309
 ],
 "environment/ruins/broken_column.png": [
 0.4697,
@@ -105,9 +105,9 @@
 0.1713
 ],
 "environment/ruins/ruin_arch_c.png": [
-0.2355,
+0.2319,
 0.9535,
-0.2138
+0.2101
 ],
 "environment/ruins/ruin_corner_a.png": [
 0.4957,
@@ -120,14 +120,14 @@
 0.4646
 ],
 "environment/ruins/ruin_corner_c.png": [
-0.4905,
+0.4952,
 0.9457,
-0.4619
+0.4571
 ],
 "environment/ruins/ruin_corner_d.png": [
-0.5056,
-0.9306,
-0.1944
+0.5111,
+0.9167,
+0.2
 ],
 "environment/ruins/ruin_corner_e.png": [
 0.5061,
@@ -150,9 +150,9 @@
 0.3167
 ],
 "environment/ruins/ruin_wall_a.png": [
-0.2157,
+0.2108,
 0.9455,
-0.1863
+0.1814
 ],
 "environment/ruins/ruin_wall_b.png": [
 0.225,
@@ -160,9 +160,9 @@
 0.195
 ],
 "environment/ruins/ruin_wall_long.png": [
-0.2218,
+0.2177,
 0.969,
-0.1976
+0.1935
 ],
 "environment/life/v_amarre.png": [
 0.7083,
@@ -185,9 +185,9 @@
 0.1282
 ],
 "environment/life/v_bois.png": [
-0.4359,
+0.4327,
 0.935,
-0.359
+0.3558
 ],
 "environment/life/v_brouette.png": [
 0.1346,
@@ -206,12 +206,12 @@
 ],
 "environment/life/v_charrette_cercueil.png": [
 0.4457,
-0.8168,
+0.8115,
 0.437
 ],
 "environment/life/v_chaudron.png": [
 0.4954,
-0.9866,
+0.9732,
 0.4769
 ],
 "environment/life/v_cloture.png": [
@@ -220,9 +220,9 @@
 0.2125
 ],
 "environment/life/v_colonne_couronne.png": [
-0.4038,
+0.399,
 0.9758,
-0.3846
+0.3798
 ],
 "environment/life/v_croix.png": [
 0.496,
@@ -235,9 +235,9 @@
 0.1613
 ],
 "environment/life/v_feu.png": [
-0.5135,
+0.5169,
 0.9574,
-0.3041
+0.3007
 ],
 "environment/life/v_filet.png": [
 0.5149,
@@ -245,29 +245,29 @@
 0.372
 ],
 "environment/life/v_grigri.png": [
-0.3958,
+0.3264,
 0.9006,
-0.3819
+0.3125
 ],
 "environment/life/v_lanterne_perche.png": [
-0.6429,
+0.6488,
 0.9804,
-0.3214
+0.3155
 ],
 "environment/life/v_nasses.png": [
-0.4015,
+0.4053,
 0.9381,
-0.3333
+0.3295
 ],
 "environment/life/v_passerelle.png": [
 0.4264,
-0.9212,
+0.9152,
 0.1008
 ],
 "environment/life/v_potager.png": [
-0.5168,
-0.9455,
-0.1959
+0.5149,
+0.9406,
+0.1978
 ],
 "environment/life/v_poteau_lanterne.png": [
 0.7188,
@@ -320,9 +320,9 @@
 0.3146
 ],
 "environment/cemetery/cemetery_grass.png": [
-0.475,
+0.4833,
 0.9375,
-0.4083
+0.4
 ],
 "environment/cemetery/cemetery_rock.png": [
 0.4917,
@@ -350,19 +350,19 @@
 0.4628
 ],
 "environment/cemetery/gothic_arches.png": [
-0.4147,
+0.4176,
 0.9459,
-0.3088
+0.3059
 ],
 "environment/cemetery/knight_statue.png": [
-0.4325,
+0.4286,
 0.972,
-0.4087
+0.4048
 ],
 "environment/cemetery/tomb_candles.png": [
-0.3929,
+0.3968,
 0.9612,
-0.2897
+0.2857
 ],
 "environment/forest/forest_fern.png": [
 0.5729,
@@ -385,9 +385,9 @@
 0.3194
 ],
 "environment/forest/forest_rock.png": [
-0.4917,
+0.4833,
 0.9574,
-0.4417
+0.4333
 ],
 "environment/forest/forest_roots.png": [
 0.4375,
@@ -400,9 +400,9 @@
 0.4103
 ],
 "environment/marsh/marsh_grass.png": [
-0.5368,
+0.5515,
 0.9333,
-0.3897
+0.375
 ],
 "environment/marsh/marsh_lily.png": [
 0.4688,
@@ -410,14 +410,14 @@
 0.3438
 ],
 "environment/marsh/marsh_mushroom.png": [
-0.5139,
-0.9667,
-0.3194
+0.5,
+0.9333,
+0.3056
 ],
 "environment/marsh/marsh_puddle.png": [
-0.557,
+0.5551,
 0.9692,
-0.2376
+0.2357
 ],
 "environment/marsh/marsh_reeds.png": [
 0.4815,
@@ -445,8 +445,8 @@
 0.4559
 ],
 "environment/props/table_coins.png": [
-0.3022,
-0.925,
-0.1593
+0.4725,
+0.9125,
+0.3297
 ]
 }
