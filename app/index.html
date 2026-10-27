@@ -1352,6 +1352,7 @@ const BC = 380;
 function brazierAt(i, j){
   if (hash(i*3+11, j*7-5) > 0.5) return null;
   if (Math.abs(i) < 1 && Math.abs(j) < 1) return null;
+  if (G && G.room) return null;
   if (G && siteNear(i*BC + BC/2, j*BC + BC/2, 60)) return null;
   return {key:i+','+j, x:i*BC + 60 + hash(i,j+99)*(BC-120), y:j*BC + 60 + hash(i+55,j)*(BC-120)};
 }
@@ -1375,6 +1376,7 @@ function breakBraziers(x, y, r){
 }
 const PC = 300;
 function puddleIn(i, j){
+  if (G && G.room) return null;
   if (hash(i*5+3, j*11-7) > 0.38) return null;
   if (Math.abs(i) < 1 && Math.abs(j) < 1) return null;
   return {x:i*PC + PC/2 + (hash(i,j+7)-.5)*80, y:j*PC + PC/2 + (hash(i+3,j)-.5)*80, rx:60 + hash(i-4,j+2)*70};
@@ -1668,14 +1670,14 @@ function update(dt){
     updateFx && updateFx(dt);
     return;
   }
-  G.t += dt;
+  if (!G.room) G.t += dt;                                         // dans une salle, la nuit est suspendue
   if (G.t >= WIN_TIME){ startDawn(); return; }
 
-  while (G.ev < EVENTS.length && G.t >= EVENTS[G.ev].t){ runEvent(EVENTS[G.ev]); G.ev++; }
+  while (!G.room && G.ev < EVENTS.length && G.t >= EVENTS[G.ev].t){ runEvent(EVENTS[G.ev]); G.ev++; }
 
   const minute = Math.min(9, Math.floor(G.t/60));
   const minCount = 12 + G.t*0.55;
-  if (G.enemies.length < 480){
+  if (G.enemies.length < 480 && !G.room){
     // respiration : temps fort / accalmie sur un cycle de 50 s, et 8 s de calme après un boss
     const ph = (G.t % 50)/50, wave = 0.62 + 0.9*Math.pow(Math.sin(ph*Math.PI), 2), calm = (G.calmT || 0) > 0 ? 0.15 : 1;
     if (ph > 0.42 && ph < 0.44 && !G.peakSaid && G.t > 40){ G.peakSaid = true; toast('La nuit s’épaissit…'); } else if (ph > 0.6) G.peakSaid = false;
@@ -1689,7 +1691,7 @@ function update(dt){
     }
   }
 
-  movePlayer(dt); updateSites(dt);
+  movePlayer(dt); updateSites(dt); updateDoors(dt); updateAmbient(dt);
   if (G.bombs) for (let i = G.bombs.length - 1; i >= 0; i--){       // élite explosif : cercle d'alerte, puis explosion
     const b = G.bombs[i]; b.t += dt;
     if (b.t >= b.max){
@@ -2086,7 +2088,7 @@ function startDawn(){
 }
 function updateDawn(dt){
   G.dawnT += dt;
-  movePlayer(dt); updateSites(dt);
+  movePlayer(dt); updateSites(dt); updateDoors(dt); updateAmbient(dt);
   let n = 0;
   for (const e of G.enemies){ if (e.dead) continue; if (Math.random() < 0.08 || G.dawnT > 2.2){ killEnemy(e, true); if (++n > 16) break; } }
   G.enemies = G.enemies.filter(e => !e.dead);
@@ -2126,7 +2128,7 @@ function treeAt(i, j){
   if (h > 0.17) return null;
   if (Math.abs(i) <= 1 && Math.abs(j) <= 1) return null;
   const x = i*TC + 40 + hash(i+1,j*3)*(TC-80), y = j*TC + 40 + hash(i*7,j+2)*(TC-80);
-  if (G && siteNear(x, y, 90)) return null;                              // les lieux sont dégagés
+  if (G && (G.room || siteNear(x, y, 90))) return null;                              // les lieux sont dégagés
   return {x, y, s:0.85 + hash(i-3,j+8)*0.55, k:h};
 }
 
@@ -2174,6 +2176,7 @@ function draw(now){
   // Sol peint
   drawGround(ox, oy);
   drawDecor(ox, oy, now);
+  drawWildDecals(ox, oy); drawSiteDecals(ox, oy); drawDoors(X, Y, now); drawCrows(X, Y, now);
   for (const d of G.decals){
     const x = X(d.x), y = Y(d.y); if (!vis(x,y,d.r*2)) continue;
     const a = Math.min(1, d.life/2)*(d.kind === 'scorch' ? 0.65 : 0.5);
@@ -2281,8 +2284,11 @@ function draw(now){
       const c = it.e, x = X(c.x), y = Y(c.y), k = c.dt/0.4; ctx.save(); ctx.globalAlpha = Math.max(0, 1 - k);
       ctx.translate(x, y - k*16); ctx.scale(1 + k*0.6, 1 - k*0.55); ctx.translate(-x, -y);
       const fl = c.flash; c.flash = 0.001; drawEnemyBody(c, x, y); c.flash = fl; ctx.restore();
+    } else if (it.k === 4 && it.r.camp){                             // cercle de pierres d'un village, avec son feu
+      const x = X(it.r.x), y = Y(it.r.y); drawEnt('v_feu', x, y); siteFlame(x, y - 4, now);
+      decoLights.push({x, y:y - 14, r:80, i:0.9, col:'255,150,70', hole:true});
     } else if (it.k === 4 && it.r.fire){                             // feu de camp d'un lieu
-      const x = X(it.r.x), y = Y(it.r.y); drawBrazier(x, y, now); siteFlame(x, y, now);
+      const x = X(it.r.x), y = Y(it.r.y); drawBrazier(x, y, now); if (!hasFx('amb_brasero')) siteFlame(x, y, now);
       decoLights.push({x, y:y - 14, r:70, i:0.9, col:'255,150,70', hole:true});
     } else if (it.k === 4 && it.r.deco){                             // petit décor d'un lieu
       const r = it.r; drawEnt(r.id, X(r.x), Y(r.y));
@@ -2301,6 +2307,7 @@ function draw(now){
       const sp = 18 + hash(k,5)*14;
       const fx = mod(hash(k,1)*1600 + tt*sp*0.7 + Math.sin(tt*1.3 + k)*30 - p.x, W + 100) - 50;
       const fy = mod(hash(k,2)*1200 + tt*sp - p.y, H + 100) - 50;
+      if (hasFx('amb_feuilles') && k < 9){ fxDraw('amb_feuilles', fxLoopFrame('amb_feuilles', tt + k*0.37), fx, fy, 34, {a:G.map === 'cimetiere' ? 0.45 : 0.75}); continue; }   // feuilles peintes qui tournoient
       ctx.save(); ctx.translate(fx, fy); ctx.rotate(tt*2 + k); ctx.scale(1, Math.abs(Math.sin(tt*3 + k)) + 0.2);
       ctx.fillStyle = G.map === 'cimetiere' ? 'rgba(130,120,110,.55)' : (k % 3 ? '#7a5a26' : '#a0702c');
       ctx.beginPath(); ctx.ellipse(0,0,3.6,1.8,0,0,TAU); ctx.fill(); ctx.restore();
@@ -2337,6 +2344,7 @@ function draw(now){
     const fl = reduce ? 0 : Math.sin(now/70 + b.x)*2;
     const gg = ctx.createRadialGradient(x,y-8,0,x,y-8,75); gg.addColorStop(0,'rgba(242,140,60,.3)'); gg.addColorStop(1,'rgba(242,140,60,0)');
     ctx.fillStyle = gg; ctx.fillRect(x-75,y-83,150,150);
+    if (hasFx('amb_brasero')) continue;                              // la flamme est déjà dans l'image animée
     ctx.fillStyle = '#ff9a3a'; ctx.beginPath(); ctx.moveTo(x-6,y-5); ctx.quadraticCurveTo(x-2,y-14-fl,x,y-21-fl); ctx.quadraticCurveTo(x+2,y-14-fl,x+6,y-5); ctx.fill();
     ctx.fillStyle = '#ffe08a'; ctx.beginPath(); ctx.moveTo(x-3,y-5); ctx.quadraticCurveTo(x,y-13-fl,x+3,y-5); ctx.fill();
   }
@@ -2481,6 +2489,7 @@ function draw(now){
     ctx.beginPath(); ctx.arc(X(q.x),Y(q.y),q.s,0,TAU); ctx.fill();
   }
   ctx.globalAlpha = 1;
+  drawAmbientOver(X, Y, now);
   drawFxSprites(X, Y);
   ctx.globalCompositeOperation = 'source-over';
 
@@ -2751,6 +2760,7 @@ function drawFlame(x, y, now, k){
   ctx.fillStyle = '#fff0b0'; ctx.beginPath(); ctx.moveTo(x-1, y); ctx.quadraticCurveTo(x, y-4-f, x+1, y); ctx.fill();
 }
 function drawDecor(ox, oy, now){
+  if (G.room){ decoLights = []; return; }
   const p = G.p, m = G.map, D = decoSet(m), ppx = p.x + ox, ppy = p.y + oy;
   decoLights = [];
   const wind = (gx, gy) => { let b = reduce ? 0 : Math.sin(now/800 + (gx-ox)*0.011 + (gy-oy)*0.006)*0.12; const dx = gx - ppx, dy = gy - ppy, d2 = dx*dx + dy*dy; if (d2 < 1800){ const d = Math.sqrt(d2) || 1; b -= dx/d*(42-d)/42*0.5; } return b; };
@@ -2761,7 +2771,8 @@ function drawDecor(ox, oy, now){
       const x = q.x+ox, y = q.y+oy;
       drawPuddle(q, x, y);                                   // image de flaque (asset) ; les rides restent un effet
       const rip = reduce ? 0 : mod(now/1800 + i*0.3, 1);                // mod : reste positif à l'ouest de la carte (i négatif)
-      ctx.strokeStyle = `rgba(160,210,200,${0.18*(1-rip)})`; ctx.beginPath(); ctx.ellipse(x - q.rx*0.15, y - q.rx*0.1, q.rx*(0.2 + rip*0.4), q.rx*(0.08 + rip*0.16), 0, 0, TAU); ctx.stroke();
+      if (hasFx('amb_ronds')) fxDraw('amb_ronds', rip*7, x - q.rx*0.15, y - q.rx*0.1, q.rx*0.9, {h:q.rx*0.5, a:0.55});   // ronds dans l'eau peints
+      else { ctx.strokeStyle = `rgba(160,210,200,${0.18*(1-rip)})`; ctx.beginPath(); ctx.ellipse(x - q.rx*0.15, y - q.rx*0.1, q.rx*(0.2 + rip*0.4), q.rx*(0.08 + rip*0.16), 0, 0, TAU); ctx.stroke(); }
       if (hash(i+9, j-9) < 0.7) drawSpr(D.lily[(hash(i,j+4)*3)|0], x + q.rx*0.35, y + q.rx*0.1);
       if (hash(i-2, j+11) < 0.5) drawSpr(D.lily[(hash(i+5,j)*3)|0], x - q.rx*0.4, y - q.rx*0.05);
     }
@@ -2929,6 +2940,7 @@ function decoGlow(){
 }
 let FC = null, FCX = null; const fogPats = {};
 function drawFog(now){
+  if (G.room) return;
   const q = 0.25, fw = Math.max(1, Math.ceil(W*q)), fh = Math.max(1, Math.ceil(H*q));
   if (!FC){ FC = document.createElement('canvas'); FCX = FC.getContext('2d'); }
   if (FC.width !== fw || FC.height !== fh){ FC.width = fw; FC.height = fh; }
@@ -3976,6 +3988,7 @@ function groundChunk(S, map, cx, cy){
   return c;
 }
 function drawGround(ox, oy){
+  if (G.room){ drawRoom(ox, oy, performance.now()); return; }
   const S = ISO_SETS[G.map];
   if (!S || !ASSET_IMG[S.base[0]]){
     ctx.save(); ctx.translate(Math.round(ox), Math.round(oy)); ctx.fillStyle = groundTex(G.map); ctx.fillRect(-Math.round(ox), -Math.round(oy), W, H); ctx.restore(); return;
@@ -4004,6 +4017,7 @@ const LANDMARKS = {                                                  // élémen
 let LAST_OX = 0, LAST_OY = 0;
 function ruinsInView(ox, oy){
   LAST_OX = ox; LAST_OY = oy;
+  if (G.room){ SITE_LIGHTS.length = 0; SITE_SMOKE.length = 0; return roomProps(); }
   const RUIN_IDS = (LANDMARKS[G.map] || []).filter(id => ASSET_IMG[id]);
   const out = [];
   if (ASSET_IMG.b_phare_depart){ const x = 0, y = -TH*1.6; if (x + ox > -200 && x + ox < W + 200 && y + oy > -260 && y + oy < H + 200) out.push({x, y, id:'b_phare_depart'}); }   // la grande lanterne du point de départ
@@ -4049,6 +4063,7 @@ function crystal(kind){
 /* ---- Brasero (la flamme et le halo restent des effets) ---- */
 function drawBrazier(x, y, now){
   ctx.fillStyle = 'rgba(0,0,0,.5)'; ctx.beginPath(); ctx.ellipse(x, y+11, 17, 5, 0, 0, TAU); ctx.fill();
+  if (hasFx('amb_brasero')){ fxDraw('amb_brasero', fxLoopFrame('amb_brasero', now/1000 + x*0.013), x, y + 12, 44, {bottom:true}); return; }   // brasero peint animé
   drawEnt('brazier', x, y + 12);
 }
 /* ---- Objets au sol, relique, colporteur ---- */
@@ -4081,14 +4096,46 @@ const SCENES = {
     {name:'Chapelle et ossuaire', deco:[['cemetery_tomb', -60, 140], ['cemetery_tomb', 90, 150], ['cemetery_tomb', 280, 140], ['cemetery_skull', 230, 120], ['cemetery_grass', -250, -50], ['cemetery_tree', -300, -40], ['cemetery_rock', 150, -110]], fires:[[-80, 115]], light:[0, -60, 160, '255,170,120'], r:290, items:[['b_chapelle', 0, 0], ['b_ossuaire', 210, 45], ['knight_statue', -180, 75]], core:['cemetery_tile_flagmoss', 'cemetery_tile_flag'], edge:['cemetery_tile_gravel', 'cemetery_tile_drygrass']},
     {name:'Remise du fossoyeur', deco:[['cemetery_tomb', -120, 120], ['cemetery_tomb', 210, 20], ['cemetery_skull', -40, 140], ['cemetery_skull', 60, 160], ['cemetery_rock', -200, -40], ['cemetery_grass', 120, -80]], fires:[[40, 120]], smoke:[[-20, -120]], light:[60, 20, 130, '255,190,110'], r:210, items:[['b_cabane', 0, 0], ['gate_pillar', -150, 55], ['tomb_candles', 130, 80]], core:['cemetery_tile_grave', 'cemetery_tile_earth'], edge:['cemetery_tile_gravel', 'cemetery_tile_earth']}]
 };
+/* Villages : de vrais lieux de vie, plus grands (rayon ~650 px), avec chemins, potagers, lanternes, feux et portes. */
+const VILLAGES = {
+  foret:{name:'Hameau des bûcherons', r:640, village:true,
+    items:[['b_hutte', -40, -40], ['b_hutte', -390, 150], ['b_bucher', 190, -10], ['v_bois', 130, 60], ['b_puits', 200, 210], ['v_tonneau', 60, 40], ['v_caisses', -170, -20],
+      ['v_potager', -90, 260], ['v_epouvantail', -50, 280], ['v_cloture', -200, 320], ['v_cloture', 30, 345], ['v_brouette', -300, 360],
+      ['v_banc', 360, 120], ['v_poteau_lanterne', -230, -110], ['v_poteau_lanterne', 430, 300], ['v_poteau_lanterne', -520, 300],
+      ['b_oratoire', -500, -90], ['v_tonneau', -330, 270], ['b_tour', 470, -170], ['forest_log', 300, 300], ['v_caisses', 250, 130]],
+    camps:[[330, 220]], decals:[['dec_traces', 60, 420], ['dec_planches', -470, 420], ['dec_cercle_champignons', 520, 380], ['dec_brulure', 330, 225]],
+    lights:[[-60, -95, 140, '255,180,100'], [-410, 95, 130, '255,180,100']], smoke:[[-80, -205], [-430, -10]],
+    core:['forest_tile_stone', 'forest_tile_flagmoss'], edge:['forest_tile_leaves', 'forest_tile_mossy', 'forest_tile_roots']},
+  marais:{name:'Village des pêcheurs', r:660, village:true,
+    items:[['b_pilotis', -20, -40], ['b_pilotis', -400, 140], ['b_ponton', 230, 100], ['v_passerelle', -210, 70], ['b_barque', 380, 230], ['v_filet', 150, -110],
+      ['v_sechoir', -250, -90], ['v_nasses', 80, 200], ['v_tonneau_vase', -60, 210], ['v_rames', 280, -30], ['v_amarre', 420, 120], ['v_amarre', 120, 300],
+      ['v_grigri', -520, -40], ['v_chaudron', -300, 320], ['v_lanterne_perche', 40, 330], ['v_lanterne_perche', -560, 270], ['v_lanterne_perche', 470, -20],
+      ['b_panneau', 540, 300], ['b_clocher', -560, -200], ['marsh_reeds', 510, 180], ['marsh_reeds', -150, 380]],
+    camps:[[-300, 330]], decals:[['dec_traces', 160, 420], ['dec_planches', -80, 400], ['dec_tache', 330, 380], ['dec_os', -470, 410]],
+    lights:[[-40, -110, 140, '255,190,110'], [-420, 70, 130, '255,190,110']], smoke:[[-60, -230], [-440, -60]],
+    core:['marsh_tile_flagmoss', 'marsh_tile_mud'], edge:['marsh_tile_puddles', 'marsh_tile_reeds', 'marsh_tile_lilies']},
+  cimetiere:{name:'Cimetière d’Orme', r:680, village:true,
+    items:[['b_chapelle', 0, -110], ['b_ossuaire', 250, -60], ['b_mausolee', -330, 40], ['b_mausolee', 360, 220],
+      ['b_grille', -175, 470], ['b_grille', 175, 470],
+      ['v_ange', -120, 80], ['v_ange', 140, 70], ['v_reverbere', -60, 200], ['v_reverbere', 60, 200], ['v_reverbere', -470, 260], ['v_reverbere', 520, 40],
+      ['v_sarcophage', -140, 300], ['v_tombe_fraiche', 150, 320], ['v_croix', 280, 380], ['v_croix', -330, 380], ['cemetery_tomb', -470, 160], ['cemetery_tomb', -230, 230],
+      ['cemetery_tomb', 470, 330], ['v_urne', 230, 230], ['v_urne', -250, 140], ['v_banc_pierre', 0, 330], ['v_charrette_cercueil', -520, 400], ['v_cercueil', 520, 420],
+      ['v_colonne_couronne', -500, -60], ['tomb_candles', 0, 40], ['knight_statue', 560, -120], ['gothic_arches', -560, -200]],
+    decals:[['dec_os', 330, 300], ['dec_traces', 0, 420], ['dec_tache', -380, 300]],
+    lights:[[0, -40, 170, '255,180,120'], [-330, 0, 110, '170,190,255']],
+    doors:[{dx:-40, dy:-85, room:'chapelle'}, {dx:-370, dy:62, room:'caveau'}],
+    core:['cemetery_tile_flag', 'cemetery_tile_flagmoss'], edge:['cemetery_tile_gravel', 'cemetery_tile_leaves', 'cemetery_tile_drygrass']}
+};
 const SITE_CACHE = new Map();
 function siteAt(ci, cj, map){
   const key = map + ':' + ci + ',' + cj;
   if (SITE_CACHE.has(key)) return SITE_CACHE.get(key);
   let s = null; const list = SCENES[map];
-  if (list && hash(ci*17 + 3, cj*29 - 11) < 0.6){
-    const sc = list[Math.floor(hash(ci + 7, cj - 3)*list.length) % list.length];
-    let x = ci*SC + SC/2 + (hash(ci, cj + 5) - 0.5)*SC*0.4, y = cj*SC + SC/2 + (hash(ci + 9, cj)*1 - 0.5)*SC*0.4;
+  const vil = VILLAGES[map] && ((ci === 1 && cj === -1) || (ci === -2 && cj === 1) || (Math.max(Math.abs(ci), Math.abs(cj)) >= 3 && hash(ci*5 - 1, cj*3 + 8) < 0.07));   // un village tout près du départ, puis d'autres plus loin
+  if (list && (vil || hash(ci*17 + 3, cj*29 - 11) < 0.6)){
+    const sc = vil ? VILLAGES[map] : list[Math.floor(hash(ci + 7, cj - 3)*list.length) % list.length];
+    const jit = sc.village ? 0.1 : 0.4;
+    let x = ci*SC + SC/2 + (hash(ci, cj + 5) - 0.5)*SC*jit, y = cj*SC + SC/2 + (hash(ci + 9, cj)*1 - 0.5)*SC*jit;
     // jamais sur les deux grands chemins (lignes x = 0 et y = 0) ni près du départ
     if (Math.abs(x) < sc.r + 110) x = Math.sign(x || 1)*(sc.r + 110);
     if (Math.abs(y) < sc.r*0.62 + 90) y = Math.sign(y || 1)*(sc.r*0.62 + 90);
@@ -4099,6 +4146,7 @@ function siteAt(ci, cj, map){
 }
 /* lieu qui contient le point (x, y) dans son ellipse (rayon agrandi de `m`), sinon null ; k = distance relative (0 centre, 1 bord) */
 function siteNear(x, y, m){
+  if (G.room) return null;
   const ci = Math.floor(x/SC), cj = Math.floor(y/SC);
   for (let a = ci - 1; a <= ci + 1; a++) for (let b = cj - 1; b <= cj + 1; b++){
     const s = siteAt(a, b, G.map); if (!s) continue;
@@ -4111,19 +4159,22 @@ function siteNear(x, y, m){
 const SITE_LIGHTS = [], SITE_SMOKE = [];
 function sitesInView(ox, oy){
   SITE_LIGHTS.length = 0; SITE_SMOKE.length = 0;
+  if (G.room) return [];
   const out = [], x0 = -ox - 400, x1 = -ox + W + 400, y0 = -oy - 400, y1 = -oy + H + 400;
   for (let ci = Math.floor(x0/SC); ci <= Math.floor(x1/SC); ci++) for (let cj = Math.floor(y0/SC); cj <= Math.floor(y1/SC); cj++){
     const s = siteAt(ci, cj, G.map); if (!s || s.x < x0 || s.x > x1 || s.y < y0 || s.y > y1) continue;
     for (const [id, dx, dy] of s.sc.items) if (ASSET_IMG[id]) out.push({x:s.x + dx, y:s.y + dy, id});
     for (const [id, dx, dy] of (s.sc.deco || [])) if (ASSET_IMG[id]) out.push({x:s.x + dx, y:s.y + dy, id, deco:true});
     for (const [dx, dy] of (s.sc.fires || [])) out.push({x:s.x + dx, y:s.y + dy, id:'brazier', fire:true});
+    for (const [dx, dy] of (s.sc.camps || [])) out.push({x:s.x + dx, y:s.y + dy, id:'v_feu', camp:true});
     for (const [dx, dy] of (s.sc.smoke || [])) SITE_SMOKE.push({x:s.x + dx, y:s.y + dy});
-    if (s.sc.light){ const [lx, ly, r, col] = s.sc.light; SITE_LIGHTS.push({x:s.x + lx, y:s.y + ly, r, col}); }
+    for (const [lx, ly, r, col] of (s.sc.lights || (s.sc.light ? [s.sc.light] : []))) SITE_LIGHTS.push({x:s.x + lx, y:s.y + ly, r, col});
   }
   return out;
 }
 /* dalle du sol dans un lieu : centre pavé, pourtour mêlé au sol de la zone, bord irrégulier */
 function siteTile(u, v){
+  if (G.room) return null;
   const x = v*TW/2, y = u*TH/2, n = siteNear(x, y, 40); if (!n) return null;
   const jit = (hash(u*3 + 1, v*5 - 2) - 0.5)*0.35;
   if (n.k + jit > 1) return null;
@@ -4136,7 +4187,9 @@ function siteTile(u, v){
 const FOOT = {b_hutte:[92, 46, -48], b_tour:[78, 40, -44], b_puits:[44, 24, -26], b_bucher:[54, 25, -22], b_oratoire:[34, 18, -20],
   b_pilotis:[88, 44, -52], b_clocher:[52, 28, -48], b_barque:[58, 20, -18], b_panneau:[7, 5, -5],
   b_mausolee:[84, 42, -48], b_chapelle:[88, 44, -48], b_ossuaire:[78, 28, -38], b_cabane:[56, 28, -28], b_grille:[148, 13, -14],
-  b_phare_depart:[46, 25, -24], b_ponton:0, b_cercle:0, b_charrette:0};
+  b_phare_depart:[46, 25, -24], b_ponton:0, b_cercle:0, b_charrette:0,
+  v_potager:0, v_passerelle:0, v_tombe_fraiche:[38, 16, -12], v_feu:[30, 14, -8], v_reverbere:[7, 5, -4], v_lanterne_perche:[7, 5, -4], v_poteau_lanterne:[9, 6, -4],
+  b_grille_parts:[[-105, 62, 12, -14], [105, 62, 12, -14]]};   // la grille a une porte au milieu : on passe
 function footOf(id){
   if (id in FOOT) return FOOT[id];
   const a = ASSET_IMG[id]; if (!a) return 0;
@@ -4147,7 +4200,9 @@ function obstacleCell(cx, cy){
   const key = G.map + ':' + cx + ',' + cy; let L = OB_CACHE.get(key);
   if (L) return L;
   L = []; const x0 = cx*OB_CELL, y0 = cy*OB_CELL;
-  const push = (id, x, y) => { if (x < x0 || x >= x0 + OB_CELL || y < y0 || y >= y0 + OB_CELL) return; const f = footOf(id); if (f) L.push({x, y:y + f[2], rx:f[0], ry:f[1]}); };
+  const push = (id, x, y) => { if (x < x0 || x >= x0 + OB_CELL || y < y0 || y >= y0 + OB_CELL) return;
+    if (id === 'b_grille'){ for (const [dx, rx, ry, dy] of FOOT.b_grille_parts) L.push({x:x + dx, y:y + dy, rx, ry}); return; }
+    const f = footOf(id); if (f) L.push({x, y:y + f[2], rx:f[0], ry:f[1]}); };
   for (let ci = Math.floor(x0/SC) - 1; ci <= Math.floor(x0/SC) + 1; ci++) for (let cj = Math.floor(y0/SC) - 1; cj <= Math.floor(y0/SC) + 1; cj++){
     const s = siteAt(ci, cj, G.map); if (!s) continue;
     for (const [id, dx, dy] of s.sc.items) push(id, s.x + dx, s.y + dy);
@@ -4169,6 +4224,7 @@ function obstacleCell(cx, cy){
 /* repousse un corps (x, y, rayon r) hors des obstacles ; il glisse le long des murs */
 function collideWorld(o, r){
   if (!ASSETS_READY) return;
+  if (G.room){ roomClamp(o, r); return; }
   const cx = Math.floor(o.x/OB_CELL), cy = Math.floor(o.y/OB_CELL);
   for (let a = cx - 1; a <= cx + 1; a++) for (let b = cy - 1; b <= cy + 1; b++){
     for (const ob of obstacleCell(a, b)){
@@ -4199,7 +4255,7 @@ function updateSites(dt){
 }
 /* lucioles qui tournent autour des lumières des lieux */
 function drawSiteLife(X, Y, now){
-  if (reduce) return;
+  if (reduce || hasFx('amb_lucioles')) return;
   const t = now/1000;
   ctx.save(); ctx.globalCompositeOperation = 'lighter';
   for (const l of SITE_LIGHTS){
@@ -4218,6 +4274,221 @@ function siteFlame(x, y, now){
   ctx.globalAlpha = 0.45; ctx.drawImage(softDot('242,140,60'), x - 50, y - 62, 100, 100); ctx.globalAlpha = 1;
   ctx.fillStyle = '#ff9a3a'; ctx.beginPath(); ctx.moveTo(x-6,y-5); ctx.quadraticCurveTo(x-2,y-14-fl,x,y-21-fl); ctx.quadraticCurveTo(x+2,y-14-fl,x+6,y-5); ctx.fill();
   ctx.fillStyle = '#ffe08a'; ctx.beginPath(); ctx.moveTo(x-3,y-5); ctx.quadraticCurveTo(x,y-13-fl,x+3,y-5); ctx.fill();
+}
+
+/* traces au sol des lieux (sous tout le reste) */
+function drawSiteDecals(ox, oy){
+  if (G.room) return;
+  const x0 = -ox - 300, x1 = -ox + W + 300, y0 = -oy - 300, y1 = -oy + H + 300;
+  for (let ci = Math.floor(x0/SC); ci <= Math.floor(x1/SC); ci++) for (let cj = Math.floor(y0/SC); cj <= Math.floor(y1/SC); cj++){
+    const s = siteAt(ci, cj, G.map); if (!s || !s.sc.decals) continue;
+    ctx.globalAlpha = 0.8; for (const [id, dx, dy] of s.sc.decals) drawEnt(id, s.x + dx + ox, s.y + dy + oy); ctx.globalAlpha = 1;
+  }
+}
+
+/* =====================================================================
+   AMBIANCE VIVANTE : corbeaux qui s'envolent quand on approche, nappes de brume qui dérivent,
+   papillons de nuit autour des lanternes, lucioles autour des lieux, traces au sol çà et là.
+   ===================================================================== */
+const CROW_C = 420;
+function crowAt(i, j){
+  if (G.room || hash(i*13 - 5, j*7 + 3) > 0.09) return null;
+  const x = i*CROW_C + hash(i, j*3 + 1)*CROW_C, y = j*CROW_C + hash(i*5, j + 2)*CROW_C;
+  if (Math.abs(x) < 300 && Math.abs(y) < 300) return null;
+  return {x, y, key:i + ',' + j, n:1 + Math.floor(hash(i + 4, j - 4)*3)};
+}
+function updateAmbient(dt){
+  if (!hasFx('amb_corbeau') || G.room) return;
+  const p = G.p; G.crowsGone = G.crowsGone || new Set(); G.crowsFly = G.crowsFly || [];
+  const i0 = Math.floor((p.x - 220)/CROW_C), i1 = Math.floor((p.x + 220)/CROW_C), j0 = Math.floor((p.y - 220)/CROW_C), j1 = Math.floor((p.y + 220)/CROW_C);
+  for (let i = i0; i <= i1; i++) for (let j = j0; j <= j1; j++){
+    const c = crowAt(i, j); if (!c || G.crowsGone.has(c.key)) continue;
+    if (Math.hypot(c.x - p.x, c.y - p.y) < 170){                       // trop près : toute la bande s'envole
+      G.crowsGone.add(c.key);
+      for (let k = 0; k < c.n; k++){ const a = Math.atan2(c.y - p.y, c.x - p.x) + rnd(-0.5, 0.5); G.crowsFly.push({x:c.x + k*22, y:c.y + k*9, vx:Math.cos(a)*190, vy:Math.sin(a)*120, h:0, t:0, flip:Math.cos(a) < 0}); }
+      SFX.tick && SFX.tick();
+    }
+  }
+  for (const f of G.crowsFly){ f.t += dt; f.x += f.vx*dt; f.y += f.vy*dt; f.h += (60 + f.t*90)*dt; }
+  G.crowsFly = G.crowsFly.filter(f => f.t < 3);
+}
+function drawCrows(X, Y, now){
+  if (!hasFx('amb_corbeau') || G.room) return;
+  const p = G.p, t = now/1000;
+  const i0 = Math.floor((p.x - W/2 - 100)/CROW_C), i1 = Math.floor((p.x + W/2 + 100)/CROW_C), j0 = Math.floor((p.y - H/2 - 100)/CROW_C), j1 = Math.floor((p.y + H/2 + 100)/CROW_C);
+  const IDLE = [0, 0, 2, 1, 1, 2, 4, 5, 6, 0];                           // regarde, picore, croasse…
+  for (let i = i0; i <= i1; i++) for (let j = j0; j <= j1; j++){
+    const c = crowAt(i, j); if (!c || (G.crowsGone && G.crowsGone.has(c.key)) || siteNear(c.x, c.y, 0)) continue;
+    for (let k = 0; k < c.n; k++){
+      const fr = IDLE[Math.floor(t*1.6 + hash(i + k, j)*10) % IDLE.length];
+      ctx.fillStyle = 'rgba(0,0,0,.35)'; ctx.beginPath(); ctx.ellipse(X(c.x + k*22), Y(c.y + k*9), 11, 3.5, 0, 0, TAU); ctx.fill();
+      fxDraw('amb_corbeau', fr, X(c.x + k*22), Y(c.y + k*9), 46, {bottom:true, flip:hash(i - k, j + 1) < 0.5});
+    }
+  }
+  for (const f of (G.crowsFly || [])) fxDraw('amb_corbeau', Math.floor(f.t*9) % 2 ? 3 : 7, X(f.x), Y(f.y) - f.h, 50, {bottom:true, flip:f.flip, a:Math.min(1, (3 - f.t)*1.5)});
+}
+/* nappes de brume, papillons, lucioles : par-dessus la scène */
+function drawAmbientOver(X, Y, now){
+  if (reduce) return;
+  const p = G.p, t = now/1000;
+  if (hasFx('amb_brume') && !G.room){
+    const FC2 = 520, dens = G.map === 'marais' ? 0.4 : G.map === 'cimetiere' ? 0.3 : 0.18;
+    const i0 = Math.floor((p.x - W/2 - 300)/FC2), i1 = Math.floor((p.x + W/2 + 300)/FC2), j0 = Math.floor((p.y - H/2 - 200)/FC2), j1 = Math.floor((p.y + H/2 + 200)/FC2);
+    for (let i = i0; i <= i1; i++) for (let j = j0; j <= j1; j++){
+      if (hash(i*7 + 2, j*11 - 3) > dens) continue;
+      const x = i*FC2 + hash(i, j)*FC2 + Math.sin(t*0.08 + i)*60, y = j*FC2 + hash(j, i)*FC2;
+      fxDraw('amb_brume', fxLoopFrame('amb_brume', t*0.5 + i*1.3 + j), X(x), Y(y), 300, {a:0.16});
+    }
+  }
+  if (hasFx('amb_papillons')) for (const l of SITE_LIGHTS) if (l.r < 160 || G.room) fxDraw('amb_papillons', fxLoopFrame('amb_papillons', t + l.x*0.01), X(l.x), Y(l.y) - 10, 46, {a:0.32});
+  if (hasFx('amb_lucioles')) for (const l of SITE_LIGHTS) fxDraw('amb_lucioles', fxLoopFrame('amb_lucioles', t*0.8 + l.y*0.01), X(l.x) + 30, Y(l.y) + 30, 120, {a:0.8});
+}
+/* traces au sol semées dans la nature (ossements, brûlures, flaques sombres…) */
+const DECAL_SET = {foret:['dec_cercle_champignons', 'dec_brulure', 'dec_planches', 'dec_traces'], marais:['dec_tache', 'dec_os', 'dec_planches', 'dec_traces'], cimetiere:['dec_os', 'dec_tache', 'dec_brulure', 'dec_traces']};
+function drawWildDecals(ox, oy){
+  if (G.room) return;
+  const L = DECAL_SET[G.map]; if (!L) return; const DC = 640, p = G.p;
+  const i0 = Math.floor((p.x - W/2 - 150)/DC), i1 = Math.floor((p.x + W/2 + 150)/DC), j0 = Math.floor((p.y - H/2 - 150)/DC), j1 = Math.floor((p.y + H/2 + 150)/DC);
+  ctx.globalAlpha = 0.7;
+  for (let i = i0; i <= i1; i++) for (let j = j0; j <= j1; j++){
+    if (hash(i*3 - 7, j*5 + 1) > 0.35) continue;
+    const x = i*DC + hash(i + 1, j)*DC, y = j*DC + hash(i, j + 1)*DC; if (siteNear(x, y, 60)) continue;
+    drawEnt(L[Math.floor(hash(i - 3, j + 3)*L.length) % L.length], x + ox, y + oy, 0.8);
+  }
+  ctx.globalAlpha = 1;
+}
+
+/* =====================================================================
+   INTÉRIEURS : on peut entrer dans certains bâtiments (chapelle, caveau).
+   Rester une seconde devant la porte → on entre. La nuit (minuteur, vagues, événements) est
+   suspendue pendant qu'on est dedans : la salle a ses propres gardiens et sa récompense.
+   La salle est construite avec les vraies images du jeu (dalles, sarcophages, bougies, ossuaire…),
+   éclairée seulement par ses bougies. Une illustration d'intérieur dédiée la remplacera (voir prompts).
+   ===================================================================== */
+const ROOM_O = {x:0, y:200000};                                    // les salles sont loin de la carte, hors du monde
+const ROOMS = {
+  caveau:{name:'Caveau de famille', hw:480, hh:260, floor:['cemetery_tile_flag', 'cemetery_tile_flagmoss', 'cemetery_tile_grave'],
+    props:[['v_ange', 0, -215], ['v_sarcophage', 0, -130], ['v_cercueil', -230, -60], ['v_cercueil', 230, -60], ['tomb_candles', -130, -160], ['tomb_candles', 130, -160],
+      ['v_urne', -360, 10], ['v_urne', 360, 10], ['v_cercueil', -150, 80], ['dec_os', -110, 120], ['dec_tache', 140, 110], ['v_croix', 230, 60], ['v_colonne_couronne', -300, -90], ['v_colonne_couronne', 300, -90]],
+    candles:[[-130, -180], [130, -180], [0, -60], [-300, -110], [300, -110]], guards:['noye', 'goule', 'goule', 'goule', 'goule', 'goule', 'goule'], elite:'noye'},
+  chapelle:{name:'Chapelle et ossuaire', hw:540, hh:290, floor:['cemetery_tile_flag', 'cemetery_tile_flag', 'cemetery_tile_flagmoss'],
+    props:[['b_ossuaire', 0, -200], ['v_ange', -190, -150], ['v_ange', 190, -150], ['v_banc_pierre', -150, -30], ['v_banc_pierre', 150, -30],
+      ['v_banc_pierre', -150, 50], ['v_banc_pierre', 150, 50], ['v_banc_pierre', -150, 130], ['v_banc_pierre', 150, 130], ['tomb_candles', -360, -60], ['tomb_candles', 360, -60],
+      ['v_reverbere', -420, 40], ['v_reverbere', 420, 40], ['v_sarcophage', 0, -95], ['dec_os', 300, 140]],
+    candles:[[-360, -80], [360, -80], [0, -210], [0, -110]], guards:['spectre', 'spectre', 'spectre', 'spectre', 'spectre', 'spectre', 'spectre', 'spectre'], elite:'spectre'}
+};
+const DOOR_R = 34, DOOR_T = 1.0;
+/* portes visibles des lieux autour du Gardien */
+function doorsNear(){
+  const out = [], p = G.p, ci = Math.floor(p.x/SC), cj = Math.floor(p.y/SC);
+  for (let a = ci - 1; a <= ci + 1; a++) for (let b = cj - 1; b <= cj + 1; b++){
+    const s = siteAt(a, b, G.map); if (!s || !s.sc.doors) continue;
+    for (const d of s.sc.doors) out.push({x:s.x + d.dx, y:s.y + d.dy, room:d.room, key:a + ',' + b + ':' + d.room});
+  }
+  return out;
+}
+function roomCenter(){ return {x:ROOM_O.x, y:ROOM_O.y}; }
+function updateDoors(dt){
+  if (G.room){ updateRoom(dt); return; }
+  const p = G.p; G.doorT = G.doorT || 0; let near = null;
+  for (const d of doorsNear()){ if ((G.roomsDone && G.roomsDone.has(d.key)) || Math.hypot(p.x - d.x, p.y - d.y) > DOOR_R) continue; near = d; }
+  G.doorAt = near;
+  if (!near){ G.doorT = 0; return; }
+  G.doorT += dt;
+  if (G.doorT >= DOOR_T) enterRoom(near);
+}
+function enterRoom(d){
+  const R = ROOMS[d.room], p = G.p, c = roomCenter();
+  G.room = {d, R, out:{x:d.x, y:d.y + 50, enemies:G.enemies, eshots:G.eshots, zones:G.zones}, cleared:false};
+  G.enemies = []; G.eshots = []; G.zones = []; G.doorT = 0; G.doorAt = null;
+  p.x = c.x; p.y = c.y + R.hh*0.62; p.svx = p.svy = 0; G.cam = null;
+  // gardiens : une élite au fond, une meute autour, et le coffre derrière eux
+  const el = makeEnemy(R.elite, c.x, c.y - R.hh*0.35, {elite:true});
+  R.guards.forEach((t, i) => { const a = Math.PI + i/(R.guards.length - 1 || 1)*Math.PI; makeEnemy(t, c.x + Math.cos(a)*R.hw*0.55, c.y + Math.sin(a)*R.hh*0.55 - 20); });
+  G.items.push({type:'coffre', x:c.x, y:c.y - R.hh*0.62, big:true, room:true});
+  G.flash = 0.5; SFX.thud && SFX.thud(); toast(R.name + ' — la nuit s’arrête au seuil');
+  if (el) el.roomBoss = true;
+}
+function updateRoom(dt){
+  const r = G.room, p = G.p, c = roomCenter();
+  if (!r.cleared && !G.enemies.some(e => !e.dead)){ r.cleared = true; toast('La salle est purifiée'); SFX.rare && SFX.rare(); }
+  // sortie : la porte en bas de la salle
+  const ex = c.x, ey = c.y + r.R.hh - 18;
+  r.exitAt = {x:ex, y:ey};
+  if (Math.hypot(p.x - ex, p.y - ey) < DOOR_R + 6){ r.exitT = (r.exitT || 0) + dt; if (r.exitT > 0.6) leaveRoom(); } else r.exitT = 0;
+}
+function leaveRoom(){
+  const r = G.room, p = G.p; if (!r) return;
+  G.roomsDone = G.roomsDone || new Set(); G.roomsDone.add(r.d.key);
+  G.items = G.items.filter(it => !it.room);
+  G.gems = G.gems.filter(g => Math.abs(g.y - ROOM_O.y) > 5000 || (G.p.xp += g.v, false));   // ce qui reste dans la salle est ramassé en sortant
+  G.enemies = r.out.enemies; G.eshots = r.out.eshots; G.zones = r.out.zones;
+  p.x = r.out.x; p.y = r.out.y; p.svx = p.svy = 0; G.cam = null;
+  for (const e of G.enemies){ const dx = e.x - p.x, dy = e.y - p.y, d = Math.hypot(dx, dy); if (d < 240 && !e.boss){ const k = 240/(d || 1); e.x = p.x + dx*k; e.y = p.y + dy*k; } }   // un peu d'air à la sortie
+  G.room = null; toast('De retour dans la nuit');
+}
+/* la salle est un losange : on ne sort pas des murs */
+function roomClamp(o, rad){
+  const r = G.room, c = roomCenter(), hw = r.R.hw - rad, hh = r.R.hh - rad*0.5;
+  const dx = o.x - c.x, dy = o.y - c.y, k = Math.abs(dx)/hw + Math.abs(dy)/hh;
+  if (k > 1){ o.x = c.x + dx/k; o.y = c.y + dy/k; }
+}
+/* ---- dessin de la salle (remplace le sol) ---- */
+function drawRoom(ox, oy, now){
+  const r = G.room, R = r.R, c = roomCenter();
+  ctx.fillStyle = '#030303'; ctx.fillRect(0, 0, W, H);
+  const art = ASSET_IMG['room_' + r.d.room];                          // illustration peinte de l'intérieur (murs compris)
+  if (art){ const w = R.hw*2*1.3, h = w*art.img.naturalHeight/art.img.naturalWidth; ctx.drawImage(art.img, c.x + ox - w/2, c.y + oy + R.hh*1.08 - h, w, h); drawRoomExit(ox, oy, now); return; }
+  ctx.save(); ctx.translate(c.x + ox, c.y + oy);
+  ctx.beginPath(); ctx.moveTo(0, -R.hh); ctx.lineTo(R.hw, 0); ctx.lineTo(0, R.hh); ctx.lineTo(-R.hw, 0); ctx.closePath(); ctx.clip();
+  const nu = Math.ceil(R.hh*2/TH) + 2, nv = Math.ceil(R.hw*2/TW) + 2;
+  for (let u = -nu; u <= nu; u++) for (let v = -nv; v <= nv; v++){
+    if ((u + v) & 1) continue;
+    const id = R.floor[Math.floor(hash(u*3 + 7, v*5 - 1)*R.floor.length) % R.floor.length], a = ASSET_IMG[id]; if (!a) continue;
+    ctx.drawImage(a.img, v*TW/2 - TW/2 - 1, u*TH/2 - TH/2 - 0.5, TW + 2, TH + 1);
+  }
+  // murs : la pénombre monte vers le fond de la salle
+  const g = ctx.createLinearGradient(0, -R.hh, 0, R.hh*0.4); g.addColorStop(0, 'rgba(0,0,0,.75)'); g.addColorStop(1, 'rgba(0,0,0,0)');
+  ctx.fillStyle = g; ctx.fillRect(-R.hw, -R.hh, R.hw*2, R.hh*2);
+  ctx.restore();
+  // bord du losange (pierre) et porte de sortie
+  ctx.font = '500 12px "Barlow Semi Condensed", sans-serif'; ctx.textAlign = 'center'; ctx.fillStyle = 'rgba(200,190,170,.45)';
+  ctx.fillText('Intérieur provisoire : murs peints à venir', c.x + ox, c.y + oy - R.hh - 14); ctx.textAlign = 'left';
+  ctx.strokeStyle = 'rgba(120,110,95,.55)'; ctx.lineWidth = 3;
+  ctx.beginPath(); ctx.moveTo(c.x + ox, c.y + oy - R.hh); ctx.lineTo(c.x + ox + R.hw, c.y + oy); ctx.lineTo(c.x + ox, c.y + oy + R.hh); ctx.lineTo(c.x + ox - R.hw, c.y + oy); ctx.closePath(); ctx.stroke();
+  drawRoomExit(ox, oy, now);
+}
+function drawRoomExit(ox, oy, now){
+  const r = G.room, R = r.R, c = roomCenter();
+  const ex = c.x + ox, ey = c.y + oy + R.hh - 18, pu = 0.5 + 0.5*Math.sin(now/300);
+  ctx.drawImage(softDot('150,190,255'), ex - 46, ey - 30, 92, 60);
+  ctx.strokeStyle = `rgba(190,215,255,${0.35 + 0.35*pu})`; ctx.lineWidth = 2; ctx.beginPath(); ctx.ellipse(ex, ey, DOOR_R, DOOR_R*0.45, 0, 0, TAU); ctx.stroke();
+  if (r.exitT > 0){ ctx.strokeStyle = 'rgba(255,240,200,.9)'; ctx.lineWidth = 3; ctx.beginPath(); ctx.ellipse(ex, ey, DOOR_R, DOOR_R*0.45, 0, -Math.PI/2, -Math.PI/2 + TAU*Math.min(1, r.exitT/0.6)); ctx.stroke(); }
+}
+/* éléments de la salle, rangés en profondeur avec les personnages */
+function roomProps(){
+  const r = G.room, c = roomCenter(), out = [];
+  for (const [id, dx, dy] of r.R.props) if (ASSET_IMG[id]) out.push({x:c.x + dx, y:c.y + dy, id, deco:id.startsWith('dec_')});
+  for (const [dx, dy] of r.R.candles) SITE_LIGHTS.push({x:c.x + dx, y:c.y + dy, r:150, col:'255,180,110'});
+  return out;
+}
+/* portes dehors : un seuil lumineux et un anneau qui se remplit */
+function drawDoors(X, Y, now){
+  if (G.room) return;
+  for (const d of doorsNear()){
+    if (G.roomsDone && G.roomsDone.has(d.key)) continue;
+    const x = X(d.x), y = Y(d.y); if (x < -80 || x > W + 80 || y < -80 || y > H + 80) continue;
+    const pu = 0.5 + 0.5*Math.sin(now/280);
+    ctx.globalAlpha = 0.5 + 0.3*pu; ctx.drawImage(softDot('255,200,120'), x - 44, y - 26, 88, 52); ctx.globalAlpha = 1;
+    ctx.strokeStyle = `rgba(255,220,160,${0.4 + 0.4*pu})`; ctx.lineWidth = 2; ctx.beginPath(); ctx.ellipse(x, y, DOOR_R, DOOR_R*0.45, 0, 0, TAU); ctx.stroke();
+    if (G.doorAt && G.doorAt.key === d.key){
+      ctx.strokeStyle = 'rgba(255,240,200,.95)'; ctx.lineWidth = 3; ctx.beginPath(); ctx.ellipse(x, y, DOOR_R, DOOR_R*0.45, 0, -Math.PI/2, -Math.PI/2 + TAU*Math.min(1, G.doorT/DOOR_T)); ctx.stroke();
+    }
+    if (Math.hypot(G.p.x - d.x, G.p.y - d.y) < 220){
+      ctx.font = '600 14px "Barlow Semi Condensed", sans-serif'; ctx.textAlign = 'center'; ctx.fillStyle = 'rgba(255,232,190,.92)';
+      ctx.fillText('Entrer : ' + ROOMS[d.room].name, x, y - 22); ctx.textAlign = 'left';
+    }
+  }
 }
 
 /* =====================================================================
@@ -4505,7 +4776,7 @@ function drawMini(){
   }
   {                                                                   // lieux : dorés une fois découverts
     const c0 = Math.floor((p.x-world)/SC) - 1, c1 = Math.floor((p.x+world)/SC) + 1, d0 = Math.floor((p.y-world)/SC) - 1, d1 = Math.floor((p.y+world)/SC) + 1;
-    for (let ci=c0;ci<=c1;ci++) for (let cj=d0;cj<=d1;cj++){ const st = siteAt(ci, cj, G.map); if (!st) continue; const [x,y] = P2(st.x, st.y); const seen = G.sitesSeen && G.sitesSeen.has(ci + ',' + cj);
+    if (!G.room) for (let ci=c0;ci<=c1;ci++) for (let cj=d0;cj<=d1;cj++){ const st = siteAt(ci, cj, G.map); if (!st) continue; const [x,y] = P2(st.x, st.y); const seen = G.sitesSeen && G.sitesSeen.has(ci + ',' + cj);
       mctx.fillStyle = seen ? 'rgba(242,184,75,.9)' : 'rgba(200,200,190,.45)'; mctx.save(); mctx.translate(x, y); mctx.rotate(Math.PI/4); const z = Math.max(2.5, 30*k); mctx.fillRect(-z/2, -z/2, z, z); mctx.restore(); }
   }
   mctx.fillStyle = `rgba(${P.tint},.08)`; mctx.beginPath(); mctx.arc(R,R,250*k,0,TAU); mctx.fill();

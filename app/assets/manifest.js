@@ -4002,6 +4002,603 @@ registerAssetData('manifest', {
    ],
    "lights": [],
    "status": "art"
+  },
+  "v_bois": {
+   "name": "Décor de village",
+   "folder": "environment/life/",
+   "art": "v_bois.png",
+   "placeholder": null,
+   "anchor": [
+    0.5,
+    0.92
+   ],
+   "size": [
+    78,
+    61
+   ],
+   "lights": [],
+   "status": "art"
+  },
+  "v_tonneau": {
+   "name": "Décor de village",
+   "folder": "environment/life/",
+   "art": "v_tonneau.png",
+   "placeholder": null,
+   "anchor": [
+    0.5,
+    0.92
+   ],
+   "size": [
+    40,
+    58
+   ],
+   "lights": [],
+   "status": "art"
+  },
+  "v_caisses": {
+   "name": "Décor de village",
+   "folder": "environment/life/",
+   "art": "v_caisses.png",
+   "placeholder": null,
+   "anchor": [
+    0.5,
+    0.92
+   ],
+   "size": [
+    55,
+    71
+   ],
+   "lights": [],
+   "status": "art"
+  },
+  "v_banc": {
+   "name": "Décor de village",
+   "folder": "environment/life/",
+   "art": "v_banc.png",
+   "placeholder": null,
+   "anchor": [
+    0.5,
+    0.92
+   ],
+   "size": [
+    72,
+    56
+   ],
+   "lights": [],
+   "status": "art"
+  },
+  "v_feu": {
+   "name": "Décor de village",
+   "folder": "environment/life/",
+   "art": "v_feu.png",
+   "placeholder": null,
+   "anchor": [
+    0.5,
+    0.92
+   ],
+   "size": [
+    74,
+    47
+   ],
+   "lights": [],
+   "status": "art"
+  },
+  "v_cloture": {
+   "name": "Décor de village",
+   "folder": "environment/life/",
+   "art": "v_cloture.png",
+   "placeholder": null,
+   "anchor": [
+    0.5,
+    0.92
+   ],
+   "size": [
+    80,
+    82
+   ],
+   "lights": [],
+   "status": "art"
+  },
+  "v_epouvantail": {
+   "name": "Décor de village",
+   "folder": "environment/life/",
+   "art": "v_epouvantail.png",
+   "placeholder": null,
+   "anchor": [
+    0.5,
+    0.92
+   ],
+   "size": [
+    62,
+    97
+   ],
+   "lights": [],
+   "status": "art"
+  },
+  "v_brouette": {
+   "name": "Décor de village",
+   "folder": "environment/life/",
+   "art": "v_brouette.png",
+   "placeholder": null,
+   "anchor": [
+    0.5,
+    0.92
+   ],
+   "size": [
+    78,
+    66
+   ],
+   "lights": [],
+   "status": "art"
+  },
+  "v_potager": {
+   "name": "Décor de village",
+   "folder": "environment/life/",
+   "art": "v_potager.png",
+   "placeholder": null,
+   "anchor": [
+    0.5,
+    0.92
+   ],
+   "size": [
+    130,
+    98
+   ],
+   "lights": [],
+   "status": "art"
+  },
+  "v_poteau_lanterne": {
+   "name": "Décor de village",
+   "folder": "environment/life/",
+   "art": "v_poteau_lanterne.png",
+   "placeholder": null,
+   "anchor": [
+    0.5,
+    0.92
+   ],
+   "size": [
+    48,
+    107
+   ],
+   "lights": [
+    [
+     -0.24,
+     -0.5,
+     60,
+     "255,190,110"
+    ]
+   ],
+   "status": "art"
+  },
+  "v_filet": {
+   "name": "Décor de village",
+   "folder": "environment/life/",
+   "art": "v_filet.png",
+   "placeholder": null,
+   "anchor": [
+    0.5,
+    0.92
+   ],
+   "size": [
+    84,
+    95
+   ],
+   "lights": [],
+   "status": "art"
+  },
+  "v_sechoir": {
+   "name": "Décor de village",
+   "folder": "environment/life/",
+   "art": "v_sechoir.png",
+   "placeholder": null,
+   "anchor": [
+    0.5,
+    0.92
+   ],
+   "size": [
+    74,
+    86
+   ],
+   "lights": [],
+   "status": "art"
+  },
+  "v_tonneau_vase": {
+   "name": "Décor de village",
+   "folder": "environment/life/",
+   "art": "v_tonneau_vase.png",
+   "placeholder": null,
+   "anchor": [
+    0.5,
+    0.92
+   ],
+   "size": [
+    66,
+    56
+   ],
+   "lights": [],
+   "status": "art"
+  },
+  "v_nasses": {
+   "name": "Décor de village",
+   "folder": "environment/life/",
+   "art": "v_nasses.png",
+   "placeholder": null,
+   "anchor": [
+    0.5,
+    0.92
+   ],
+   "size": [
+    66,
+    57
+   ],
+   "lights": [],
+   "status": "art"
+  },
+  "v_rames": {
+   "name": "Décor de village",
+   "folder": "environment/life/",
+   "art": "v_rames.png",
+   "placeholder": null,
+   "anchor": [
+    0.5,
+    0.92
+   ],
+   "size": [
+    46,
+    81
+   ],
+   "lights": [],
+   "status": "art"
+  },
+  "v_amarre": {
+   "name": "Décor de village",
+   "folder": "environment/life/",
+   "art": "v_amarre.png",
+   "placeholder": null,
+   "anchor": [
+    0.5,
+    0.92
+   ],
+   "size": [
+    42,
+    61
+   ],
+   "lights": [],
+   "status": "art"
+  },
+  "v_passerelle": {
+   "name": "Décor de village",
+   "folder": "environment/life/",
+   "art": "v_passerelle.png",
+   "placeholder": null,
+   "anchor": [
+    0.5,
+    0.92
+   ],
+   "size": [
+    120,
+    77
+   ],
+   "lights": [],
+   "status": "art"
+  },
+  "v_grigri": {
+   "name": "Décor de village",
+   "folder": "environment/life/",
+   "art": "v_grigri.png",
+   "placeholder": null,
+   "anchor": [
+    0.5,
+    0.92
+   ],
+   "size": [
+    72,
+    80
+   ],
+   "lights": [],
+   "status": "art"
+  },
+  "v_chaudron": {
+   "name": "Décor de village",
+   "folder": "environment/life/",
+   "art": "v_chaudron.png",
+   "placeholder": null,
+   "anchor": [
+    0.5,
+    0.92
+   ],
+   "size": [
+    54,
+    75
+   ],
+   "lights": [],
+   "status": "art"
+  },
+  "v_lanterne_perche": {
+   "name": "Décor de village",
+   "folder": "environment/life/",
+   "art": "v_lanterne_perche.png",
+   "placeholder": null,
+   "anchor": [
+    0.5,
+    0.92
+   ],
+   "size": [
+    42,
+    102
+   ],
+   "lights": [
+    [
+     -0.3,
+     -0.74,
+     55,
+     "160,255,190"
+    ]
+   ],
+   "status": "art"
+  },
+  "v_tombe_fraiche": {
+   "name": "Décor de village",
+   "folder": "environment/life/",
+   "art": "v_tombe_fraiche.png",
+   "placeholder": null,
+   "anchor": [
+    0.5,
+    0.92
+   ],
+   "size": [
+    92,
+    85
+   ],
+   "lights": [],
+   "status": "art"
+  },
+  "v_cercueil": {
+   "name": "Décor de village",
+   "folder": "environment/life/",
+   "art": "v_cercueil.png",
+   "placeholder": null,
+   "anchor": [
+    0.5,
+    0.92
+   ],
+   "size": [
+    76,
+    69
+   ],
+   "lights": [],
+   "status": "art"
+  },
+  "v_banc_pierre": {
+   "name": "Décor de village",
+   "folder": "environment/life/",
+   "art": "v_banc_pierre.png",
+   "placeholder": null,
+   "anchor": [
+    0.5,
+    0.92
+   ],
+   "size": [
+    78,
+    58
+   ],
+   "lights": [],
+   "status": "art"
+  },
+  "v_reverbere": {
+   "name": "Décor de village",
+   "folder": "environment/life/",
+   "art": "v_reverbere.png",
+   "placeholder": null,
+   "anchor": [
+    0.5,
+    0.92
+   ],
+   "size": [
+    30,
+    109
+   ],
+   "lights": [
+    [
+     -0.3,
+     -0.8,
+     60,
+     "255,190,110"
+    ]
+   ],
+   "status": "art"
+  },
+  "v_ange": {
+   "name": "Décor de village",
+   "folder": "environment/life/",
+   "art": "v_ange.png",
+   "placeholder": null,
+   "anchor": [
+    0.5,
+    0.92
+   ],
+   "size": [
+    48,
+    114
+   ],
+   "lights": [],
+   "status": "art"
+  },
+  "v_urne": {
+   "name": "Décor de village",
+   "folder": "environment/life/",
+   "art": "v_urne.png",
+   "placeholder": null,
+   "anchor": [
+    0.5,
+    0.92
+   ],
+   "size": [
+    30,
+    59
+   ],
+   "lights": [],
+   "status": "art"
+  },
+  "v_croix": {
+   "name": "Décor de village",
+   "folder": "environment/life/",
+   "art": "v_croix.png",
+   "placeholder": null,
+   "anchor": [
+    0.5,
+    0.92
+   ],
+   "size": [
+    62,
+    54
+   ],
+   "lights": [],
+   "status": "art"
+  },
+  "v_charrette_cercueil": {
+   "name": "Décor de village",
+   "folder": "environment/life/",
+   "art": "v_charrette_cercueil.png",
+   "placeholder": null,
+   "anchor": [
+    0.5,
+    0.92
+   ],
+   "size": [
+    115,
+    96
+   ],
+   "lights": [],
+   "status": "art"
+  },
+  "v_colonne_couronne": {
+   "name": "Décor de village",
+   "folder": "environment/life/",
+   "art": "v_colonne_couronne.png",
+   "placeholder": null,
+   "anchor": [
+    0.5,
+    0.92
+   ],
+   "size": [
+    52,
+    83
+   ],
+   "lights": [],
+   "status": "art"
+  },
+  "v_sarcophage": {
+   "name": "Décor de village",
+   "folder": "environment/life/",
+   "art": "v_sarcophage.png",
+   "placeholder": null,
+   "anchor": [
+    0.5,
+    0.92
+   ],
+   "size": [
+    104,
+    87
+   ],
+   "lights": [],
+   "status": "art"
+  },
+  "dec_brulure": {
+   "name": "Décor de village",
+   "folder": "environment/decals/",
+   "art": "dec_brulure.png",
+   "placeholder": null,
+   "anchor": [
+    0.5,
+    0.5
+   ],
+   "size": [
+    150,
+    98
+   ],
+   "lights": [],
+   "status": "art"
+  },
+  "dec_traces": {
+   "name": "Décor de village",
+   "folder": "environment/decals/",
+   "art": "dec_traces.png",
+   "placeholder": null,
+   "anchor": [
+    0.5,
+    0.5
+   ],
+   "size": [
+    120,
+    88
+   ],
+   "lights": [],
+   "status": "art"
+  },
+  "dec_os": {
+   "name": "Décor de village",
+   "folder": "environment/decals/",
+   "art": "dec_os.png",
+   "placeholder": null,
+   "anchor": [
+    0.5,
+    0.5
+   ],
+   "size": [
+    120,
+    71
+   ],
+   "lights": [],
+   "status": "art"
+  },
+  "dec_tache": {
+   "name": "Décor de village",
+   "folder": "environment/decals/",
+   "art": "dec_tache.png",
+   "placeholder": null,
+   "anchor": [
+    0.5,
+    0.5
+   ],
+   "size": [
+    130,
+    87
+   ],
+   "lights": [],
+   "status": "art"
+  },
+  "dec_cercle_champignons": {
+   "name": "Décor de village",
+   "folder": "environment/decals/",
+   "art": "dec_cercle_champignons.png",
+   "placeholder": null,
+   "anchor": [
+    0.5,
+    0.5
+   ],
+   "size": [
+    150,
+    106
+   ],
+   "lights": [],
+   "status": "art"
+  },
+  "dec_planches": {
+   "name": "Décor de village",
+   "folder": "environment/decals/",
+   "art": "dec_planches.png",
+   "placeholder": null,
+   "anchor": [
+    0.5,
+    0.5
+   ],
+   "size": [
+    120,
+    74
+   ],
+   "lights": [],
+   "status": "art"
   }
  },
  "icons": {
@@ -4043,9 +4640,87 @@ registerAssetData('manifest', {
   "vent": "ui/icons/ic_vent.webp"
  },
  "arcana": {
-  "lune": "ui/arcana/arc_lune.webp"
+  "avare": "ui/arcana/arc_avare.webp",
+  "brasier": "ui/arcana/arc_brasier.webp",
+  "brume": "ui/arcana/arc_brume.webp",
+  "couronne": "ui/arcana/arc_couronne.webp",
+  "epines": "ui/arcana/arc_epines.webp",
+  "lune": "ui/arcana/arc_lune.webp",
+  "moisson": "ui/arcana/arc_moisson.webp",
+  "soleil": "ui/arcana/arc_soleil.webp",
+  "vagabond": "ui/arcana/arc_vagabond.webp"
  },
  "fx": {
+  "amb_brasero": {
+   "file": "fx/amb_brasero.webp",
+   "n": 8,
+   "w": 156,
+   "h": 180,
+   "mode": "solid",
+   "fps": 10,
+   "loop": true,
+   "align": "bottom"
+  },
+  "amb_brume": {
+   "file": "fx/amb_brume.webp",
+   "n": 8,
+   "w": 239,
+   "h": 131,
+   "mode": "add",
+   "fps": 5.0,
+   "loop": true,
+   "align": "center"
+  },
+  "amb_corbeau": {
+   "file": "fx/amb_corbeau.webp",
+   "n": 8,
+   "w": 259,
+   "h": 192,
+   "mode": "solid",
+   "fps": 6,
+   "loop": true,
+   "align": "bottom"
+  },
+  "amb_feuilles": {
+   "file": "fx/amb_feuilles.webp",
+   "n": 8,
+   "w": 256,
+   "h": 113,
+   "mode": "add",
+   "fps": 9.0,
+   "loop": true,
+   "align": "center"
+  },
+  "amb_lucioles": {
+   "file": "fx/amb_lucioles.webp",
+   "n": 6,
+   "w": 173,
+   "h": 168,
+   "mode": "add",
+   "fps": 8.0,
+   "loop": true,
+   "align": "center"
+  },
+  "amb_papillons": {
+   "file": "fx/amb_papillons.webp",
+   "n": 7,
+   "w": 247,
+   "h": 225,
+   "mode": "add",
+   "fps": 10.0,
+   "loop": true,
+   "align": "center"
+  },
+  "amb_ronds": {
+   "file": "fx/amb_ronds.webp",
+   "n": 7,
+   "w": 247,
+   "h": 226,
+   "mode": "add",
+   "fps": 9.0,
+   "loop": false,
+   "align": "center"
+  },
   "fx_ame": {
    "file": "fx/fx_ame.webp",
    "n": 6,
