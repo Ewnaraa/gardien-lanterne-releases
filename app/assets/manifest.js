@@ -2340,7 +2340,7 @@ registerAssetData('manifest', {
    "placeholder": "environment/forest/PLACEHOLDER_forest_tree.png",
    "anchor": [
     0.5,
-    1.0
+    0.9966
    ],
    "size": [
     131,
@@ -2348,7 +2348,8 @@ registerAssetData('manifest', {
    ],
    "lights": [],
    "status": "art",
-   "art": "forest_tree.png"
+   "art": "forest_tree.png",
+   "foot": 0.4103
   },
   "forest_grass": {
    "name": "Herbe",
@@ -2356,7 +2357,7 @@ registerAssetData('manifest', {
    "placeholder": "environment/forest/PLACEHOLDER_forest_grass.png",
    "anchor": [
     0.5,
-    1.0
+    0.9224
    ],
    "size": [
     34,
@@ -2364,7 +2365,8 @@ registerAssetData('manifest', {
    ],
    "lights": [],
    "status": "art",
-   "art": "forest_grass.png"
+   "art": "forest_grass.png",
+   "foot": 0.3603
   },
   "forest_fern": {
    "name": "Fougère",
@@ -2372,7 +2374,7 @@ registerAssetData('manifest', {
    "placeholder": "environment/forest/PLACEHOLDER_forest_fern.png",
    "anchor": [
     0.5,
-    1.0
+    0.8525
    ],
    "size": [
     24,
@@ -2380,7 +2382,8 @@ registerAssetData('manifest', {
    ],
    "lights": [],
    "status": "art",
-   "art": "forest_fern.png"
+   "art": "forest_fern.png",
+   "foot": 0.1562
   },
   "forest_rock": {
    "name": "Rocher",
@@ -2388,7 +2391,7 @@ registerAssetData('manifest', {
    "placeholder": "environment/forest/PLACEHOLDER_forest_rock.png",
    "anchor": [
     0.5,
-    1.0
+    0.9724
    ],
    "size": [
     30,
@@ -2396,7 +2399,8 @@ registerAssetData('manifest', {
    ],
    "lights": [],
    "status": "art",
-   "art": "forest_rock.png"
+   "art": "forest_rock.png",
+   "foot": 0.4417
   },
   "forest_mushroom": {
    "name": "Champignon",
@@ -2404,7 +2408,7 @@ registerAssetData('manifest', {
    "placeholder": "environment/forest/PLACEHOLDER_forest_mushroom.png",
    "anchor": [
     0.5,
-    1.0
+    0.946
    ],
    "size": [
     18,
@@ -2419,7 +2423,8 @@ registerAssetData('manifest', {
     ]
    ],
    "status": "art",
-   "art": "forest_mushroom.png"
+   "art": "forest_mushroom.png",
+   "foot": 0.3194
   },
   "forest_roots": {
    "name": "Racines",
@@ -2427,7 +2432,7 @@ registerAssetData('manifest', {
    "placeholder": "environment/forest/PLACEHOLDER_forest_roots.png",
    "anchor": [
     0.5,
-    1.0
+    0.8426
    ],
    "size": [
     40,
@@ -2435,7 +2440,8 @@ registerAssetData('manifest', {
    ],
    "lights": [],
    "status": "art",
-   "art": "forest_roots.png"
+   "art": "forest_roots.png",
+   "foot": 0.425
   },
   "forest_log": {
    "name": "Tronc",
@@ -2443,7 +2449,7 @@ registerAssetData('manifest', {
    "placeholder": "environment/forest/PLACEHOLDER_forest_log.png",
    "anchor": [
     0.5,
-    1.0
+    0.9573
    ],
    "size": [
     56,
@@ -2451,7 +2457,8 @@ registerAssetData('manifest', {
    ],
    "lights": [],
    "status": "art",
-   "art": "forest_log.png"
+   "art": "forest_log.png",
+   "foot": 0.2277
   },
   "marsh_tree": {
    "name": "Saule",
@@ -2459,7 +2466,7 @@ registerAssetData('manifest', {
    "placeholder": "environment/marsh/PLACEHOLDER_marsh_tree.png",
    "anchor": [
     0.5,
-    1.0
+    0.9966
    ],
    "size": [
     137,
@@ -2467,7 +2474,8 @@ registerAssetData('manifest', {
    ],
    "lights": [],
    "status": "art",
-   "art": "marsh_tree.png"
+   "art": "marsh_tree.png",
+   "foot": 0.3905
   },
   "marsh_grass": {
    "name": "Herbe",
@@ -2475,7 +2483,7 @@ registerAssetData('manifest', {
    "placeholder": "environment/marsh/PLACEHOLDER_marsh_grass.png",
    "anchor": [
     0.5,
-    1.0
+    0.9483
    ],
    "size": [
     34,
@@ -2483,7 +2491,8 @@ registerAssetData('manifest', {
    ],
    "lights": [],
    "status": "art",
-   "art": "marsh_grass.png"
+   "art": "marsh_grass.png",
+   "foot": 0.3897
   },
   "marsh_reeds": {
    "name": "Roseaux",
@@ -2491,7 +2500,7 @@ registerAssetData('manifest', {
    "placeholder": "environment/marsh/PLACEHOLDER_marsh_reeds.png",
    "anchor": [
     0.5,
-    1.0
+    0.9588
    ],
    "size": [
     27,
@@ -2499,7 +2508,8 @@ registerAssetData('manifest', {
    ],
    "lights": [],
    "status": "art",
-   "art": "marsh_reeds.png"
+   "art": "marsh_reeds.png",
+   "foot": 0.3148
   },
   "marsh_rock": {
    "name": "Rocher",
@@ -2507,7 +2517,7 @@ registerAssetData('manifest', {
    "placeholder": "environment/marsh/PLACEHOLDER_marsh_rock.png",
    "anchor": [
     0.5,
-    1.0
+    0.9923
    ],
    "size": [
     30,
@@ -2515,7 +2525,8 @@ registerAssetData('manifest', {
    ],
    "lights": [],
    "status": "art",
-   "art": "marsh_rock.png"
+   "art": "marsh_rock.png",
+   "foot": 0.3333
   },
   "marsh_mushroom": {
    "name": "Champignon",
@@ -2523,7 +2534,7 @@ registerAssetData('manifest', {
    "placeholder": "environment/marsh/PLACEHOLDER_marsh_mushroom.png",
    "anchor": [
     0.5,
-    1.0
+    0.9817
    ],
    "size": [
     18,
@@ -2538,7 +2549,8 @@ registerAssetData('manifest', {
     ]
    ],
    "status": "art",
-   "art": "marsh_mushroom.png"
+   "art": "marsh_mushroom.png",
+   "foot": 0.3194
   },
   "marsh_lily": {
    "name": "Nénuphar",
@@ -2546,7 +2558,7 @@ registerAssetData('manifest', {
    "placeholder": "environment/marsh/PLACEHOLDER_marsh_lily.png",
    "anchor": [
     0.5,
-    1.0
+    0.9505
    ],
    "size": [
     24,
@@ -2554,7 +2566,8 @@ registerAssetData('manifest', {
    ],
    "lights": [],
    "status": "art",
-   "art": "marsh_lily.png"
+   "art": "marsh_lily.png",
+   "foot": 0.3438
   },
   "cemetery_tree": {
    "name": "Arbre mort",
@@ -2562,7 +2575,7 @@ registerAssetData('manifest', {
    "placeholder": "environment/cemetery/PLACEHOLDER_cemetery_tree.png",
    "anchor": [
     0.5,
-    1.0
+    0.9966
    ],
    "size": [
     137,
@@ -2570,7 +2583,8 @@ registerAssetData('manifest', {
    ],
    "lights": [],
    "status": "art",
-   "art": "cemetery_tree.png"
+   "art": "cemetery_tree.png",
+   "foot": 0.3887
   },
   "cemetery_grass": {
    "name": "Herbe",
@@ -2578,7 +2592,7 @@ registerAssetData('manifest', {
    "placeholder": "environment/cemetery/PLACEHOLDER_cemetery_grass.png",
    "anchor": [
     0.5,
-    1.0
+    0.9525
    ],
    "size": [
     30,
@@ -2586,7 +2600,8 @@ registerAssetData('manifest', {
    ],
    "lights": [],
    "status": "art",
-   "art": "cemetery_grass.png"
+   "art": "cemetery_grass.png",
+   "foot": 0.4083
   },
   "cemetery_tomb": {
    "name": "Tombe",
@@ -2594,7 +2609,7 @@ registerAssetData('manifest', {
    "placeholder": "environment/cemetery/PLACEHOLDER_cemetery_tomb.png",
    "anchor": [
     0.5,
-    1.0
+    0.9809
    ],
    "size": [
     32,
@@ -2602,7 +2617,8 @@ registerAssetData('manifest', {
    ],
    "lights": [],
    "status": "art",
-   "art": "cemetery_tomb.png"
+   "art": "cemetery_tomb.png",
+   "foot": 0.3438
   },
   "cemetery_skull": {
    "name": "Crâne",
@@ -2610,7 +2626,7 @@ registerAssetData('manifest', {
    "placeholder": "environment/cemetery/PLACEHOLDER_cemetery_skull.png",
    "anchor": [
     0.5,
-    1.0
+    0.9695
    ],
    "size": [
     16,
@@ -2618,7 +2634,8 @@ registerAssetData('manifest', {
    ],
    "lights": [],
    "status": "art",
-   "art": "cemetery_skull.png"
+   "art": "cemetery_skull.png",
+   "foot": 0.3438
   },
   "cemetery_rock": {
    "name": "Rocher",
@@ -2626,7 +2643,7 @@ registerAssetData('manifest', {
    "placeholder": "environment/cemetery/PLACEHOLDER_cemetery_rock.png",
    "anchor": [
     0.5,
-    1.0
+    0.9933
    ],
    "size": [
     30,
@@ -2634,7 +2651,8 @@ registerAssetData('manifest', {
    ],
    "lights": [],
    "status": "art",
-   "art": "cemetery_rock.png"
+   "art": "cemetery_rock.png",
+   "foot": 0.3417
   },
   "brazier": {
    "name": "Brasero",
@@ -2642,7 +2660,7 @@ registerAssetData('manifest', {
    "placeholder": "environment/props/PLACEHOLDER_brazier.png",
    "anchor": [
     0.5,
-    1.0
+    0.9811
    ],
    "size": [
     34,
@@ -2650,7 +2668,8 @@ registerAssetData('manifest', {
    ],
    "lights": [],
    "status": "art",
-   "art": "brazier.png"
+   "art": "brazier.png",
+   "foot": 0.4559
   },
   "xp_small": {
    "name": "XP",
@@ -2850,7 +2869,7 @@ registerAssetData('manifest', {
    "placeholder": "environment/marsh/PLACEHOLDER_marsh_puddle.png",
    "anchor": [
     0.5,
-    0.5
+    0.9842
    ],
    "size": [
     140,
@@ -2858,7 +2877,8 @@ registerAssetData('manifest', {
    ],
    "lights": [],
    "status": "art",
-   "art": "marsh_puddle.png"
+   "art": "marsh_puddle.png",
+   "foot": 0.2376
   },
   "merchant": {
    "name": "Colporteur",
@@ -3381,14 +3401,15 @@ registerAssetData('manifest', {
    "placeholder": null,
    "anchor": [
     0.5,
-    0.97
+    0.984
    ],
    "size": [
     124,
     129
    ],
    "lights": [],
-   "status": "art"
+   "status": "art",
+   "foot": 0.1976
   },
   "ruin_wall_a": {
    "name": "Ruine",
@@ -3397,14 +3418,15 @@ registerAssetData('manifest', {
    "placeholder": null,
    "anchor": [
     0.5,
-    0.97
+    0.9605
    ],
    "size": [
     97,
     104
    ],
    "lights": [],
-   "status": "art"
+   "status": "art",
+   "foot": 0.1863
   },
   "ruin_wall_b": {
    "name": "Ruine",
@@ -3413,14 +3435,15 @@ registerAssetData('manifest', {
    "placeholder": null,
    "anchor": [
     0.5,
-    0.97
+    0.9678
    ],
    "size": [
     95,
     101
    ],
    "lights": [],
-   "status": "art"
+   "status": "art",
+   "foot": 0.195
   },
   "ruin_arch": {
    "name": "Ruine",
@@ -3429,14 +3452,15 @@ registerAssetData('manifest', {
    "placeholder": null,
    "anchor": [
     0.5,
-    0.97
+    0.9991
    ],
    "size": [
     140,
     126
    ],
    "lights": [],
-   "status": "art"
+   "status": "art",
+   "foot": 0.2143
   },
   "ruin_arch_b": {
    "name": "Ruine",
@@ -3445,14 +3469,15 @@ registerAssetData('manifest', {
    "placeholder": null,
    "anchor": [
     0.5,
-    0.97
+    0.965
    ],
    "size": [
     103,
     95
    ],
    "lights": [],
-   "status": "art"
+   "status": "art",
+   "foot": 0.1713
   },
   "ruin_arch_c": {
    "name": "Ruine",
@@ -3461,14 +3486,15 @@ registerAssetData('manifest', {
    "placeholder": null,
    "anchor": [
     0.5,
-    0.97
+    0.9685
    ],
    "size": [
     138,
     129
    ],
    "lights": [],
-   "status": "art"
+   "status": "art",
+   "foot": 0.2138
   },
   "ruin_corner_a": {
    "name": "Ruine",
@@ -3477,14 +3503,15 @@ registerAssetData('manifest', {
    "placeholder": null,
    "anchor": [
     0.5,
-    0.97
+    0.9428
    ],
    "size": [
     109,
     92
    ],
    "lights": [],
-   "status": "art"
+   "status": "art",
+   "foot": 0.4696
   },
   "ruin_corner_b": {
    "name": "Ruine",
@@ -3493,14 +3520,15 @@ registerAssetData('manifest', {
    "placeholder": null,
    "anchor": [
     0.5,
-    0.97
+    0.9733
    ],
    "size": [
     107,
     91
    ],
    "lights": [],
-   "status": "art"
+   "status": "art",
+   "foot": 0.4646
   },
   "ruin_corner_c": {
    "name": "Ruine",
@@ -3509,14 +3537,15 @@ registerAssetData('manifest', {
    "placeholder": null,
    "anchor": [
     0.5,
-    0.97
+    0.9607
    ],
    "size": [
     100,
     87
    ],
    "lights": [],
-   "status": "art"
+   "status": "art",
+   "foot": 0.4619
   },
   "ruin_corner_d": {
    "name": "Ruine",
@@ -3525,14 +3554,15 @@ registerAssetData('manifest', {
    "placeholder": null,
    "anchor": [
     0.5,
-    0.97
+    0.9456
    ],
    "size": [
     81,
     65
    ],
    "lights": [],
-   "status": "art"
+   "status": "art",
+   "foot": 0.1944
   },
   "ruin_corner_e": {
    "name": "Ruine",
@@ -3541,14 +3571,15 @@ registerAssetData('manifest', {
    "placeholder": null,
    "anchor": [
     0.5,
-    0.97
+    0.9715
    ],
    "size": [
     74,
     62
    ],
    "lights": [],
-   "status": "art"
+   "status": "art",
+   "foot": 0.128
   },
   "ruin_door_wall": {
    "name": "Ruine",
@@ -3557,14 +3588,15 @@ registerAssetData('manifest', {
    "placeholder": null,
    "anchor": [
     0.5,
-    0.97
+    1.0
    ],
    "size": [
     147,
     126
    ],
    "lights": [],
-   "status": "art"
+   "status": "art",
+   "foot": 0.2449
   },
   "ruin_gate": {
    "name": "Ruine",
@@ -3573,14 +3605,15 @@ registerAssetData('manifest', {
    "placeholder": null,
    "anchor": [
     0.5,
-    0.97
+    0.9733
    ],
    "size": [
     83,
     91
    ],
    "lights": [],
-   "status": "art"
+   "status": "art",
+   "foot": 0.2356
   },
   "ruin_small_door": {
    "name": "Ruine",
@@ -3589,14 +3622,15 @@ registerAssetData('manifest', {
    "placeholder": null,
    "anchor": [
     0.5,
-    0.97
+    1.0
    ],
    "size": [
     54,
     53
    ],
    "lights": [],
-   "status": "art"
+   "status": "art",
+   "foot": 0.3167
   },
   "broken_column": {
    "name": "Ruine",
@@ -3605,14 +3639,15 @@ registerAssetData('manifest', {
    "placeholder": null,
    "anchor": [
     0.5,
-    0.97
+    1.0
    ],
    "size": [
     59,
     49
    ],
    "lights": [],
-   "status": "art"
+   "status": "art",
+   "foot": 0.4697
   },
   "gothic_arches": {
    "name": "Ruine",
@@ -3621,14 +3656,15 @@ registerAssetData('manifest', {
    "placeholder": null,
    "anchor": [
     0.5,
-    0.97
+    0.9609
    ],
    "size": [
     195,
     170
    ],
    "lights": [],
-   "status": "art"
+   "status": "art",
+   "foot": 0.3088
   },
   "knight_statue": {
    "name": "Ruine",
@@ -3637,14 +3673,15 @@ registerAssetData('manifest', {
    "placeholder": null,
    "anchor": [
     0.5,
-    0.97
+    0.987
    ],
    "size": [
     139,
     157
    ],
    "lights": [],
-   "status": "art"
+   "status": "art",
+   "foot": 0.4087
   },
   "gate_pillar": {
    "name": "Ruine",
@@ -3653,14 +3690,15 @@ registerAssetData('manifest', {
    "placeholder": null,
    "anchor": [
     0.5,
-    0.97
+    0.9701
    ],
    "size": [
     94,
     89
    ],
    "lights": [],
-   "status": "art"
+   "status": "art",
+   "foot": 0.4628
   },
   "cage_pillar": {
    "name": "Ruine",
@@ -3669,14 +3707,15 @@ registerAssetData('manifest', {
    "placeholder": null,
    "anchor": [
     0.5,
-    0.97
+    0.9847
    ],
    "size": [
     89,
     99
    ],
    "lights": [],
-   "status": "art"
+   "status": "art",
+   "foot": 0.3146
   },
   "tomb_candles": {
    "name": "Ruine",
@@ -3685,7 +3724,7 @@ registerAssetData('manifest', {
    "placeholder": null,
    "anchor": [
     0.5,
-    0.97
+    0.9762
    ],
    "size": [
     120,
@@ -3699,7 +3738,8 @@ registerAssetData('manifest', {
      "255,190,110"
     ]
    ],
-   "status": "art"
+   "status": "art",
+   "foot": 0.2897
   },
   "b_hutte": {
    "name": "Bâtiment",
@@ -3708,14 +3748,15 @@ registerAssetData('manifest', {
    "placeholder": null,
    "anchor": [
     0.5,
-    0.86
+    0.9043
    ],
    "size": [
     250,
     200
    ],
    "lights": [],
-   "status": "art"
+   "status": "art",
+   "foot": 0.2373
   },
   "b_oratoire": {
    "name": "Bâtiment",
@@ -3724,14 +3765,15 @@ registerAssetData('manifest', {
    "placeholder": null,
    "anchor": [
     0.5,
-    0.86
+    0.8872
    ],
    "size": [
     105,
     108
    ],
    "lights": [],
-   "status": "art"
+   "status": "art",
+   "foot": 0.2873
   },
   "b_tour": {
    "name": "Bâtiment",
@@ -3740,14 +3782,15 @@ registerAssetData('manifest', {
    "placeholder": null,
    "anchor": [
     0.5,
-    0.86
+    0.8933
    ],
    "size": [
     230,
     218
    ],
    "lights": [],
-   "status": "art"
+   "status": "art",
+   "foot": 0.3327
   },
   "b_puits": {
    "name": "Bâtiment",
@@ -3756,14 +3799,15 @@ registerAssetData('manifest', {
    "placeholder": null,
    "anchor": [
     0.5,
-    0.86
+    0.889
    ],
    "size": [
     135,
     140
    ],
    "lights": [],
-   "status": "art"
+   "status": "art",
+   "foot": 0.3557
   },
   "b_bucher": {
    "name": "Bâtiment",
@@ -3772,14 +3816,15 @@ registerAssetData('manifest', {
    "placeholder": null,
    "anchor": [
     0.5,
-    0.86
+    0.7769
    ],
    "size": [
     140,
     94
    ],
    "lights": [],
-   "status": "art"
+   "status": "art",
+   "foot": 0.3345
   },
   "b_pilotis": {
    "name": "Bâtiment",
@@ -3788,14 +3833,15 @@ registerAssetData('manifest', {
    "placeholder": null,
    "anchor": [
     0.5,
-    0.86
+    0.9211
    ],
    "size": [
     240,
     265
    ],
    "lights": [],
-   "status": "art"
+   "status": "art",
+   "foot": 0.4089
   },
   "b_ponton": {
    "name": "Bâtiment",
@@ -3804,14 +3850,15 @@ registerAssetData('manifest', {
    "placeholder": null,
    "anchor": [
     0.5,
-    0.86
+    0.814
    ],
    "size": [
     210,
     148
    ],
    "lights": [],
-   "status": "art"
+   "status": "art",
+   "foot": 0.3218
   },
   "b_clocher": {
    "name": "Bâtiment",
@@ -3820,14 +3867,15 @@ registerAssetData('manifest', {
    "placeholder": null,
    "anchor": [
     0.5,
-    0.86
+    0.8726
    ],
    "size": [
     230,
     247
    ],
    "lights": [],
-   "status": "art"
+   "status": "art",
+   "foot": 0.3762
   },
   "b_barque": {
    "name": "Bâtiment",
@@ -3836,14 +3884,15 @@ registerAssetData('manifest', {
    "placeholder": null,
    "anchor": [
     0.5,
-    0.86
+    0.855
    ],
    "size": [
     165,
     87
    ],
    "lights": [],
-   "status": "art"
+   "status": "art",
+   "foot": 0.3746
   },
   "b_panneau": {
    "name": "Bâtiment",
@@ -3852,14 +3901,15 @@ registerAssetData('manifest', {
    "placeholder": null,
    "anchor": [
     0.5,
-    0.86
+    0.6229
    ],
    "size": [
     85,
     124
    ],
    "lights": [],
-   "status": "art"
+   "status": "art",
+   "foot": 0.4194
   },
   "b_mausolee": {
    "name": "Bâtiment",
@@ -3868,14 +3918,15 @@ registerAssetData('manifest', {
    "placeholder": null,
    "anchor": [
     0.5,
-    0.86
+    0.9407
    ],
    "size": [
     230,
     255
    ],
    "lights": [],
-   "status": "art"
+   "status": "art",
+   "foot": 0.3127
   },
   "b_chapelle": {
    "name": "Bâtiment",
@@ -3884,14 +3935,15 @@ registerAssetData('manifest', {
    "placeholder": null,
    "anchor": [
     0.5,
-    0.86
+    0.9122
    ],
    "size": [
     240,
     200
    ],
    "lights": [],
-   "status": "art"
+   "status": "art",
+   "foot": 0.2624
   },
   "b_ossuaire": {
    "name": "Bâtiment",
@@ -3900,14 +3952,15 @@ registerAssetData('manifest', {
    "placeholder": null,
    "anchor": [
     0.5,
-    0.86
+    0.9199
    ],
    "size": [
     200,
     211
    ],
    "lights": [],
-   "status": "art"
+   "status": "art",
+   "foot": 0.2369
   },
   "b_cabane": {
    "name": "Bâtiment",
@@ -3916,14 +3969,15 @@ registerAssetData('manifest', {
    "placeholder": null,
    "anchor": [
     0.5,
-    0.86
+    0.8889
    ],
    "size": [
     160,
     132
    ],
    "lights": [],
-   "status": "art"
+   "status": "art",
+   "foot": 0.2333
   },
   "b_grille": {
    "name": "Bâtiment",
@@ -3932,14 +3986,15 @@ registerAssetData('manifest', {
    "placeholder": null,
    "anchor": [
     0.5,
-    0.86
+    0.8492
    ],
    "size": [
     330,
     124
    ],
    "lights": [],
-   "status": "art"
+   "status": "art",
+   "foot": 0.3415
   },
   "b_charrette": {
    "name": "Bâtiment",
@@ -3948,7 +4003,7 @@ registerAssetData('manifest', {
    "placeholder": null,
    "anchor": [
     0.5,
-    0.86
+    0.9056
    ],
    "size": [
     170,
@@ -3962,7 +4017,8 @@ registerAssetData('manifest', {
      "150,255,170"
     ]
    ],
-   "status": "art"
+   "status": "art",
+   "foot": 0.3707
   },
   "b_phare_depart": {
    "name": "Bâtiment",
@@ -3971,7 +4027,7 @@ registerAssetData('manifest', {
    "placeholder": null,
    "anchor": [
     0.5,
-    0.86
+    0.9343
    ],
    "size": [
     150,
@@ -3985,7 +4041,8 @@ registerAssetData('manifest', {
      "255,196,120"
     ]
    ],
-   "status": "art"
+   "status": "art",
+   "foot": 0.3617
   },
   "b_cercle": {
    "name": "Bâtiment",
@@ -3994,14 +4051,15 @@ registerAssetData('manifest', {
    "placeholder": null,
    "anchor": [
     0.5,
-    0.86
+    0.8528
    ],
    "size": [
     290,
     224
    ],
    "lights": [],
-   "status": "art"
+   "status": "art",
+   "foot": 0.2963
   },
   "v_bois": {
    "name": "Décor de village",
@@ -4010,14 +4068,15 @@ registerAssetData('manifest', {
    "placeholder": null,
    "anchor": [
     0.5,
-    0.92
+    0.95
    ],
    "size": [
     78,
     62
    ],
    "lights": [],
-   "status": "art"
+   "status": "art",
+   "foot": 0.359
   },
   "v_tonneau": {
    "name": "Décor de village",
@@ -4026,14 +4085,15 @@ registerAssetData('manifest', {
    "placeholder": null,
    "anchor": [
     0.5,
-    0.92
+    0.9978
    ],
    "size": [
     40,
     58
    ],
    "lights": [],
-   "status": "art"
+   "status": "art",
+   "foot": 0.3812
   },
   "v_caisses": {
    "name": "Décor de village",
@@ -4042,14 +4102,15 @@ registerAssetData('manifest', {
    "placeholder": null,
    "anchor": [
     0.5,
-    0.92
+    0.9795
    ],
    "size": [
     55,
     70
    ],
    "lights": [],
-   "status": "art"
+   "status": "art",
+   "foot": 0.3227
   },
   "v_banc": {
    "name": "Décor de village",
@@ -4058,14 +4119,15 @@ registerAssetData('manifest', {
    "placeholder": null,
    "anchor": [
     0.5,
-    0.92
+    0.8469
    ],
    "size": [
     72,
     56
    ],
    "lights": [],
-   "status": "art"
+   "status": "art",
+   "foot": 0.1389
   },
   "v_feu": {
    "name": "Décor de village",
@@ -4074,14 +4136,15 @@ registerAssetData('manifest', {
    "placeholder": null,
    "anchor": [
     0.5,
-    0.92
+    0.9724
    ],
    "size": [
     74,
     47
    ],
    "lights": [],
-   "status": "art"
+   "status": "art",
+   "foot": 0.3041
   },
   "v_cloture": {
    "name": "Décor de village",
@@ -4090,14 +4153,15 @@ registerAssetData('manifest', {
    "placeholder": null,
    "anchor": [
     0.5,
-    0.92
+    0.9423
    ],
    "size": [
     80,
     82
    ],
    "lights": [],
-   "status": "art"
+   "status": "art",
+   "foot": 0.2125
   },
   "v_epouvantail": {
    "name": "Décor de village",
@@ -4106,14 +4170,15 @@ registerAssetData('manifest', {
    "placeholder": null,
    "anchor": [
     0.5,
-    0.92
+    0.8181
    ],
    "size": [
     62,
     96
    ],
    "lights": [],
-   "status": "art"
+   "status": "art",
+   "foot": 0.1613
   },
   "v_brouette": {
    "name": "Décor de village",
@@ -4122,14 +4187,15 @@ registerAssetData('manifest', {
    "placeholder": null,
    "anchor": [
     0.5,
-    0.92
+    0.9774
    ],
    "size": [
     78,
     66
    ],
    "lights": [],
-   "status": "art"
+   "status": "art",
+   "foot": 0.1218
   },
   "v_potager": {
    "name": "Décor de village",
@@ -4138,14 +4204,15 @@ registerAssetData('manifest', {
    "placeholder": null,
    "anchor": [
     0.5,
-    0.92
+    0.9605
    ],
    "size": [
     130,
     98
    ],
    "lights": [],
-   "status": "art"
+   "status": "art",
+   "foot": 0.1959
   },
   "v_poteau_lanterne": {
    "name": "Décor de village",
@@ -4154,7 +4221,7 @@ registerAssetData('manifest', {
    "placeholder": null,
    "anchor": [
     0.5,
-    0.92
+    0.9963
    ],
    "size": [
     48,
@@ -4168,7 +4235,8 @@ registerAssetData('manifest', {
      "255,190,110"
     ]
    ],
-   "status": "art"
+   "status": "art",
+   "foot": 0.1458
   },
   "v_filet": {
    "name": "Décor de village",
@@ -4177,14 +4245,15 @@ registerAssetData('manifest', {
    "placeholder": null,
    "anchor": [
     0.5,
-    0.92
+    0.915
    ],
    "size": [
     84,
     95
    ],
    "lights": [],
-   "status": "art"
+   "status": "art",
+   "foot": 0.372
   },
   "v_sechoir": {
    "name": "Décor de village",
@@ -4193,14 +4262,15 @@ registerAssetData('manifest', {
    "placeholder": null,
    "anchor": [
     0.5,
-    0.92
+    0.8416
    ],
    "size": [
     74,
     86
    ],
    "lights": [],
-   "status": "art"
+   "status": "art",
+   "foot": 0.4831
   },
   "v_tonneau_vase": {
    "name": "Décor de village",
@@ -4209,14 +4279,15 @@ registerAssetData('manifest', {
    "placeholder": null,
    "anchor": [
     0.5,
-    0.92
+    0.9882
    ],
    "size": [
     66,
     56
    ],
    "lights": [],
-   "status": "art"
+   "status": "art",
+   "foot": 0.3674
   },
   "v_nasses": {
    "name": "Décor de village",
@@ -4225,14 +4296,15 @@ registerAssetData('manifest', {
    "placeholder": null,
    "anchor": [
     0.5,
-    0.92
+    0.9531
    ],
    "size": [
     66,
     56
    ],
    "lights": [],
-   "status": "art"
+   "status": "art",
+   "foot": 0.3333
   },
   "v_rames": {
    "name": "Décor de village",
@@ -4241,14 +4313,15 @@ registerAssetData('manifest', {
    "placeholder": null,
    "anchor": [
     0.5,
-    0.92
+    0.9843
    ],
    "size": [
     46,
     82
    ],
    "lights": [],
-   "status": "art"
+   "status": "art",
+   "foot": 0.3859
   },
   "v_amarre": {
    "name": "Décor de village",
@@ -4257,14 +4330,15 @@ registerAssetData('manifest', {
    "placeholder": null,
    "anchor": [
     0.5,
-    0.92
+    0.974
    ],
    "size": [
     42,
     61
    ],
    "lights": [],
-   "status": "art"
+   "status": "art",
+   "foot": 0.244
   },
   "v_passerelle": {
    "name": "Décor de village",
@@ -4273,14 +4347,15 @@ registerAssetData('manifest', {
    "placeholder": null,
    "anchor": [
     0.5,
-    0.92
+    0.9362
    ],
    "size": [
     120,
     77
    ],
    "lights": [],
-   "status": "art"
+   "status": "art",
+   "foot": 0.1008
   },
   "v_grigri": {
    "name": "Décor de village",
@@ -4289,14 +4364,15 @@ registerAssetData('manifest', {
    "placeholder": null,
    "anchor": [
     0.5,
-    0.92
+    0.9156
    ],
    "size": [
     72,
     80
    ],
    "lights": [],
-   "status": "art"
+   "status": "art",
+   "foot": 0.3819
   },
   "v_chaudron": {
    "name": "Décor de village",
@@ -4305,14 +4381,15 @@ registerAssetData('manifest', {
    "placeholder": null,
    "anchor": [
     0.5,
-    0.92
+    1.0
    ],
    "size": [
     54,
     74
    ],
    "lights": [],
-   "status": "art"
+   "status": "art",
+   "foot": 0.4769
   },
   "v_lanterne_perche": {
    "name": "Décor de village",
@@ -4321,7 +4398,7 @@ registerAssetData('manifest', {
    "placeholder": null,
    "anchor": [
     0.5,
-    0.92
+    0.9954
    ],
    "size": [
     42,
@@ -4335,7 +4412,8 @@ registerAssetData('manifest', {
      "160,255,190"
     ]
    ],
-   "status": "art"
+   "status": "art",
+   "foot": 0.3214
   },
   "v_tombe_fraiche": {
    "name": "Décor de village",
@@ -4344,14 +4422,15 @@ registerAssetData('manifest', {
    "placeholder": null,
    "anchor": [
     0.5,
-    0.92
+    0.9916
    ],
    "size": [
     92,
     86
    ],
    "lights": [],
-   "status": "art"
+   "status": "art",
+   "foot": 0.3288
   },
   "v_cercueil": {
    "name": "Décor de village",
@@ -4360,14 +4439,15 @@ registerAssetData('manifest', {
    "placeholder": null,
    "anchor": [
     0.5,
-    0.92
+    0.9643
    ],
    "size": [
     76,
     69
    ],
    "lights": [],
-   "status": "art"
+   "status": "art",
+   "foot": 0.2237
   },
   "v_banc_pierre": {
    "name": "Décor de village",
@@ -4376,14 +4456,15 @@ registerAssetData('manifest', {
    "placeholder": null,
    "anchor": [
     0.5,
-    0.92
+    0.9633
    ],
    "size": [
     78,
     58
    ],
    "lights": [],
-   "status": "art"
+   "status": "art",
+   "foot": 0.1282
   },
   "v_reverbere": {
    "name": "Décor de village",
@@ -4392,7 +4473,7 @@ registerAssetData('manifest', {
    "placeholder": null,
    "anchor": [
     0.5,
-    0.92
+    1.0
    ],
    "size": [
     30,
@@ -4406,7 +4487,8 @@ registerAssetData('manifest', {
      "255,190,110"
     ]
    ],
-   "status": "art"
+   "status": "art",
+   "foot": 0.1167
   },
   "v_ange": {
    "name": "Décor de village",
@@ -4415,14 +4497,15 @@ registerAssetData('manifest', {
    "placeholder": null,
    "anchor": [
     0.5,
-    0.92
+    0.9975
    ],
    "size": [
     48,
     114
    ],
    "lights": [],
-   "status": "art"
+   "status": "art",
+   "foot": 0.474
   },
   "v_urne": {
    "name": "Décor de village",
@@ -4431,14 +4514,15 @@ registerAssetData('manifest', {
    "placeholder": null,
    "anchor": [
     0.5,
-    0.92
+    0.9979
    ],
    "size": [
     30,
     58
    ],
    "lights": [],
-   "status": "art"
+   "status": "art",
+   "foot": 0.2417
   },
   "v_croix": {
    "name": "Décor de village",
@@ -4447,14 +4531,15 @@ registerAssetData('manifest', {
    "placeholder": null,
    "anchor": [
     0.5,
-    0.92
+    0.9416
    ],
    "size": [
     62,
     54
    ],
    "lights": [],
-   "status": "art"
+   "status": "art",
+   "foot": 0.3347
   },
   "v_charrette_cercueil": {
    "name": "Décor de village",
@@ -4463,14 +4548,15 @@ registerAssetData('manifest', {
    "placeholder": null,
    "anchor": [
     0.5,
-    0.92
+    0.8318
    ],
    "size": [
     115,
     96
    ],
    "lights": [],
-   "status": "art"
+   "status": "art",
+   "foot": 0.437
   },
   "v_colonne_couronne": {
    "name": "Décor de village",
@@ -4479,14 +4565,15 @@ registerAssetData('manifest', {
    "placeholder": null,
    "anchor": [
     0.5,
-    0.92
+    0.9908
    ],
    "size": [
     52,
     82
    ],
    "lights": [],
-   "status": "art"
+   "status": "art",
+   "foot": 0.3846
   },
   "v_sarcophage": {
    "name": "Décor de village",
@@ -4495,14 +4582,15 @@ registerAssetData('manifest', {
    "placeholder": null,
    "anchor": [
     0.5,
-    0.92
+    0.9636
    ],
    "size": [
     104,
     88
    ],
    "lights": [],
-   "status": "art"
+   "status": "art",
+   "foot": 0.2163
   },
   "dec_brulure": {
    "name": "Décor de village",

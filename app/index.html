@@ -2386,16 +2386,16 @@ function draw(now){
       ctx.translate(x, y - k*16); ctx.scale(1 + k*0.6, 1 - k*0.55); ctx.translate(-x, -y);
       const fl = c.flash; c.flash = 0.001; drawEnemyBody(c, x, y); c.flash = fl; ctx.restore();
     } else if (it.k === 4 && it.r.camp){                             // cercle de pierres d'un village, avec son feu
-      const x = X(it.r.x), y = Y(it.r.y); drawEnt('v_feu', x, y); siteFlame(x, y - 4, now);
+      const x = X(it.r.x), y = Y(it.r.y); groundContact(x, y, 30, 0.8); drawEnt('v_feu', x, y); siteFlame(x, y - 4, now);
       decoLights.push({x, y:y - 14, r:80, i:0.9, col:'255,150,70', hole:true});
     } else if (it.k === 4 && it.r.fire){                             // feu de camp d'un lieu
       const x = X(it.r.x), y = Y(it.r.y); drawBrazier(x, y, now); if (!hasFx('amb_brasero')) siteFlame(x, y, now);
       decoLights.push({x, y:y - 14, r:70, i:0.9, col:'255,150,70', hole:true});
     } else if (it.k === 4 && it.r.deco){                             // petit décor d'un lieu
-      const r = it.r; drawEnt(r.id, X(r.x), Y(r.y));
+      const r = it.r, a = ASSET_IMG[r.id]; if (a && !r.id.startsWith('dec_')) groundContact(X(r.x), Y(r.y), a.foot || a.w*0.3, 0.9); drawEnt(r.id, X(r.x), Y(r.y));
     } else if (it.k === 4){
       const r = it.r, x = X(r.x), y = Y(r.y), a = ASSET_IMG[r.id];
-      ctx.fillStyle = 'rgba(0,0,0,.45)'; ctx.beginPath(); ctx.ellipse(x, y - 2, a.w*0.42, a.w*0.12, 0, 0, TAU); ctx.fill();
+      groundContact(x, y, a.foot || a.w*0.36, r.id.startsWith('b_') ? 1.35 : 1.1);
       const hide = pFoot < r.y && Math.abs(p.x - r.x) < a.w*0.45 && pFoot > r.y - a.h*0.9;     // ruine devant le Gardien : translucide
       if (hide) ctx.globalAlpha = 0.45; drawEnt(r.id, x, y); ctx.globalAlpha = 1;
       if (a.lights.length && !(r.lantern && !r.lit)){ const L = a.lights[0]; decoLights.push({x:x + L[0]*a.w, y:y + L[1]*a.h, r:L[2], i:0.75 + (reduce ? 0 : 0.08*Math.sin(now/110 + r.x)), col:L[3], hole:true}); }
@@ -2622,7 +2622,7 @@ function draw(now){
       const gg = ctx.createRadialGradient(x+46, y-30, 0, x+46, y-30, 130); gg.addColorStop(0,'rgba(140,255,170,.24)'); gg.addColorStop(1,'rgba(140,255,170,0)');
       ctx.fillStyle = gg; ctx.fillRect(x-90, y-160, 270, 270); ctx.restore();
       ctx.fillStyle = 'rgba(0,0,0,.45)'; ctx.beginPath(); ctx.ellipse(x+14, y+13, 42, 8, 0, 0, TAU); ctx.fill();
-      drawEnt('b_charrette', x - 58, y + 4);
+      groundContact(x - 58, y + 4, 60, 0.9); drawEnt('b_charrette', x - 58, y + 4);
       drawEnt('merchant', x + 14, y + 13);
       if (m.life < 15 && Math.floor(now/250)%2 === 0){ ctx.strokeStyle = 'rgba(143,224,160,.5)'; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(x+10, y-6, 54, 0, TAU); ctx.stroke(); }
     }
@@ -3863,7 +3863,7 @@ async function loadArtManifest(){
       if (!r) return;
       const iw = r.img.naturalWidth, ih = r.img.naturalHeight, ex = M.exportScale || 2;
       const w = e.size ? e.size[0] : iw/ex, h = e.size ? e.size[1] : ih/ex;
-      ASSET_IMG[id] = {img:r.img, level:r.level, w, h, ax:(e.anchor ? e.anchor[0] : 0.5)*w, ay:(e.anchor ? e.anchor[1] : 1)*h, lights:e.lights || []};
+      ASSET_IMG[id] = {img:r.img, level:r.level, w, h, ax:(e.anchor ? e.anchor[0] : 0.5)*w, ay:(e.anchor ? e.anchor[1] : 1)*h, lights:e.lights || [], foot:e.foot ? e.foot*w : 0};
       if (PDEF[id] || id === 'ombre'){                          // créatures : branchées sur le rendu des ennemis
         PIMG[id] = r.img; PLEVEL[id] = r.level;
         PM[id] = r.level === 'concept' && PM_CONCEPT[id] ? PM_CONCEPT[id] : {w:iw, h:ih};
@@ -3884,7 +3884,7 @@ async function loadArtManifest(){
 /* sprite « image » au format attendu par le code existant (c, w, h, ax, ay) */
 function assetSpr(id){
   const a = ASSET_IMG[id]; if (!a) return null;
-  const s = {c:a.img, w:a.w, h:a.h, ax:a.ax, ay:a.ay, level:a.level};
+  const s = {c:a.img, w:a.w, h:a.h, ax:a.ax, ay:a.ay, level:a.level, foot:a.foot};
   if (a.lights && a.lights.length){ const L = a.lights[0]; s.light = {dx:L[0]*a.w, dy:L[1]*a.h, r:L[2], col:L[3]}; }
   return s;
 }
@@ -3914,7 +3914,23 @@ function decoSet(map){
   if (ASSETS_READY) DECO[map] = S;
   return S;
 }
-function drawSpr(s, x, y){ if (!s || !s.w) return; ctx.drawImage(s.c, x - s.ax, y - s.ay, s.w, s.h); }   // plus de « vent » par déformation
+/* ombre de contact : là où un objet touche le sol, la terre s'assombrit (une couche large et douce + un cœur serré).
+   C'est ce qui « pose » l'objet dans la dalle au lieu de le faire flotter par-dessus. */
+let CONTACT_SPR = null;
+function contactSprite(){
+  if (CONTACT_SPR) return CONTACT_SPR;
+  const c = document.createElement('canvas'); c.width = 128; c.height = 64; const g = c.getContext('2d');
+  const gr = g.createRadialGradient(64, 32, 0, 64, 32, 64); gr.addColorStop(0, 'rgba(0,0,0,1)'); gr.addColorStop(0.45, 'rgba(0,0,0,.7)'); gr.addColorStop(1, 'rgba(0,0,0,0)');
+  g.setTransform(1, 0, 0, 0.5, 0, 16); g.fillStyle = gr; g.fillRect(0, 0, 128, 128);
+  return (CONTACT_SPR = c);
+}
+function groundContact(x, y, half, k){
+  if (!half) return; const s = contactSprite(), a = k == null ? 1 : k;
+  ctx.globalAlpha *= 0.42*a; ctx.drawImage(s, x - half*1.45, y - half*0.42, half*2.9, half*0.84);          // halo large
+  ctx.globalAlpha /= 0.42*a; ctx.globalAlpha *= 0.55*a; ctx.drawImage(s, x - half*0.95, y - half*0.2, half*1.9, half*0.4);   // occlusion au pied
+  ctx.globalAlpha /= 0.55*a;
+}
+function drawSpr(s, x, y){ if (!s || !s.w) return; if (s.foot) groundContact(x, y, s.foot, 0.8); ctx.drawImage(s.c, x - s.ax, y - s.ay, s.w, s.h); }   // plus de « vent » par déformation
 const TREE_IDS = {foret:'forest_tree', marais:'marsh_tree', cimetiere:'cemetery_tree'};
 function treeSet(map){
   if (TREES[map]) return TREES[map];
@@ -3930,6 +3946,7 @@ function drawTree(t, x, y, lx, ly, L, now){
     ctx.save(); ctx.globalAlpha *= 0.55*lit; ctx.fillStyle = '#000'; ctx.translate(x, y); ctx.rotate(Math.atan2(dy, dx));
     ctx.beginPath(); ctx.ellipse(60*s, 0, 90*s, 18*s, 0, 0, TAU); ctx.fill(); ctx.restore();
   }
+  groundContact(x, y, (spr.foot || spr.w*0.18)*s, 1);              // pied de l'arbre ancré dans le sol
   ctx.drawImage(spr.c, x - spr.ax*s, y - spr.ay*s, spr.w*s, spr.h*s);
 }
 /* ---- Créatures animées : une image par pose (planches d'animation), choisie selon l'état de l'ennemi ---- */
