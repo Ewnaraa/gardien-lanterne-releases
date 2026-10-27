@@ -2340,7 +2340,7 @@ registerAssetData('manifest', {
    "placeholder": "environment/forest/PLACEHOLDER_forest_tree.png",
    "anchor": [
     0.5,
-    0.9966
+    0.9696
    ],
    "size": [
     131,
@@ -2357,7 +2357,7 @@ registerAssetData('manifest', {
    "placeholder": "environment/forest/PLACEHOLDER_forest_grass.png",
    "anchor": [
     0.5,
-    0.9224
+    0.8954
    ],
    "size": [
     34,
@@ -2374,7 +2374,7 @@ registerAssetData('manifest', {
    "placeholder": "environment/forest/PLACEHOLDER_forest_fern.png",
    "anchor": [
     0.5,
-    0.8525
+    0.8255
    ],
    "size": [
     24,
@@ -2391,7 +2391,7 @@ registerAssetData('manifest', {
    "placeholder": "environment/forest/PLACEHOLDER_forest_rock.png",
    "anchor": [
     0.5,
-    0.9724
+    0.9454
    ],
    "size": [
     30,
@@ -2408,7 +2408,7 @@ registerAssetData('manifest', {
    "placeholder": "environment/forest/PLACEHOLDER_forest_mushroom.png",
    "anchor": [
     0.5,
-    0.946
+    0.919
    ],
    "size": [
     18,
@@ -2432,7 +2432,7 @@ registerAssetData('manifest', {
    "placeholder": "environment/forest/PLACEHOLDER_forest_roots.png",
    "anchor": [
     0.5,
-    0.8426
+    0.8156
    ],
    "size": [
     40,
@@ -2449,7 +2449,7 @@ registerAssetData('manifest', {
    "placeholder": "environment/forest/PLACEHOLDER_forest_log.png",
    "anchor": [
     0.5,
-    0.9573
+    0.9303
    ],
    "size": [
     56,
@@ -2466,7 +2466,7 @@ registerAssetData('manifest', {
    "placeholder": "environment/marsh/PLACEHOLDER_marsh_tree.png",
    "anchor": [
     0.5,
-    0.9966
+    0.9696
    ],
    "size": [
     137,
@@ -2483,7 +2483,7 @@ registerAssetData('manifest', {
    "placeholder": "environment/marsh/PLACEHOLDER_marsh_grass.png",
    "anchor": [
     0.5,
-    0.9483
+    0.9213
    ],
    "size": [
     34,
@@ -2500,7 +2500,7 @@ registerAssetData('manifest', {
    "placeholder": "environment/marsh/PLACEHOLDER_marsh_reeds.png",
    "anchor": [
     0.5,
-    0.9588
+    0.9318
    ],
    "size": [
     27,
@@ -2517,7 +2517,7 @@ registerAssetData('manifest', {
    "placeholder": "environment/marsh/PLACEHOLDER_marsh_rock.png",
    "anchor": [
     0.5,
-    0.9923
+    0.9653
    ],
    "size": [
     30,
@@ -2534,7 +2534,7 @@ registerAssetData('manifest', {
    "placeholder": "environment/marsh/PLACEHOLDER_marsh_mushroom.png",
    "anchor": [
     0.5,
-    0.9817
+    0.9547
    ],
    "size": [
     18,
@@ -2558,7 +2558,7 @@ registerAssetData('manifest', {
    "placeholder": "environment/marsh/PLACEHOLDER_marsh_lily.png",
    "anchor": [
     0.5,
-    0.9505
+    0.9235
    ],
    "size": [
     24,
@@ -2575,7 +2575,7 @@ registerAssetData('manifest', {
    "placeholder": "environment/cemetery/PLACEHOLDER_cemetery_tree.png",
    "anchor": [
     0.5,
-    0.9966
+    0.9696
    ],
    "size": [
     137,
@@ -2592,7 +2592,7 @@ registerAssetData('manifest', {
    "placeholder": "environment/cemetery/PLACEHOLDER_cemetery_grass.png",
    "anchor": [
     0.5,
-    0.9525
+    0.9255
    ],
    "size": [
     30,
@@ -2609,7 +2609,7 @@ registerAssetData('manifest', {
    "placeholder": "environment/cemetery/PLACEHOLDER_cemetery_tomb.png",
    "anchor": [
     0.5,
-    0.9809
+    0.9539
    ],
    "size": [
     32,
@@ -2626,7 +2626,7 @@ registerAssetData('manifest', {
    "placeholder": "environment/cemetery/PLACEHOLDER_cemetery_skull.png",
    "anchor": [
     0.5,
-    0.9695
+    0.9425
    ],
    "size": [
     16,
@@ -2643,7 +2643,7 @@ registerAssetData('manifest', {
    "placeholder": "environment/cemetery/PLACEHOLDER_cemetery_rock.png",
    "anchor": [
     0.5,
-    0.9933
+    0.9663
    ],
    "size": [
     30,
@@ -2660,7 +2660,7 @@ registerAssetData('manifest', {
    "placeholder": "environment/props/PLACEHOLDER_brazier.png",
    "anchor": [
     0.5,
-    0.9811
+    0.9541
    ],
    "size": [
     34,
@@ -2869,7 +2869,7 @@ registerAssetData('manifest', {
    "placeholder": "environment/marsh/PLACEHOLDER_marsh_puddle.png",
    "anchor": [
     0.5,
-    0.9842
+    0.9572
    ],
    "size": [
     140,
@@ -3401,11 +3401,11 @@ registerAssetData('manifest', {
    "placeholder": null,
    "anchor": [
     0.5,
-    0.984
+    0.957
    ],
    "size": [
-    124,
-    129
+    161,
+    168
    ],
    "lights": [],
    "status": "art",
@@ -3418,11 +3418,11 @@ registerAssetData('manifest', {
    "placeholder": null,
    "anchor": [
     0.5,
-    0.9605
+    0.9335
    ],
    "size": [
-    97,
-    104
+    126,
+    136
    ],
    "lights": [],
    "status": "art",
@@ -3435,11 +3435,11 @@ registerAssetData('manifest', {
    "placeholder": null,
    "anchor": [
     0.5,
-    0.9678
+    0.9408
    ],
    "size": [
-    95,
-    101
+    123,
+    131
    ],
    "lights": [],
    "status": "art",
@@ -3452,11 +3452,11 @@ registerAssetData('manifest', {
    "placeholder": null,
    "anchor": [
     0.5,
-    0.9991
+    0.9721
    ],
    "size": [
-    140,
-    126
+    182,
+    164
    ],
    "lights": [],
    "status": "art",
@@ -3469,11 +3469,11 @@ registerAssetData('manifest', {
    "placeholder": null,
    "anchor": [
     0.5,
-    0.965
+    0.938
    ],
    "size": [
-    103,
-    95
+    133,
+    123
    ],
    "lights": [],
    "status": "art",
@@ -3486,11 +3486,11 @@ registerAssetData('manifest', {
    "placeholder": null,
    "anchor": [
     0.5,
-    0.9685
+    0.9415
    ],
    "size": [
-    138,
-    129
+    179,
+    168
    ],
    "lights": [],
    "status": "art",
@@ -3503,11 +3503,11 @@ registerAssetData('manifest', {
    "placeholder": null,
    "anchor": [
     0.5,
-    0.9428
+    0.9158
    ],
    "size": [
-    109,
-    92
+    142,
+    120
    ],
    "lights": [],
    "status": "art",
@@ -3520,11 +3520,11 @@ registerAssetData('manifest', {
    "placeholder": null,
    "anchor": [
     0.5,
-    0.9733
+    0.9463
    ],
    "size": [
-    107,
-    91
+    140,
+    119
    ],
    "lights": [],
    "status": "art",
@@ -3537,11 +3537,11 @@ registerAssetData('manifest', {
    "placeholder": null,
    "anchor": [
     0.5,
-    0.9607
+    0.9337
    ],
    "size": [
-    100,
-    87
+    130,
+    114
    ],
    "lights": [],
    "status": "art",
@@ -3554,11 +3554,11 @@ registerAssetData('manifest', {
    "placeholder": null,
    "anchor": [
     0.5,
-    0.9456
+    0.9186
    ],
    "size": [
-    81,
-    65
+    105,
+    84
    ],
    "lights": [],
    "status": "art",
@@ -3571,11 +3571,11 @@ registerAssetData('manifest', {
    "placeholder": null,
    "anchor": [
     0.5,
-    0.9715
+    0.9445
    ],
    "size": [
-    74,
-    62
+    96,
+    81
    ],
    "lights": [],
    "status": "art",
@@ -3588,11 +3588,11 @@ registerAssetData('manifest', {
    "placeholder": null,
    "anchor": [
     0.5,
-    1.0
+    0.988
    ],
    "size": [
-    147,
-    126
+    191,
+    164
    ],
    "lights": [],
    "status": "art",
@@ -3605,11 +3605,11 @@ registerAssetData('manifest', {
    "placeholder": null,
    "anchor": [
     0.5,
-    0.9733
+    0.9463
    ],
    "size": [
-    83,
-    91
+    107,
+    119
    ],
    "lights": [],
    "status": "art",
@@ -3622,11 +3622,11 @@ registerAssetData('manifest', {
    "placeholder": null,
    "anchor": [
     0.5,
-    1.0
+    0.988
    ],
    "size": [
-    54,
-    53
+    70,
+    69
    ],
    "lights": [],
    "status": "art",
@@ -3639,11 +3639,11 @@ registerAssetData('manifest', {
    "placeholder": null,
    "anchor": [
     0.5,
-    1.0
+    0.988
    ],
    "size": [
-    59,
-    49
+    77,
+    63
    ],
    "lights": [],
    "status": "art",
@@ -3656,11 +3656,11 @@ registerAssetData('manifest', {
    "placeholder": null,
    "anchor": [
     0.5,
-    0.9609
+    0.9339
    ],
    "size": [
-    195,
-    170
+    254,
+    221
    ],
    "lights": [],
    "status": "art",
@@ -3673,11 +3673,11 @@ registerAssetData('manifest', {
    "placeholder": null,
    "anchor": [
     0.5,
-    0.987
+    0.96
    ],
    "size": [
-    139,
-    157
+    180,
+    204
    ],
    "lights": [],
    "status": "art",
@@ -3690,11 +3690,11 @@ registerAssetData('manifest', {
    "placeholder": null,
    "anchor": [
     0.5,
-    0.9701
+    0.9431
    ],
    "size": [
-    94,
-    89
+    122,
+    116
    ],
    "lights": [],
    "status": "art",
@@ -3707,11 +3707,11 @@ registerAssetData('manifest', {
    "placeholder": null,
    "anchor": [
     0.5,
-    0.9847
+    0.9577
    ],
    "size": [
-    89,
-    99
+    116,
+    129
    ],
    "lights": [],
    "status": "art",
@@ -3724,11 +3724,11 @@ registerAssetData('manifest', {
    "placeholder": null,
    "anchor": [
     0.5,
-    0.9762
+    0.9492
    ],
    "size": [
-    120,
-    98
+    156,
+    127
    ],
    "lights": [
     [
@@ -3748,11 +3748,11 @@ registerAssetData('manifest', {
    "placeholder": null,
    "anchor": [
     0.5,
-    0.9043
+    0.8773
    ],
    "size": [
-    250,
-    200
+    425,
+    340
    ],
    "lights": [],
    "status": "art",
@@ -3765,11 +3765,11 @@ registerAssetData('manifest', {
    "placeholder": null,
    "anchor": [
     0.5,
-    0.8872
+    0.8602
    ],
    "size": [
-    105,
-    108
+    178,
+    183
    ],
    "lights": [],
    "status": "art",
@@ -3782,11 +3782,11 @@ registerAssetData('manifest', {
    "placeholder": null,
    "anchor": [
     0.5,
-    0.8933
+    0.8663
    ],
    "size": [
-    230,
-    218
+    391,
+    370
    ],
    "lights": [],
    "status": "art",
@@ -3799,11 +3799,11 @@ registerAssetData('manifest', {
    "placeholder": null,
    "anchor": [
     0.5,
-    0.889
+    0.862
    ],
    "size": [
-    135,
-    140
+    230,
+    238
    ],
    "lights": [],
    "status": "art",
@@ -3816,11 +3816,11 @@ registerAssetData('manifest', {
    "placeholder": null,
    "anchor": [
     0.5,
-    0.7769
+    0.7499
    ],
    "size": [
-    140,
-    94
+    238,
+    160
    ],
    "lights": [],
    "status": "art",
@@ -3833,11 +3833,11 @@ registerAssetData('manifest', {
    "placeholder": null,
    "anchor": [
     0.5,
-    0.9211
+    0.8941
    ],
    "size": [
-    240,
-    265
+    408,
+    450
    ],
    "lights": [],
    "status": "art",
@@ -3850,11 +3850,11 @@ registerAssetData('manifest', {
    "placeholder": null,
    "anchor": [
     0.5,
-    0.814
+    0.787
    ],
    "size": [
-    210,
-    148
+    357,
+    252
    ],
    "lights": [],
    "status": "art",
@@ -3867,11 +3867,11 @@ registerAssetData('manifest', {
    "placeholder": null,
    "anchor": [
     0.5,
-    0.8726
+    0.8456
    ],
    "size": [
-    230,
-    247
+    391,
+    420
    ],
    "lights": [],
    "status": "art",
@@ -3884,11 +3884,11 @@ registerAssetData('manifest', {
    "placeholder": null,
    "anchor": [
     0.5,
-    0.855
+    0.828
    ],
    "size": [
-    165,
-    87
+    280,
+    148
    ],
    "lights": [],
    "status": "art",
@@ -3901,11 +3901,11 @@ registerAssetData('manifest', {
    "placeholder": null,
    "anchor": [
     0.5,
-    0.6229
+    0.5959
    ],
    "size": [
-    85,
-    124
+    144,
+    211
    ],
    "lights": [],
    "status": "art",
@@ -3918,11 +3918,11 @@ registerAssetData('manifest', {
    "placeholder": null,
    "anchor": [
     0.5,
-    0.9407
+    0.9137
    ],
    "size": [
-    230,
-    255
+    391,
+    433
    ],
    "lights": [],
    "status": "art",
@@ -3935,11 +3935,11 @@ registerAssetData('manifest', {
    "placeholder": null,
    "anchor": [
     0.5,
-    0.9122
+    0.8852
    ],
    "size": [
-    240,
-    200
+    408,
+    341
    ],
    "lights": [],
    "status": "art",
@@ -3952,11 +3952,11 @@ registerAssetData('manifest', {
    "placeholder": null,
    "anchor": [
     0.5,
-    0.9199
+    0.8929
    ],
    "size": [
-    200,
-    211
+    340,
+    359
    ],
    "lights": [],
    "status": "art",
@@ -3969,11 +3969,11 @@ registerAssetData('manifest', {
    "placeholder": null,
    "anchor": [
     0.5,
-    0.8889
+    0.8619
    ],
    "size": [
-    160,
-    132
+    272,
+    224
    ],
    "lights": [],
    "status": "art",
@@ -3986,11 +3986,11 @@ registerAssetData('manifest', {
    "placeholder": null,
    "anchor": [
     0.5,
-    0.8492
+    0.8222
    ],
    "size": [
-    330,
-    124
+    561,
+    211
    ],
    "lights": [],
    "status": "art",
@@ -4003,11 +4003,11 @@ registerAssetData('manifest', {
    "placeholder": null,
    "anchor": [
     0.5,
-    0.9056
+    0.8786
    ],
    "size": [
-    170,
-    208
+    289,
+    354
    ],
    "lights": [
     [
@@ -4027,11 +4027,11 @@ registerAssetData('manifest', {
    "placeholder": null,
    "anchor": [
     0.5,
-    0.9343
+    0.9073
    ],
    "size": [
-    150,
-    192
+    255,
+    326
    ],
    "lights": [
     [
@@ -4051,11 +4051,11 @@ registerAssetData('manifest', {
    "placeholder": null,
    "anchor": [
     0.5,
-    0.8528
+    0.8258
    ],
    "size": [
-    290,
-    224
+    493,
+    381
    ],
    "lights": [],
    "status": "art",
@@ -4068,7 +4068,7 @@ registerAssetData('manifest', {
    "placeholder": null,
    "anchor": [
     0.5,
-    0.95
+    0.923
    ],
    "size": [
     78,
@@ -4085,7 +4085,7 @@ registerAssetData('manifest', {
    "placeholder": null,
    "anchor": [
     0.5,
-    0.9978
+    0.9708
    ],
    "size": [
     40,
@@ -4102,7 +4102,7 @@ registerAssetData('manifest', {
    "placeholder": null,
    "anchor": [
     0.5,
-    0.9795
+    0.9525
    ],
    "size": [
     55,
@@ -4119,7 +4119,7 @@ registerAssetData('manifest', {
    "placeholder": null,
    "anchor": [
     0.5,
-    0.8469
+    0.8199
    ],
    "size": [
     72,
@@ -4136,7 +4136,7 @@ registerAssetData('manifest', {
    "placeholder": null,
    "anchor": [
     0.5,
-    0.9724
+    0.9454
    ],
    "size": [
     74,
@@ -4153,7 +4153,7 @@ registerAssetData('manifest', {
    "placeholder": null,
    "anchor": [
     0.5,
-    0.9423
+    0.9153
    ],
    "size": [
     80,
@@ -4170,7 +4170,7 @@ registerAssetData('manifest', {
    "placeholder": null,
    "anchor": [
     0.5,
-    0.8181
+    0.7911
    ],
    "size": [
     62,
@@ -4187,7 +4187,7 @@ registerAssetData('manifest', {
    "placeholder": null,
    "anchor": [
     0.5,
-    0.9774
+    0.9504
    ],
    "size": [
     78,
@@ -4204,7 +4204,7 @@ registerAssetData('manifest', {
    "placeholder": null,
    "anchor": [
     0.5,
-    0.9605
+    0.9335
    ],
    "size": [
     130,
@@ -4221,7 +4221,7 @@ registerAssetData('manifest', {
    "placeholder": null,
    "anchor": [
     0.5,
-    0.9963
+    0.9693
    ],
    "size": [
     48,
@@ -4245,7 +4245,7 @@ registerAssetData('manifest', {
    "placeholder": null,
    "anchor": [
     0.5,
-    0.915
+    0.888
    ],
    "size": [
     84,
@@ -4262,7 +4262,7 @@ registerAssetData('manifest', {
    "placeholder": null,
    "anchor": [
     0.5,
-    0.8416
+    0.8146
    ],
    "size": [
     74,
@@ -4279,7 +4279,7 @@ registerAssetData('manifest', {
    "placeholder": null,
    "anchor": [
     0.5,
-    0.9882
+    0.9612
    ],
    "size": [
     66,
@@ -4296,7 +4296,7 @@ registerAssetData('manifest', {
    "placeholder": null,
    "anchor": [
     0.5,
-    0.9531
+    0.9261
    ],
    "size": [
     66,
@@ -4313,7 +4313,7 @@ registerAssetData('manifest', {
    "placeholder": null,
    "anchor": [
     0.5,
-    0.9843
+    0.9573
    ],
    "size": [
     46,
@@ -4330,7 +4330,7 @@ registerAssetData('manifest', {
    "placeholder": null,
    "anchor": [
     0.5,
-    0.974
+    0.947
    ],
    "size": [
     42,
@@ -4347,7 +4347,7 @@ registerAssetData('manifest', {
    "placeholder": null,
    "anchor": [
     0.5,
-    0.9362
+    0.9092
    ],
    "size": [
     120,
@@ -4364,7 +4364,7 @@ registerAssetData('manifest', {
    "placeholder": null,
    "anchor": [
     0.5,
-    0.9156
+    0.8886
    ],
    "size": [
     72,
@@ -4381,7 +4381,7 @@ registerAssetData('manifest', {
    "placeholder": null,
    "anchor": [
     0.5,
-    1.0
+    0.9746
    ],
    "size": [
     54,
@@ -4398,7 +4398,7 @@ registerAssetData('manifest', {
    "placeholder": null,
    "anchor": [
     0.5,
-    0.9954
+    0.9684
    ],
    "size": [
     42,
@@ -4422,7 +4422,7 @@ registerAssetData('manifest', {
    "placeholder": null,
    "anchor": [
     0.5,
-    0.9916
+    0.9646
    ],
    "size": [
     92,
@@ -4439,7 +4439,7 @@ registerAssetData('manifest', {
    "placeholder": null,
    "anchor": [
     0.5,
-    0.9643
+    0.9373
    ],
    "size": [
     76,
@@ -4456,7 +4456,7 @@ registerAssetData('manifest', {
    "placeholder": null,
    "anchor": [
     0.5,
-    0.9633
+    0.9363
    ],
    "size": [
     78,
@@ -4473,7 +4473,7 @@ registerAssetData('manifest', {
    "placeholder": null,
    "anchor": [
     0.5,
-    1.0
+    0.9788
    ],
    "size": [
     30,
@@ -4497,7 +4497,7 @@ registerAssetData('manifest', {
    "placeholder": null,
    "anchor": [
     0.5,
-    0.9975
+    0.9705
    ],
    "size": [
     48,
@@ -4514,7 +4514,7 @@ registerAssetData('manifest', {
    "placeholder": null,
    "anchor": [
     0.5,
-    0.9979
+    0.9709
    ],
    "size": [
     30,
@@ -4531,7 +4531,7 @@ registerAssetData('manifest', {
    "placeholder": null,
    "anchor": [
     0.5,
-    0.9416
+    0.9146
    ],
    "size": [
     62,
@@ -4548,7 +4548,7 @@ registerAssetData('manifest', {
    "placeholder": null,
    "anchor": [
     0.5,
-    0.8318
+    0.8048
    ],
    "size": [
     115,
@@ -4565,7 +4565,7 @@ registerAssetData('manifest', {
    "placeholder": null,
    "anchor": [
     0.5,
-    0.9908
+    0.9638
    ],
    "size": [
     52,
@@ -4582,7 +4582,7 @@ registerAssetData('manifest', {
    "placeholder": null,
    "anchor": [
     0.5,
-    0.9636
+    0.9366
    ],
    "size": [
     104,

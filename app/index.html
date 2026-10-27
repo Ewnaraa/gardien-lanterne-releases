@@ -2392,12 +2392,14 @@ function draw(now){
       const x = X(it.r.x), y = Y(it.r.y); drawBrazier(x, y, now); if (!hasFx('amb_brasero')) siteFlame(x, y, now);
       decoLights.push({x, y:y - 14, r:70, i:0.9, col:'255,150,70', hole:true});
     } else if (it.k === 4 && it.r.deco){                             // petit décor d'un lieu
-      const r = it.r, a = ASSET_IMG[r.id]; if (a && !r.id.startsWith('dec_')) groundContact(X(r.x), Y(r.y), a.foot || a.w*0.3, 0.9); drawEnt(r.id, X(r.x), Y(r.y));
+      const r = it.r, a = ASSET_IMG[r.id]; if (a && !r.id.startsWith('dec_')) groundContact(X(r.x), Y(r.y), a.foot || a.w*0.3, 0.9); drawEnt(r.id, X(r.x), Y(r.y)); if (a && !r.id.startsWith('dec_') && !/potager|passerelle|tombe_fraiche/.test(r.id)) drawSink(r.id, r.x, r.y, X(r.x), Y(r.y), (a.foot || a.w*0.3)*1.05, G.map === 'marais' ? 9 : 6);
     } else if (it.k === 4){
       const r = it.r, x = X(r.x), y = Y(r.y), a = ASSET_IMG[r.id];
       groundContact(x, y, a.foot || a.w*0.36, r.id.startsWith('b_') ? 1.35 : 1.1);
       const hide = pFoot < r.y && Math.abs(p.x - r.x) < a.w*0.45 && pFoot > r.y - a.h*0.9;     // ruine devant le Gardien : translucide
-      if (hide) ctx.globalAlpha = 0.45; drawEnt(r.id, x, y); ctx.globalAlpha = 1;
+      if (hide) ctx.globalAlpha = 0.45; drawEnt(r.id, x, y);
+      const half = a.foot || a.w*0.36, deep = r.id === 'b_pilotis' || r.id === 'b_clocher' || r.id === 'b_barque' ? 16 : r.id.startsWith('b_') ? 11 : 8;
+      drawSink(r.id, r.x, r.y, x, y, half*1.05, G.map === 'marais' ? deep*1.3 : deep); ctx.globalAlpha = 1;
       if (a.lights.length && !(r.lantern && !r.lit)){ const L = a.lights[0]; decoLights.push({x:x + L[0]*a.w, y:y + L[1]*a.h, r:L[2], i:0.75 + (reduce ? 0 : 0.08*Math.sin(now/110 + r.x)), col:L[3], hole:true}); }
     } else { ctx.globalAlpha = 1; drawPlayer(X(p.x), Y(p.y), lx, ly, now); }
   }
@@ -3852,7 +3854,7 @@ function resolveEntity(id, e, M){
   return tryNext(0);
 }
 /* Recharge la sélection d'images (après changement d'option) : les fichiers restent en cache, rien n'est retéléchargé. */
-function reloadArt(){ for (const k in PVIEWS) delete PVIEWS[k]; for (const k in ANIM) delete ANIM[k]; ANIM_CACHE.clear(); for (const k in PIMG) if (k !== 'c_gardien') delete PIMG[k]; for (const k in PLEVEL) delete PLEVEL[k]; for (const k in ASSET_IMG) delete ASSET_IMG[k]; ASSETS_READY = false; GROUND_CACHE.clear(); return loadArtManifest(); }
+function reloadArt(){ for (const k in PVIEWS) delete PVIEWS[k]; for (const k in ANIM) delete ANIM[k]; ANIM_CACHE.clear(); for (const k in PIMG) if (k !== 'c_gardien') delete PIMG[k]; for (const k in PLEVEL) delete PLEVEL[k]; for (const k in ASSET_IMG) delete ASSET_IMG[k]; ASSETS_READY = false; GROUND_CACHE.clear(); LIP_CACHE.clear(); return loadArtManifest(); }
 async function loadArtManifest(){
   try { await loadDataOnce(ASSET_ROOT + 'manifest.js'); } catch(e){ console.warn('[assets] manifeste introuvable'); return; }
   const M = ASSET_DATA.manifest; if (!M) return;
@@ -4142,7 +4144,7 @@ function ruinsInView(ox, oy){
   if (G.room){ SITE_LIGHTS.length = 0; SITE_SMOKE.length = 0; return roomProps(); }
   const RUIN_IDS = (LANDMARKS[G.map] || []).filter(id => ASSET_IMG[id]);
   const out = [];
-  if (ASSET_IMG.b_phare_depart){ const x = 0, y = -TH*1.6; if (x + ox > -200 && x + ox < W + 200 && y + oy > -260 && y + oy < H + 200) out.push({x, y, id:'b_phare_depart'}); }   // la grande lanterne du point de départ
+  if (ASSET_IMG.b_phare_depart){ const x = 0, y = -TH*2.8; if (x + ox > -200 && x + ox < W + 200 && y + oy > -260 && y + oy < H + 200) out.push({x, y, id:'b_phare_depart'}); }   // la grande lanterne du point de départ
   const u0 = Math.floor(2*(-oy - 200)/TH), u1 = Math.ceil(2*(-oy + H + 200)/TH), v0 = Math.floor(2*(-ox - 200)/TW), v1 = Math.ceil(2*(-ox + W + 200)/TW);
   for (let u=u0; u<=u1; u++) for (let v=v0; v<=v1; v++){
     if ((u + v) & 1 || Math.abs(u) < 5 || Math.abs(v) < 4) continue;   // jamais sur le chemin ni au départ
@@ -4193,6 +4195,42 @@ const ITEM_IDS = {coffre:'chest', fiole:'potion', bourse:'purse', aimant:'magnet
 function drawItemAsset(it, x, y){ return drawEnt(it.type === 'coffre' && it.big ? 'chest_big' : ITEM_IDS[it.type], x, y); }
 
 loadArtManifest();
+/* =====================================================================
+   ENFONCEMENT DANS LE SOL : le vrai sol (pris dans le cache des dalles, à la même position du monde)
+   est redessiné PAR-DESSUS le bas de l'objet, en s'estompant vers le haut. Le pied disparaît dans la boue,
+   la terre ou le gravier au lieu de s'arrêter net sur la dalle. Calculé une seule fois par objet (il ne bouge pas).
+   ===================================================================== */
+const LIP_CACHE = new Map();
+function sinkLip(id, wx, wy, half, depth){
+  if (G.room || !ASSETS_READY) return null;
+  const S = ISO_SETS[G.map]; if (!S || !ASSET_IMG[S.base[0]]) return null;
+  const key = G.map + id + (wx|0) + ',' + (wy|0); let L = LIP_CACHE.get(key);
+  if (L) return L;
+  const w = Math.ceil(half*2.5), up = Math.ceil(depth), down = Math.ceil(depth*0.6), h = up + down;
+  const c = document.createElement('canvas'), d = DPR(); c.width = Math.max(1, Math.round(w*d)); c.height = Math.max(1, Math.round(h*d));
+  const g = c.getContext('2d'); g.scale(d, d);
+  const x0 = wx - w/2, y0 = wy - up;                                   // coin haut-gauche dans le monde
+  for (let cx = Math.floor(x0/GCH); cx <= Math.floor((x0 + w)/GCH); cx++) for (let cy = Math.floor(y0/GCH); cy <= Math.floor((y0 + h)/GCH); cy++)
+    g.drawImage(groundChunk(S, G.map, cx, cy), cx*GCH - x0, cy*GCH - y0);
+  if (G.map === 'marais'){ g.fillStyle = 'rgba(10,26,26,.35)'; g.fillRect(0, 0, w, h); }          // boue mouillée, un peu plus sombre
+  // masque : opaque au ras du sol, s'efface vers le haut et sur les côtés (bord irrégulier pour ne pas faire « bande »)
+  g.globalCompositeOperation = 'destination-in';
+  const m = document.createElement('canvas'); m.width = c.width; m.height = c.height; const mg = m.getContext('2d'); mg.scale(d, d);
+  const vg = mg.createLinearGradient(0, 0, 0, up); vg.addColorStop(0, 'rgba(0,0,0,0)'); vg.addColorStop(0.75, 'rgba(0,0,0,.85)'); vg.addColorStop(1, 'rgba(0,0,0,1)');
+  mg.fillStyle = vg; mg.fillRect(0, 0, w, up); mg.fillStyle = '#000'; mg.fillRect(0, up, w, down);
+  mg.globalCompositeOperation = 'destination-in';
+  const hg = mg.createLinearGradient(0, 0, w, 0); hg.addColorStop(0, 'rgba(0,0,0,0)'); hg.addColorStop(0.2, '#000'); hg.addColorStop(0.8, '#000'); hg.addColorStop(1, 'rgba(0,0,0,0)');
+  mg.fillStyle = hg; mg.fillRect(0, 0, w, h);
+  mg.globalCompositeOperation = 'destination-out';                     // dentelures : quelques mottes plus hautes, d'autres plus basses
+  for (let i = 0; i < 9; i++){ const xx = hash(i + wx*0.01, wy*0.01)*w, rr = 3 + hash(wx*0.02, i)*5; mg.globalAlpha = 0.6; mg.beginPath(); mg.ellipse(xx, up*0.35, rr*1.6, rr, 0, 0, TAU); mg.fill(); }
+  g.drawImage(m, 0, 0, w, h);
+  L = {c, w, h, up}; LIP_CACHE.set(key, L); if (LIP_CACHE.size > 400) LIP_CACHE.delete(LIP_CACHE.keys().next().value);
+  return L;
+}
+function drawSink(id, wx, wy, sx, sy, half, depth){
+  const L = sinkLip(id, wx, wy, half, depth); if (!L) return;
+  ctx.drawImage(L.c, sx - L.w/2, sy - L.up, L.w, L.h);
+}
 
 /* =====================================================================
    LIEUX : les bâtiments ne sont plus semés au hasard. Ils forment des lieux composés
@@ -4200,7 +4238,7 @@ loadArtManifest();
    (dalles, terre battue, gravier), avec les arbres et les herbes dégagés autour.
    Un lieu au plus par case de 1500 px, jamais sur les deux chemins ni près du départ.
    ===================================================================== */
-const SC = 1500;
+const SC = 2400;
 // chaque élément : [image, décalage x, décalage y] ; r = rayon du lieu ; core/edge = dalles du centre et du pourtour
 const SCENES = {
   foret:[
@@ -4250,6 +4288,20 @@ const VILLAGES = {
     doors:[{dx:-40, dy:-85, room:'chapelle'}, {dx:-370, dy:62, room:'caveau'}],
     core:['cemetery_tile_flag', 'cemetery_tile_flagmoss'], edge:['cemetery_tile_gravel', 'cemetery_tile_leaves', 'cemetery_tile_drygrass']}
 };
+/* échelle humaine : les bâtiments ont été agrandis ×1,7 ; toute la disposition des lieux l'est d'autant
+   (positions, rayon, lumières, portes), les petits objets gardent leur taille */
+const LAYOUT = 1.7;
+function scaleScene(sc){
+  if (sc._scaled) return; sc._scaled = true;
+  const P = a => { a[1] *= LAYOUT; a[2] *= LAYOUT; }, Q = a => { a[0] *= LAYOUT; a[1] *= LAYOUT; };
+  sc.r *= LAYOUT;
+  for (const k of ['items', 'deco', 'decals']) (sc[k] || []).forEach(P);
+  for (const k of ['fires', 'smoke', 'camps']) (sc[k] || []).forEach(Q);
+  for (const L of (sc.lights || (sc.light ? [sc.light] : []))){ Q(L); L[2] *= 1.3; }
+  for (const d of (sc.doors || [])){ d.dx *= LAYOUT; d.dy *= LAYOUT; }
+}
+for (const z in SCENES) SCENES[z].forEach(scaleScene);
+for (const z in VILLAGES) scaleScene(VILLAGES[z]);
 const SITE_CACHE = new Map();
 function siteAt(ci, cj, map){
   const key = map + ':' + ci + ',' + cj;
@@ -4317,7 +4369,7 @@ const FOOT = {b_hutte:[92, 46, -48], b_tour:[78, 40, -44], b_puits:[44, 24, -26]
   v_potager:0, v_passerelle:0, v_tombe_fraiche:[38, 16, -12], v_feu:[30, 14, -8], v_reverbere:[7, 5, -4], v_lanterne_perche:[7, 5, -4], v_poteau_lanterne:[9, 6, -4],
   b_grille_parts:[[-105, 62, 12, -14], [105, 62, 12, -14]]};   // la grille a une porte au milieu : on passe
 function footOf(id){
-  if (id in FOOT) return FOOT[id];
+  if (id in FOOT){ const f = FOOT[id]; return f && id.startsWith('b_') ? [f[0]*1.7, f[1]*1.7, f[2]*1.7] : f; }
   const a = ASSET_IMG[id]; if (!a) return 0;
   const rx = a.w*0.3; return [rx, rx*0.45, -rx*0.35];                      // ruines et statues : empreinte proportionnelle
 }
@@ -4327,13 +4379,13 @@ function obstacleCell(cx, cy){
   if (L) return L;
   L = []; const x0 = cx*OB_CELL, y0 = cy*OB_CELL;
   const push = (id, x, y) => { if (x < x0 || x >= x0 + OB_CELL || y < y0 || y >= y0 + OB_CELL) return;
-    if (id === 'b_grille'){ for (const [dx, rx, ry, dy] of FOOT.b_grille_parts) L.push({x:x + dx, y:y + dy, rx, ry}); return; }
+    if (id === 'b_grille'){ for (const [dx, rx, ry, dy] of FOOT.b_grille_parts) L.push({x:x + dx*1.7, y:y + dy*1.7, rx:rx*1.7, ry:ry*1.7}); return; }
     const f = footOf(id); if (f) L.push({x, y:y + f[2], rx:f[0], ry:f[1]}); };
   for (let ci = Math.floor(x0/SC) - 1; ci <= Math.floor(x0/SC) + 1; ci++) for (let cj = Math.floor(y0/SC) - 1; cj <= Math.floor(y0/SC) + 1; cj++){
     const s = siteAt(ci, cj, G.map); if (!s) continue;
     for (const [id, dx, dy] of s.sc.items) push(id, s.x + dx, s.y + dy);
   }
-  push('b_phare_depart', 0, -TH*1.6);
+  push('b_phare_depart', 0, -TH*2.8);
   const RIDS = (LANDMARKS[G.map] || []);                                     // ruines isolées : même tirage que l'affichage
   if (RIDS.length){
     const u0 = Math.floor(2*y0/TH) - 1, u1 = Math.ceil(2*(y0 + OB_CELL)/TH) + 1, v0 = Math.floor(2*x0/TW) - 1, v1 = Math.ceil(2*(x0 + OB_CELL)/TW) + 1;
