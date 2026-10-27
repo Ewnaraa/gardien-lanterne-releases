@@ -401,6 +401,40 @@ td .w svg{width:16px;height:16px;color:var(--amber);flex:none}
   .mitem{padding-block:clamp(2px,.7vh,7px)}
   .mitem span{font-size:clamp(22px,min(3vw,4.4vh),34px)}
 }
+
+/* ===== Échoppe : le personnage en grand, ses statistiques, les améliorations ===== */
+.shophead{display:flex;justify-content:space-between;align-items:end;gap:16px}
+.shopbody{display:grid;grid-template-columns:minmax(240px,27%) minmax(210px,20%) 1fr;gap:clamp(12px,1.6vw,22px);min-height:0}
+.showcase{position:relative;display:grid;grid-template-rows:auto 1fr auto auto;gap:6px;background:radial-gradient(ellipse at 50% 62%,rgba(242,184,75,.10),transparent 60%),linear-gradient(180deg,#0e1210,#070908);border:1px solid var(--line-soft);border-radius:4px;padding:10px;min-height:0}
+#scCanvas{width:100%;height:100%;min-height:0;max-height:52vh;object-fit:contain;cursor:grab;touch-action:none}
+#scCanvas:active{cursor:grabbing}
+.scsel{display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:8px}
+.scname{text-align:center}.scname b{display:block;font-family:var(--display);font-size:22px;color:var(--amber)}.scname small{color:var(--mute);font-size:13px}
+.scarrow{background:var(--panel);border:1px solid var(--line-soft);color:var(--bone);border-radius:3px;padding:6px 10px;font-size:20px;cursor:pointer;display:flex;gap:6px;align-items:center}
+.scarrow:hover{border-color:var(--amber);color:var(--amber)}
+.scarrow kbd{font-size:11px}
+.scnote{font-size:13px;color:var(--mute);text-align:center;min-height:1em}
+.schint{text-align:center;color:rgba(236,228,207,.35);font-size:12px}
+.scstats{display:grid;align-content:start;gap:8px}
+#scStats{display:grid;gap:2px}
+.strow{display:flex;justify-content:space-between;gap:8px;padding:5px 8px;border-bottom:1px solid rgba(236,228,207,.06);font-size:14px}
+.strow span{color:var(--mute)}.strow b{font-variant-numeric:tabular-nums}
+.strow b em{font-style:normal;color:#9fd88a;margin-left:6px}
+.scshop{display:grid;align-content:start;gap:8px;min-height:0}
+#shopGrid{grid-template-columns:repeat(4,minmax(0,1fr))!important;gap:8px}
+#shopGrid .pick b{font-size:15px}
+#shopGrid .pick{padding:8px 10px;gap:4px}
+#shopGrid .pick small{font-size:12.5px}
+@media (max-width:899px){.shopbody{grid-template-columns:1fr}#scCanvas{max-height:36vh}#shopGrid{grid-template-columns:repeat(2,minmax(0,1fr))!important}}
+/* préparation de la veillée : vraies images des lieux et portraits */
+.pick .mapimg{display:block;height:clamp(36px,6vh,96px);border-radius:2px;background:center/cover no-repeat;border:1px solid rgba(0,0,0,.6);filter:saturate(.95)}
+.pick.locked .mapimg{filter:grayscale(.8) brightness(.5)}
+.pick .portrait{display:block;height:clamp(38px,6.5vh,120px);border-radius:2px;background:#0b0e0c center 18%/cover no-repeat;border:1px solid rgba(0,0,0,.6);position:relative;overflow:hidden}
+.pick .portrait.ph{display:grid;place-items:center;color:rgba(236,228,207,.5);font-size:11px;letter-spacing:.08em;text-transform:uppercase}
+.pick .portrait.ph svg{width:34px;height:34px;opacity:.75}
+.pick .portrait.ph span{position:absolute;bottom:4px;left:0;right:0;text-align:center}
+.pick.locked .portrait{filter:grayscale(.7) brightness(.55)}
+@media (min-width:900px) and (max-height:760px){#mapGrid .pick > small{display:none}#chars .card{gap:5px}#chars .pick{gap:2px}}
 </style>
 
 <canvas id="c" aria-label="Zone de jeu"></canvas>
@@ -493,11 +527,18 @@ td .w svg{width:16px;height:16px;color:var(--amber);flex:none}
 </div>
 
 <div class="overlay" id="shop" hidden>
-  <div class="card wide">
-    <div class="eyebrow">Améliorations permanentes</div>
-    <h2>L’échoppe du charbonnier</h2>
-    <div class="meta" id="shopBal"></div>
-    <div class="grid" id="shopGrid"></div>
+  <div class="card wide shopcard">
+    <div class="shophead"><div><div class="eyebrow">Améliorations permanentes</div><h2>L’échoppe du charbonnier</h2></div><div class="meta" id="shopBal"></div></div>
+    <div class="shopbody">
+      <section class="showcase" aria-label="Personnage">
+        <div class="scsel"><button type="button" class="scarrow" id="scPrev" aria-label="Personnage précédent"><kbd>Q</kbd>‹</button><div class="scname"><b id="scName"></b><small id="scSpell"></small></div><button type="button" class="scarrow" id="scNext" aria-label="Personnage suivant">›<kbd>E</kbd></button></div>
+        <canvas id="scCanvas" width="420" height="520"></canvas>
+        <div class="scnote" id="scNote"></div>
+        <small class="schint">Fais glisser pour le tourner</small>
+      </section>
+      <section class="scstats" aria-label="Statistiques"><div class="sect">Statistiques</div><div id="scStats"></div><small class="mute" id="scBonus"></small></section>
+      <section class="scshop" aria-label="Améliorations"><div class="sect">Améliorations</div><div class="grid" id="shopGrid"></div></section>
+    </div>
     <div class="btns"><button class="btn ghost" data-back>Retour</button></div>
   </div>
 </div>
@@ -5345,6 +5386,8 @@ $('#resetBtn').addEventListener('click', () => {
   try { localStorage.removeItem(SAVE_KEY); localStorage.removeItem('gardien-best'); } catch(_) {}
   SAVE = loadSave(); selChar = 'gardien'; selMap = 'foret'; persist(); applyVolume(); goMenu();
 });
+const MAP_ART = id => { const M = ASSET_DATA.manifest; return M && M.maps && M.maps[id] ? ASSET_ROOT + M.maps[id] : null; };
+const PORTRAIT = id => { const M = ASSET_DATA.manifest; return M && M.portraits && M.portraits[id] ? ASSET_ROOT + M.portraits[id] : null; };
 function goChars(){
   state = 'chars'; show('chars');
   $('#charBal').innerHTML = `<span>Braises : <b class="g">${num(SAVE.braises)}</b></span>`;
@@ -5352,7 +5395,7 @@ function goChars(){
     const open = !!SAVE.maps[id], req = m.req ? achDef(m.req) : null;
     const relic = SAVE.relics[id] ? `Relique trouvée : ${m.relic.name}` : 'Une relique se cache loin du départ';
     return `<button type="button" class="pick ${open?'':'locked'}" data-map="${id}" aria-pressed="${id===selMap}">
-      <span class="band" style="background:linear-gradient(120deg,${m.band[0]},${m.band[1]})"></span>
+      ${MAP_ART(id) ? `<span class="mapimg" style="background-image:url(${MAP_ART(id)})"></span>` : `<span class="band" style="background:linear-gradient(120deg,${m.band[0]},${m.band[1]})"></span>`}
       <b>${m.name}</b><small>${m.desc}</small>
       ${open ? `<span class="diff">Ombres ×${dec(m.hp)} PV · braises ×${dec(m.gold)}</span><span class="relic">${relic}</span>` : `<span class="cost">Verrouillé · ${req.cond}</span>`}
     </button>`;
@@ -5361,7 +5404,8 @@ function goChars(){
     const owned = !!SAVE.chars[id];
     const lock = owned ? '' : c.req ? `<span class="cost">Succès : ${achDef(c.req).name}</span>` : `<span class="cost">Débloquer : ${num(c.cost)} braises</span>`;
     return `<button type="button" class="pick ${owned?'':'locked'}" data-char="${id}" aria-pressed="${id===selChar}">
-      <span class="head"><span class="swatch" style="background:${c.cloak}"></span><b>${c.name}</b></span>
+      ${PORTRAIT(id) ? `<span class="portrait" style="background-image:url(${PORTRAIT(id)})"></span>` : `<span class="portrait ph" style="background:linear-gradient(160deg,${c.cloak},#0b0e0c 75%)">${icon(c.w)}<span>Portrait à venir</span></span>`}
+      <span class="head"><b>${c.name}</b></span>
       <span class="start">${icon(c.w)} ${WD[c.w].name}</span><small>${c.bonus}</small>${lock}
     </button>`;
   }).join('');
@@ -5398,17 +5442,86 @@ $('#goBtn').addEventListener('click', () => {
 });
 $('#hardBox').addEventListener('change', e => { SAVE.hard = e.target.checked ? 1 : 0; persist(); });
 
+/* ---------- Échoppe : le personnage en grand (modèle 3D qui tourne), ses statistiques, les achats ---------- */
+let shopChar = null, SC_RAF = 0, SC_DIR = 0, SC_DRAG = null, SC_PREVIEW = null;
+function charStats(cid, shop){
+  const c = CH[cid].mod, s = shop;
+  return [
+    ['PV max', 100 + (c.maxhp||0) + 10*(s.vitalite||0), v => v],
+    ['Dégâts', 1 + (c.might||0) + 0.05*(s.puissance||0), v => '+' + Math.round((v - 1)*100) + ' %'],
+    ['Armure', (c.armor||0) + (s.armure||0), v => v],
+    ['Régénération', (c.regen||0) + 0.2*(s.recup||0), v => dec(v) + ' PV/s'],
+    ['Vitesse', 1 + (c.speed||0) + 0.04*(s.celerite||0), v => Math.round(v*100) + ' %'],
+    ['Zone des sorts', 1 + (c.area||0) + 0.05*(s.rayon||0), v => Math.round(v*100) + ' %'],
+    ['Recharge', 1 + (c.cd||0) - 0.03*(s.hate||0), v => Math.round(v*100) + ' %'],
+    ['Critique', 0.03 + (c.crit||0), v => Math.round(v*100) + ' %'],
+    ['Attraction', 1 + 0.2*(s.attraction||0), v => Math.round(v*100) + ' %'],
+    ['Expérience', 1 + (c.xp||0) + 0.05*(s.croissance||0), v => '+' + Math.round((v - 1)*100) + ' %'],
+    ['Braises', 1 + 0.15*(s.fortune||0), v => '+' + Math.round((v - 1)*100) + ' %'],
+    ['Chance', (c.luck||0) + 0.05*(s.chance||0), v => '+' + Math.round(v*100) + ' %'],
+    ['Relances / bannis.', (c.rerolls||0) + (s.relance||0) + 1000*((c.banish||0) + (s.exil||0)), v => (v % 1000) + ' / ' + Math.floor(v/1000)],
+    ['Renaissances', (c.revive||0) + (s.renaissance||0), v => v]
+  ];
+}
+function renderShopStats(){
+  const cur = charStats(shopChar, SAVE.shop), pre = SC_PREVIEW ? charStats(shopChar, Object.assign({}, SAVE.shop, {[SC_PREVIEW]:(SAVE.shop[SC_PREVIEW]||0) + 1})) : null;
+  $('#scStats').innerHTML = cur.map(([n, v, f], i) => { const d = pre && Math.abs(pre[i][1] - v) > 1e-9; return `<div class="strow"><span>${n}</span><b>${f(v)}${d ? `<em>→ ${f(pre[i][1])}</em>` : ''}</b></div>`; }).join('');
+  $('#scBonus').textContent = 'Bonus du personnage : ' + CH[shopChar].bonus;
+}
+function renderShowcase(){
+  const c = CH[shopChar], owned = !!SAVE.chars[shopChar];
+  $('#scName').textContent = c.name; $('#scSpell').textContent = 'Sort de départ : ' + WD[c.w].name + (owned ? '' : ' · verrouillé');
+  $('#scNote').textContent = shopChar === 'gardien' ? '' : 'Modèle 3D à venir : seul le Gardien a son modèle pour l’instant';
+  renderShopStats();
+}
+function scDraw(now){
+  if (state !== 'shop'){ SC_RAF = 0; return; }
+  SC_RAF = requestAnimationFrame(scDraw);
+  const cv = $('#scCanvas'), g = cv.getContext('2d'), r = cv.getBoundingClientRect(), d = Math.min(2, DPR());
+  const w = Math.max(1, Math.round(r.width*d)), h = Math.max(1, Math.round(r.height*d)); if (cv.width !== w || cv.height !== h){ cv.width = w; cv.height = h; }
+  g.clearRect(0, 0, w, h);
+  const C = CHARS.guardian, sh = C && C.sheet, cx = w/2, fy = h*0.9;
+  g.fillStyle = 'rgba(0,0,0,.55)'; g.beginPath(); g.ellipse(cx, fy, w*0.2, w*0.055, 0, 0, TAU); g.fill();
+  if (shopChar !== 'gardien' || !C || C.status !== 'ready' || !sh){
+    // pas encore de modèle : silhouette honnête, couleur de la cape et sort de départ
+    const c = CH[shopChar]; g.fillStyle = c.cloak; g.globalAlpha = 0.35; g.beginPath(); g.ellipse(cx, fy - h*0.33, w*0.16, h*0.33, 0, 0, TAU); g.fill(); g.globalAlpha = 1;
+    g.fillStyle = 'rgba(236,228,207,.45)'; g.font = `600 ${Math.round(14*d)}px "Barlow Semi Condensed", sans-serif`; g.textAlign = 'center'; g.fillText('Modèle à venir', cx, fy - h*0.33); return;
+  }
+  if (!SC_DRAG) SC_DIR = (SC_DIR + 1/60*0.5) % 16;                     // tourne lentement : un tour en ~30 s, ou à la main
+  const L = sh.dirOrder.length, DIRS = ['s','sse','se','ese','e','ene','ne','nne','n','nnw','nw','wnw','w','wsw','sw','ssw'];
+  const dname = DIRS[Math.floor(((SC_DIR % 16) + 16) % 16)], row = Math.max(0, sh.dirOrder.indexOf(L === 16 ? dname : dname.length === 3 ? dname.slice(1) : dname));
+  const a = sh.anims.idle, fi = Math.floor(now/1000*(a.fps || 4)) % a.frames;
+  const k = Math.min(h*0.62/(sh.anchor[1]*0.62), w*0.9/sh.frameW);   // tient en entier dans la vitrine                               // le Gardien occupe les trois quarts de la hauteur
+  const dw = sh.frameW*k, dh = sh.frameH*k;
+  g.imageSmoothingQuality = 'high'; g.filter = 'brightness(1.45) contrast(1.06)';
+  g.drawImage(C.sheetImg, (a.col + fi)*sh.frameW, row*sh.frameH, sh.frameW, sh.frameH, cx - sh.anchor[0]*k, fy - sh.anchor[1]*k, dw, dh);
+  g.filter = 'none';
+  if (sh.glass){ const gp = sh.glass.idle[row][fi], lx = cx + (gp[0] - sh.anchor[0])*k, ly = fy + (gp[1] - sh.anchor[1])*k, hid = sh.glassHidden && sh.glassHidden.idle && sh.glassHidden.idle[row][fi];
+    g.globalCompositeOperation = 'lighter'; const R = 90*d*(hid ? 0.5 : 1), gr = g.createRadialGradient(lx, ly, 0, lx, ly, R); gr.addColorStop(0, 'rgba(255,190,110,.45)'); gr.addColorStop(1, 'rgba(255,190,110,0)'); g.fillStyle = gr; g.fillRect(lx - R, ly - R, R*2, R*2); g.globalCompositeOperation = 'source-over'; }
+}
 function goShop(){
   state = 'shop'; show('shop');
+  if (!shopChar) shopChar = selChar || 'gardien';
   $('#shopBal').innerHTML = `<span>Braises : <b class="g">${num(SAVE.braises)}</b></span>`;
   $('#shopGrid').innerHTML = Object.entries(SH).map(([id,s]) => {
     const lv = SAVE.shop[id]||0, maxed = lv >= s.max, cost = shopCost(id);
     const pips = Array.from({length:s.max}, (_,i) => `<i class="${i<lv?'on':''}"></i>`).join('');
-    return `<div class="pick" style="cursor:default"><b>${s.name}</b><small>${s.txt}</small><span class="pips">${pips}</span>
+    return `<div class="pick" style="cursor:default" data-up="${id}"><b>${s.name}</b><small>${s.txt}</small><span class="pips">${pips}</span>
       <button type="button" class="btn small ${maxed?'ghost':''}" data-buy="${id}" ${maxed || SAVE.braises < cost ? 'disabled' : ''}>${maxed ? 'Maximum atteint' : `Acheter · ${num(cost)}`}</button></div>`;
   }).join('');
+  renderShowcase();
+  if (!SC_RAF) SC_RAF = requestAnimationFrame(scDraw);
   focusFirst('shop');
 }
+function scCycle(dir){ const ids = Object.keys(CH); shopChar = ids[(ids.indexOf(shopChar) + dir + ids.length) % ids.length]; SFX.tick && SFX.tick(); renderShowcase(); }
+$('#scPrev').addEventListener('click', () => scCycle(-1));
+$('#scNext').addEventListener('click', () => scCycle(1));
+addEventListener('keydown', e => { if (state !== 'shop') return; const k = e.key.toLowerCase(); if (k === 'q' || k === 'a') scCycle(-1); else if (k === 'e') scCycle(1); });
+$('#scCanvas').addEventListener('pointerdown', e => { SC_DRAG = {x:e.clientX, d:SC_DIR}; e.target.setPointerCapture(e.pointerId); });
+$('#scCanvas').addEventListener('pointermove', e => { if (SC_DRAG) SC_DIR = SC_DRAG.d - (e.clientX - SC_DRAG.x)/22; });
+$('#scCanvas').addEventListener('pointerup', () => { SC_DRAG = null; });
+$('#shopGrid').addEventListener('pointerover', e => { const p = e.target.closest('[data-up]'); const id = p ? p.dataset.up : null; if (id !== SC_PREVIEW){ SC_PREVIEW = id; renderShopStats(); } });
+$('#shopGrid').addEventListener('pointerleave', () => { SC_PREVIEW = null; renderShopStats(); });
 $('#shopGrid').addEventListener('click', e => {
   const b = e.target.closest('[data-buy]'); if (!b) return;
   const id = b.dataset.buy, cost = shopCost(id);

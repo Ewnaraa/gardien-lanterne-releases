@@ -4650,6 +4650,14 @@ registerAssetData('manifest', {
   "soleil": "ui/arcana/arc_soleil.webp",
   "vagabond": "ui/arcana/arc_vagabond.webp"
  },
+ "maps": {
+  "cimetiere": "ui/maps/map_cimetiere.webp",
+  "foret": "ui/maps/map_foret.webp",
+  "marais": "ui/maps/map_marais.webp"
+ },
+ "portraits": {
+  "gardien": "ui/portraits/p_gardien.webp"
+ },
  "fx": {
   "amb_brasero": {
    "file": "fx/amb_brasero.webp",
