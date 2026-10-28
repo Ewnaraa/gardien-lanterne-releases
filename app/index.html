@@ -1130,7 +1130,7 @@ const BOSS_LINES = {
 };
 const TIPS = [
   'Brise les braseros : ils cachent soins, aimants et trésors.',
-  'Les élites portent des coffres. C’est là que les sorts évoluent.',
+  'Sort et talent associé au max : un autel de braises s’allume pour le faire évoluer.',
   'Un sort au niveau VII et son talent associé… garde ça en tête.',
   'Les cartes qui brillent sont plus rares, et bien plus fortes.',
   'Ta lanterne grandit avec toi. Plus tu montes, plus tu vois loin.',
@@ -1659,6 +1659,27 @@ function relicTrial(dt){
   if (r.phase === 'guard' && (!r.guard || r.guard.dead || !G.enemies.includes(r.guard))){
     r.phase = 'free'; r.free = true; toast('Le sceau est brisé : prends la relique'); SFX.rare && SFX.rare(); G.flash = 0.3;
   }
+}
+/* AUTEL DE BRAISES : dès qu'un sort et son talent sont au max, un autel s'allume non loin.
+   Rester dans sa flamme quelques secondes forge l'évolution (un coffre la fait aussi, s'il vient avant). */
+const ALTAR_R = 80, ALTAR_NEED = 4;
+function altarStep(dt){
+  const p = G.p, ready = G.weapons.some(canEvolve);
+  if (!G.altar){
+    if (G.altarCd > 0){ G.altarCd -= dt; return; }
+    if (!ready || G.room) return;
+    const a = Math.random()*TAU, o = {x:p.x + Math.cos(a)*560, y:p.y + Math.sin(a)*560*0.62};
+    collideWorld(o, 70);
+    G.altar = {x:o.x, y:o.y, t:0};
+    toast('Un autel de braises s’allume : ton sort peut évoluer'); SFX.rare && SFX.rare();
+    if (!SAVE.altarSeen){ SAVE.altarSeen = 1; persist(); dialog('Ysolde', 'Ton sort et son talent sont à leur sommet. Va à l’autel de braises et reste dans sa flamme : elle forgera ton arme.', 5); }
+    return;
+  }
+  if (!ready){ G.altar = null; return; }                                  // un coffre a déjà fait l'évolution
+  const A = G.altar, d = Math.hypot(A.x - p.x, (A.y - p.y)/0.62);
+  A.t = d < ALTAR_R ? A.t + dt : Math.max(0, A.t - dt*0.7);
+  if (d < ALTAR_R && Math.random() < dt*14) burst(A.x + rnd(-30, 30), A.y + rnd(-14, 8), '#ff9a4a', 1, 0.9);
+  if (A.t >= ALTAR_NEED){ G.altar = null; G.altarCd = 2; openAltar(A); }
 }
 function runEvent(ev){
   const minute = Math.min(9, Math.floor(G.t/60)), m = MAPS[G.map];
@@ -2337,6 +2358,7 @@ function update(dt){
     else if (md > 90) m.inside = false;
   }
   if (G.relic) relicTrial(dt);
+  altarStep(dt); if (state !== 'play') return;
   if (G.relic && G.relic.free && (G.relic.x-p.x)**2 + (G.relic.y-p.y)**2 < (p.r+18)**2){
     const r = G.relic; G.relic = null; G.relicFound = true;
     unlockAch('relic_' + G.map); storyUnlock('relic_' + G.map); computeStats();
@@ -2662,6 +2684,7 @@ function draw(now){
   DL.push({y:pFoot, k:3});
   if (G.ally && G.ally.p) DL.push({y:G.ally.p.y + 14, k:6});
   for (const r of ruinsInView(ox, oy)) DL.push({y:r.y, k:4, r});
+  if (G.altar) DL.push({y:G.altar.y, k:4, r:{altar:true, x:G.altar.x, y:G.altar.y}});
   DL.sort((a, b) => a.y - b.y || a.k - b.k);
   pm('sol'); drawBossAfterimages(X, Y);
   for (const it of DL){
@@ -2678,6 +2701,15 @@ function draw(now){
       const c = it.e, x = X(c.x), y = Y(c.y), k = c.dt/0.4; ctx.save(); ctx.globalAlpha = Math.max(0, 1 - k);
       ctx.translate(x, y - k*16); ctx.scale(1 + k*0.6, 1 - k*0.55); ctx.translate(-x, -y);
       const fl = c.flash; c.flash = 0.001; drawEnemyBody(c, x, y); c.flash = fl; ctx.restore();
+    } else if (it.k === 4 && it.r.altar){                            // autel de braises, à sa place dans la profondeur
+      const x = X(it.r.x), y = Y(it.r.y);
+      if (vis(x, y, 160)){
+        const pu = 0.6 + 0.4*Math.sin(now/220), gg = ctx.createLinearGradient(x, y - 190, x, y);   // colonne de braises qui se voit de loin
+        gg.addColorStop(0, 'rgba(255,140,60,0)'); gg.addColorStop(1, `rgba(255,150,70,${0.22 + 0.12*pu + 0.3*G.altar.t/ALTAR_NEED})`);
+        ctx.save(); ctx.globalCompositeOperation = 'lighter'; ctx.fillStyle = gg; ctx.beginPath(); ctx.ellipse(x, y - 95, 22 + 6*pu, 100, 0, 0, TAU); ctx.fill(); ctx.restore();
+        groundContact(x, y, 52, 0.95);
+        ctx.save(); ctx.translate(x, y); ctx.scale(1.7, 1.7); ctx.translate(-x, -y); drawBrazier(x, y, now); siteFlame(x, y, now); if (G.altar.t > 0) siteFlame(x, y - 5, now + 333); ctx.restore();
+      }
     } else if (it.k === 4 && it.r.camp){                             // cercle de pierres d'un village, avec son feu
       const x = X(it.r.x), y = Y(it.r.y); groundContact(x, y, 30, 0.8); drawEnt('v_feu', x, y); siteFlame(x, y - 4, now);
       decoLights.push({x, y:y - 14, r:80, i:0.9, col:'255,150,70', hole:true});
@@ -2852,6 +2884,17 @@ function draw(now){
   drawBossFxLight(X, Y, now);
   drawLanternFx(X, Y, now);
   if (G.ally && G.ally.p && !G.ally.p.down) coopSwap(() => drawLanternFx(X, Y, now), true);   // halo de la lanterne du compagnon
+  if (G.altar){                                                         // autel de braises : cercle de flamme et forge
+    const A = G.altar, x = X(A.x), y = Y(A.y), k = A.t/ALTAR_NEED, pu = 0.5 + 0.5*Math.sin(now/170);
+    if (vis(x, y, ALTAR_R + 40)){
+      ctx.save(); ctx.strokeStyle = `rgba(255,150,70,${0.35 + 0.3*pu})`; ctx.lineWidth = 2; ctx.setLineDash([7, 6]);
+      ctx.beginPath(); ctx.ellipse(x, y, ALTAR_R, ALTAR_R*0.62, 0, 0, TAU); ctx.stroke(); ctx.setLineDash([]);
+      if (k > 0){ ctx.strokeStyle = 'rgba(255,190,110,.95)'; ctx.lineWidth = 5; ctx.beginPath(); ctx.ellipse(x, y, ALTAR_R, ALTAR_R*0.62, 0, -Math.PI/2, -Math.PI/2 + TAU*k); ctx.stroke(); }
+      const lab = k > 0 ? 'Forge ' + Math.floor(k*100) + ' %' : 'Autel de braises';
+      ctx.font = '700 15px "Barlow Semi Condensed", sans-serif'; ctx.textAlign = 'center'; ctx.fillStyle = 'rgba(0,0,0,.6)'; ctx.fillText(lab, x + 1, y - ALTAR_R*0.62 - 39);
+      ctx.fillStyle = '#ffd09a'; ctx.fillText(lab, x, y - ALTAR_R*0.62 - 40); ctx.restore();
+    }
+  }
   if (G.relic && G.relic.phase === 'ritual'){                           // cercle du rituel et avancement
     const r = G.relic, x = X(r.x), y = Y(r.y), k = r.t/RELIC_NEED, pu = 0.5 + 0.5*Math.sin(now/200);
     ctx.save(); ctx.strokeStyle = `rgba(233,216,166,${0.35 + 0.25*pu})`; ctx.lineWidth = 2; ctx.setLineDash([10, 8]);
@@ -2964,6 +3007,7 @@ function draw(now){
   for (const e of G.enemies) if (e.boss || e.elite) edgeArrow(e.x, e.y, e.boss ? '#ff5a4a' : '#e8a84b');
   if (G.relic && Math.hypot(G.relic.x-p.x, G.relic.y-p.y) < 1500) edgeArrow(G.relic.x, G.relic.y, '#e9d8a6');
   if (G.merchant) edgeArrow(G.merchant.x, G.merchant.y, '#8fe0a0');
+  if (G.altar) edgeArrow(G.altar.x, G.altar.y, '#ff8c3c');
 
   pm('divers'); drawWeather(now); pm('météo');
   if (GFX('bloom')) gradeBloom(); pm('halo');
@@ -3375,6 +3419,7 @@ function lightPass(X, Y, lx, ly, L, dk, now){
     if (f.k === 'fx_explosion' || f.k === 'fx_embrasement' || f.k === 'fx_niveau'){ const k = f.age/f.dur; add(X(f.follow ? G.p.x : f.x), Y(f.follow ? G.p.y : f.y), f.w*0.7, 0.8*(1 - k), f.k === 'fx_niveau' ? '255,230,160' : '255,140,60'); }
   }
   if (G.relic) add(X(G.relic.x), Y(G.relic.y), 140, 0.75);
+  if (G.altar) add(X(G.altar.x), Y(G.altar.y) - 14, 190 + 60*G.altar.t/ALTAR_NEED, 0.95, '255,150,70');
   for (const it of G.items) if (it.type === 'coffre') add(X(it.x), Y(it.y), 80, 0.55);
   for (const l of decoLights) add(l.x, l.y, l.r, l.i, l.col);
   for (const e of G.enemies){ const L2 = ELIGHT[e.type]; if (L2) add(X(e.x), Y(e.y) - (e.boss ? e.r*0.6 : 0), L2[0], L2[1]); }
@@ -5796,7 +5841,7 @@ function coopSnapshot(){
     tx:G.texts.filter(near).slice(-30).map(t => [R0(t.x), R0(t.y), t.v, R1(t.life), t.col || 0, t.big ? 1 : 0]),
     de:!slow ? null : G.decals.filter(near).slice(-50).flatMap(d => [R0(d.x), R0(d.y), R0(d.r), R0(d.life), R0(d.max), R0(d.seed), d.kind === 'scorch' ? 1 : 0]),
     gv:G.graves.map(g => pickF(g, ['x', 'y', 't'])), bm:(G.bombs || []).map(b => pickF(b, ['x', 'y', 'R', 't', 'max'])),
-    bfx:G.bfx || null, mer:G.merchant ? pickF(G.merchant, ['x', 'y', 'life']) : null, rel:G.relic ? pickF(G.relic, ['x', 'y', 'name', 'phase', 't', 'free']) : null,
+    bfx:G.bfx || null, mer:G.merchant ? pickF(G.merchant, ['x', 'y', 'life']) : null, rel:G.relic ? pickF(G.relic, ['x', 'y', 'name', 'phase', 't', 'free']) : null, alt:G.altar ? pickF(G.altar, ['x', 'y', 't']) : null,
     brk:[...G.broken].slice(-200), room:G.room ? {id:G.room.d.room, ex:R1(G.room.exitT || 0)} : null,
     vl:G.vlit ? [...G.vlit].map(([k, s]) => [k, [...s]]) : [], vs:G.vsafe ? [...G.vsafe] : [], seen:G.sitesSeen ? [...G.sitesSeen] : []};
 }
@@ -5865,7 +5910,7 @@ function guestApply(dt){
   G.fxs = m.fx.map(f => ({k:f[0], x:f[1], y:f[2], w:f[3], age:f[4], dur:f[5], bottom:!!f[6], rot:f[7], a:f[8], f0:f[9]})); G.texts = m.tx.map(t => ({x:t[0], y:t[1], v:t[2], life:t[3], col:t[4] || null, big:!!t[5]}));
   if (m.de){ G.decals = []; } for (let i = 0; m.de && i < m.de.length; i += 7) G.decals.push({x:m.de[i], y:m.de[i+1], r:m.de[i+2], life:m.de[i+3], max:m.de[i+4], seed:m.de[i+5], kind:m.de[i+6] ? 'scorch' : 'ink'}); G.graves = m.gv; G.bombs = m.bm; G.bfx = m.bfx || G.bfx;
   if (m.gm) G.gems = []; for (let i = 0; m.gm && i < m.gm.length; i += 3){ const c = m.gm[i+2]; G.gems.push({x:m.gm[i], y:m.gm[i+1], v:c === 3 ? 10 : c === 2 ? 3 : 1, kind:c === 1 ? 'coin' : 'xp'}); }
-  G.merchant = m.mer ? Object.assign(G.merchant || {}, m.mer) : null; G.relic = m.rel;
+  G.merchant = m.mer ? Object.assign(G.merchant || {}, m.mer) : null; G.relic = m.rel; G.altar = m.alt || null;
   for (const b of m.brk) G.broken.add(b);
   G.room = m.room ? {R:roomDef(m.room.id), d:{room:m.room.id, key:''}, exitT:m.room.ex} : null;
   G.vlit = new Map(m.vl.map(([kk, s]) => [kk, new Set(s)])); G.vsafe = new Set(m.vs); G.sitesSeen = new Set(m.seen);
@@ -6044,6 +6089,8 @@ function drawMini(){
       mctx.fillStyle = '#fff3cf'; mctx.beginPath(); mctx.moveTo(x,y-5); mctx.lineTo(x+4,y); mctx.lineTo(x,y+5); mctx.lineTo(x-4,y); mctx.closePath(); mctx.fill();
     }
   }
+  if (G.altar){ let [x,y] = P2(G.altar.x, G.altar.y); const dd = Math.hypot(x-R,y-R); if (dd > R-8){ x = R + (x-R)/dd*(R-8); y = R + (y-R)/dd*(R-8); }
+    const pu = 0.7 + 0.3*Math.sin(performance.now()/180); mctx.fillStyle = `rgba(255,140,60,${pu})`; mctx.beginPath(); mctx.moveTo(x, y-6); mctx.quadraticCurveTo(x+5, y, x, y+4); mctx.quadraticCurveTo(x-5, y, x, y-6); mctx.fill(); mctx.strokeStyle = '#000'; mctx.stroke(); }
   if (G.merchant){ let [x,y] = P2(G.merchant.x, G.merchant.y); const dd = Math.hypot(x-R,y-R); if (dd > R-8){ x = R + (x-R)/dd*(R-8); y = R + (y-R)/dd*(R-8); } mctx.fillStyle = '#8fe0a0'; mctx.beginPath(); mctx.arc(x,y,3.8,0,TAU); mctx.fill(); mctx.strokeStyle = '#000'; mctx.stroke(); }
   mctx.save(); mctx.translate(R,R); mctx.scale(p.face,1);
   mctx.fillStyle = '#ffd27a'; mctx.beginPath(); mctx.moveTo(6,0); mctx.lineTo(-4,-4.5); mctx.lineTo(-2,0); mctx.lineTo(-4,4.5); mctx.closePath(); mctx.fill();
@@ -6176,20 +6223,45 @@ $('#banishBtn').addEventListener('click', () => { if (!G.banishMode && G.banishe
 $('#skipBtn').addEventListener('click', () => { if (G.guest){ choose({k:'x', id:'repas'}); return; } G.p.hp = Math.min(G.p.max, G.p.hp + 15); afterLevel(); });
 
 /* Coffres */
+function evolveWeapon(w){
+  const old = w.id; w.id = WD[old].evo; w.t = 0;
+  G.acq[w.id] = G.acq[old] != null ? G.acq[old] : G.t; G.dmgBy[w.id] = (G.dmgBy[w.id]||0) + (G.dmgBy[old]||0); delete G.dmgBy[old];
+  const fresh = !SAVE.evos[w.id]; SAVE.evos[w.id] = 1; persist();
+  unlockAch('evo1'); if (Object.keys(SAVE.evos).length >= 4) unlockAch('evo4');
+  return {ico:w.id, name:WD[w.id].name, tag: fresh ? 'Évolution découverte !' : 'Évolution !', txt:WD[w.id].intro, evo:true};
+}
+function openAltar(A){
+  state = 'chest'; joy = null; keys.clear(); SFX.chest(); SFX.rare && SFX.rare();
+  const res = G.weapons.filter(canEvolve).map(evolveWeapon);                  // tous les sorts prêts sont forgés d'un coup
+  G.buildDirty = true; G.flash = 0.4; G.shake = Math.max(G.shake, 0.5);
+  burst(A.x, A.y, '#ff9a4a', 40, 1.6); G.rings.push({x:A.x, y:A.y, R:220, life:0.45, lv:true});
+  query(A.x, A.y, 260, e => { const dx = e.x - A.x, dy = e.y - A.y, d = Math.hypot(dx, dy)||1; e.kx += dx/d*420*e.kb; e.ky += dy/d*420*e.kb; });
+  $('#chestEyebrow').textContent = 'Autel de braises';
+  $('#chestTitle').textContent = res.length > 1 ? 'Deux sorts forgés !' : 'La flamme forge ton sort';
+  $('#chestItems').innerHTML = res.map((r,i) =>
+    `<div class="reveal evo" style="animation-delay:${i*0.25}s"><span class="ico evo">${icon(r.ico)}</span><span class="txt"><span class="tag new">${r.tag}</span><b>${r.name}</b><small>${r.txt}</small></span></div>`).join('');
+  show('chest'); focusFirst('chest'); chestSkip = false; spinReveal();
+}
+function spinReveal(){
+  if (reduce) return;
+  const pool = ALL_W.concat(Object.keys(PD));
+  document.querySelectorAll('#chestItems .reveal').forEach((row, i) => {
+    const ic = row.querySelector('.ico'), fin = ic.innerHTML, txt = row.querySelector('.txt');
+    row.classList.add('spin'); txt.style.visibility = 'hidden';
+    let n = 0; const total = 9 + i*6;
+    const iv = setInterval(() => {
+      if (++n >= total || chestSkip){ clearInterval(iv); ic.innerHTML = fin; row.classList.remove('spin'); row.classList.add('landed'); txt.style.visibility = ''; if (!chestSkip) (row.classList.contains('evo') ? SFX.rare : SFX.pickup)(); return; }
+      ic.innerHTML = icon(pick(pool)); if (n % 2) SFX.tick();
+    }, 70 + i*8);
+  });
+}
 function openChest(big){
   state = 'chest'; joy = null; keys.clear(); SFX.chest();
   SAVE.stats.chests = (SAVE.stats.chests||0) + 1;
   const res = [], count = big ? 3 : (Math.random() < 0.15 + G.st.luck*0.6 ? 3 : 1);
   for (let k=0;k<count;k++){
     const evos = G.weapons.filter(canEvolve);
-    if (evos.length){
-      const w = evos[0], old = w.id; w.id = WD[old].evo; w.t = 0;
-      G.acq[w.id] = G.acq[old] != null ? G.acq[old] : G.t; G.dmgBy[w.id] = (G.dmgBy[w.id]||0) + (G.dmgBy[old]||0); delete G.dmgBy[old];
-      const fresh = !SAVE.evos[w.id]; SAVE.evos[w.id] = 1; persist();
-      unlockAch('evo1'); if (Object.keys(SAVE.evos).length >= 4) unlockAch('evo4');
-      res.push({ico:w.id, name:WD[w.id].name, tag: fresh ? 'Évolution découverte !' : 'Évolution !', txt:WD[w.id].intro, evo:true});
-      continue;
-    }
+    if (evos.length){ res.push(evolveWeapon(evos[0])); continue; }
     const ups = [
       ...G.weapons.filter(w => !WD[w.id].evolved && w.lv < WD[w.id].max).map(o => ({k:'w', o})),
       ...G.passives.filter(q => q.lv < PD[q.id].max).map(o => ({k:'p', o}))
@@ -6213,19 +6285,7 @@ function openChest(big){
     `<div class="reveal ${r.evo?'evo':''}" style="animation-delay:${i*0.25}s"><span class="ico ${r.pas?'pas':''} ${r.evo?'evo':''}">${icon(r.ico)}</span><span class="txt"><span class="tag ${r.evo?'new':''}">${r.tag}</span><b>${r.name}</b><small>${r.txt}</small></span></div>`
   ).join('') + `<p class="mute">+${bonus} braises trouvées dans le coffre.</p>`;
   show('chest'); focusFirst('chest');
-  chestSkip = false;
-  if (!reduce){
-    const pool = ALL_W.concat(Object.keys(PD));
-    document.querySelectorAll('#chestItems .reveal').forEach((row, i) => {
-      const ic = row.querySelector('.ico'), fin = ic.innerHTML, txt = row.querySelector('.txt');
-      row.classList.add('spin'); txt.style.visibility = 'hidden';
-      let n = 0; const total = 9 + i*6;
-      const iv = setInterval(() => {
-        if (++n >= total || chestSkip){ clearInterval(iv); ic.innerHTML = fin; row.classList.remove('spin'); row.classList.add('landed'); txt.style.visibility = ''; if (!chestSkip) (row.classList.contains('evo') ? SFX.rare : SFX.pickup)(); return; }
-        ic.innerHTML = icon(pick(pool)); if (n % 2) SFX.tick();
-      }, 70 + i*8);
-    });
-  }
+  chestSkip = false; spinReveal();
 }
 let chestSkip = false;
 $('#chestBtn').addEventListener('click', () => {
@@ -6311,6 +6371,7 @@ function renderPause(){
   const bt = slot => { const e = (G.events || EVENTS).find(x => x.k === 'boss' && x.slot === slot); return e && G.t < e.t ? 'à ' + fmt(e.t) : ''; };
   row(G.bossKilled.has(m.boss1), 'Vaincre ' + lcFirst(ET[m.boss1].name), bt(1));
   if (LV().boss2) row(G.bossKilled.has(m.boss2), 'Vaincre ' + lcFirst(ET[m.boss2].name), bt(2));
+  if (G.altar) row(false, 'Autel de braises : forger l’évolution', num(Math.hypot(G.altar.x-G.p.x, G.altar.y-G.p.y)/10) + ' m');
   if (G.relicFound) row(true, 'Relique trouvée : ' + m.relic.name);
   else if (SAVE.relics[G.map]) row(true, 'Relique du lieu déjà obtenue');
   else if (G.relic && G.relic.phase === 'ritual') row(false, 'Relique : tenir le cercle', Math.floor(G.relic.t) + ' / ' + RELIC_NEED + ' s');
@@ -6329,7 +6390,7 @@ function renderPause(){
     const d = WD[w.id];
     if (d.evolved){ rows.push(`<div class="eqrow evo"><span class="ico evo">${icon(w.id)}</span><span><b>${d.name}${stars(w.stars)}</b><small>Sort évolué</small></span><b class="lvtag">★</b></div>`); continue; }
     const P = PD[d.pair], pl = pLv(d.pair), wOk = w.lv >= d.max, pOk = pl >= P.max;
-    const evo = wOk && pOk ? `<small class="ready">Évolution prête : ouvre un coffre d’élite</small>`
+    const evo = wOk && pOk ? `<small class="ready">Évolution prête : va à l’autel de braises</small>`
       : `<small>Évolution « ${WD[d.evo].name} » : sort ${wOk ? '✓' : ROMAN[w.lv] + '/' + ROMAN[d.max]} · ${P.name} ${pOk ? '✓' : pl ? ROMAN[pl] + '/' + ROMAN[P.max] : 'à prendre'}</small>`;
     rows.push(`<div class="eqrow"><span class="ico">${icon(w.id)}</span><span><b>${d.name}${stars(w.stars)}</b>${evo}</span>${pips(w.lv, d.max)}</div>`);
   }
