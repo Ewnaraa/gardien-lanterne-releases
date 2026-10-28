@@ -384,6 +384,12 @@ td .w svg{width:16px;height:16px;color:var(--amber);flex:none}
 @keyframes pulse{50%{opacity:.5}}
 @media (max-width:720px){.bindgrid{grid-template-columns:1fr}}
 #opts .opane[data-op="gfx"]:has(#advGrid:not([hidden])) .qgrid small{display:none}
+.vertag{position:fixed;right:12px;bottom:8px;z-index:30;font:600 12px var(--body);letter-spacing:.06em;color:rgba(236,228,207,.38);pointer-events:none}
+.updbar{position:fixed;left:50%;transform:translateX(-50%);bottom:14px;z-index:60;display:flex;gap:12px;align-items:center;padding:9px 14px;border-radius:4px;
+  background:rgba(12,15,13,.94);border:1px solid var(--line);box-shadow:0 6px 24px rgba(0,0,0,.55);color:var(--bone);font:600 14px var(--body);max-width:min(92vw,620px)}
+.updbar .bar{width:160px;height:6px;border-radius:3px;background:rgba(255,255,255,.08);overflow:hidden}.updbar .bar i{display:block;height:100%;background:var(--amber);transition:width .4s}
+.updbar.ready{border-color:var(--amber)}
+.updbox{display:flex;flex-wrap:wrap;gap:10px;align-items:center;color:var(--bone)}
 .advgrid{display:grid;grid-template-columns:auto 1fr;gap:6px 12px;align-items:center}
 .advgrid > span{color:var(--bone);font-size:14px}
 .seg{display:flex;flex-wrap:wrap;gap:4px}.seg button{background:var(--panel);border:1px solid var(--line-soft);color:var(--mute);border-radius:3px;padding:4px 9px;font:600 13px var(--body);cursor:pointer}
@@ -528,10 +534,12 @@ td .w svg{width:16px;height:16px;color:var(--amber);flex:none}
 <div class="achpop" id="achPop"></div>
 <div class="fade" id="fade"></div>
 
+<div class="updbar" id="updBar" hidden></div>
+<div class="vertag" id="verTag"></div>
 <div class="overlay title" id="menu">
   <div class="tmenu">
     <div class="tlogo">
-      <div class="eyebrow">Une veillée de dix minutes</div>
+      <div class="eyebrow">Une veillée jusqu’à l’aube</div>
       <h1>Gardien<span>de la</span>Lanterne</h1>
     </div>
     <button class="press" id="press">Clique ou appuie sur une touche pour allumer la lanterne</button>
@@ -607,7 +615,11 @@ td .w svg{width:16px;height:16px;color:var(--amber);flex:none}
       <div class="advgrid" id="advGrid" hidden></div>
     </div>
     <div class="opane" data-op="save" hidden>
-      <p class="mute">La progression (braises, personnages, succès, journal) est enregistrée sur ce PC.</p>
+      <div class="sect">Version du jeu</div>
+      <div class="updbox"><span>Version installée : <b id="verNow">—</b></span><button class="btn ghost small" id="updCheck">Rechercher une mise à jour</button><button class="btn small" id="updInstall" hidden>Redémarrer et installer</button></div>
+      <p class="mute" id="updTxt"></p>
+      <div class="sect">Sauvegarde</div>
+      <p class="mute">La progression (braises, personnages, succès, journal) est enregistrée sur ce PC. Les mises à jour ne la touchent jamais.</p>
       <div class="danger"><button class="btn ghost small" id="resetBtn">Effacer la sauvegarde</button><span class="mute" id="resetTxt"></span></div>
     </div>
     <div class="opane" data-op="admin" hidden>
@@ -5977,7 +5989,7 @@ function toggleMute(){ SAVE.mute = SAVE.mute ? 0 : 1; persist(); audioInit(); ap
 
 /* ================= Écrans ================= */
 const OVERLAYS = ['coop','menu','opts','chars','shop','codex','ach','journal','story','levelup','chest','arcana','merchant','pause','end'];
-function show(id){ for (const o of OVERLAYS) $('#'+o).hidden = o !== id; }
+function show(id){ for (const o of OVERLAYS) $('#'+o).hidden = o !== id; try { renderUpd(); } catch(_) {} }   // le bandeau de mise à jour suit l'écran affiché
 function focusFirst(id){ setTimeout(() => { const el = $('#'+id+' button:not(:disabled)'); if (el) el.focus({preventScroll:true}); }, 30); }
 
 function upgradeText(id, lv){
@@ -6366,7 +6378,7 @@ function goOpts(){
   $('#volR').value = Math.round(SAVE.vol*100); $('#musR').value = Math.round(SAVE.musicVol*100);
   $('#volV').textContent = $('#volR').value + ' %'; $('#musV').textContent = $('#musR').value + ' %';
   resetArmed = false; $('#resetBtn').textContent = 'Effacer la sauvegarde'; $('#resetTxt').textContent = '';
-  BIND_WAIT = null; renderBinds(); renderMute(); renderConceptBtn(); renderDecoPh(); renderFps(); renderQual(); renderBigItems(); optTab(OPT_TAB); focusFirst('opts');
+  BIND_WAIT = null; renderBinds(); renderUpd(); renderMute(); renderConceptBtn(); renderDecoPh(); renderFps(); renderQual(); renderBigItems(); optTab(OPT_TAB); focusFirst('opts');
   $('#adminTab').hidden = !SAVE.admin;
 }
 /* onglets des options */
@@ -6414,6 +6426,36 @@ $('#advGrid').addEventListener('click', e => {
   if (b.dataset.gk === 'res' && v === 'auto'){ RSCALE = 1; resize(); }
   persist(); renderAdv(); SFX.tick && SFX.tick();
 });
+/* MISES À JOUR visibles : version sur l'écran titre, avancement du téléchargement, bouton « Redémarrer et installer ».
+   (dans le navigateur, sans application de bureau : seulement « version web ») */
+const APP = window.gardienApp || null;
+let UPD = {s:APP ? 'idle' : 'web'}, VER = '';
+function renderUpd(){
+  const u = UPD, bar = $('#updBar'), inGame = RUN_STATES.has(state) && state !== 'pause';
+  let txt = '', html = '';
+  if (u.s === 'checking') txt = 'Recherche d’une mise à jour…';
+  else if (u.s === 'none') txt = 'Ton jeu est à jour' + (VER ? ' (version ' + VER + ').' : '.');
+  else if (u.s === 'progress') txt = `Mise à jour ${u.v || ''} en cours de téléchargement : ${u.p || 0} %` + (u.mbps ? ` (${u.mbps} Mo/s)` : '') + '. Tu peux jouer en attendant.';
+  else if (u.s === 'ready') txt = `La version ${u.v} est prête. Redémarre pour l’installer (sinon elle s’installera à la fermeture du jeu).`;
+  else if (u.s === 'error') txt = 'Impossible de vérifier les mises à jour (pas d’Internet ?). Le jeu marche quand même.';
+  else if (u.s === 'dev') txt = 'Version d’essai : pas de mise à jour automatique.';
+  else if (u.s === 'web') txt = 'Version web : elle est toujours à jour.';
+  $('#updTxt').textContent = txt; $('#verTag').hidden = inGame;
+  $('#updInstall').hidden = u.s !== 'ready';
+  $('#updCheck').disabled = !APP || u.s === 'checking' || u.s === 'progress';
+  // bandeau : seulement pendant le téléchargement ou quand c'est prêt, et pas en pleine partie
+  if ((u.s === 'progress' || u.s === 'ready') && !inGame){
+    html = u.s === 'progress' ? `<span>Mise à jour ${u.v || ''} : ${u.p || 0} %</span><span class="bar"><i style="width:${u.p || 0}%"></i></span>`
+                              : `<span>Version ${u.v} prête</span><button class="btn small" data-upd-install>Redémarrer et installer</button>`;
+    bar.innerHTML = html; bar.hidden = false; bar.classList.toggle('ready', u.s === 'ready');
+  } else bar.hidden = true;
+}
+if (APP){
+  APP.version().then(v => { VER = v; $('#verTag').textContent = 'v' + v; $('#verNow').textContent = v; renderUpd(); }).catch(() => {});
+  APP.onUpdate(s => { const was = UPD.s; UPD = s; renderUpd(); if (s.s === 'ready' && was !== 'ready') toast('Mise à jour ' + s.v + ' prête : redémarre quand tu veux'); });
+} else { $('#verTag').textContent = 'version web'; $('#verNow').textContent = 'web'; }
+$('#updCheck').addEventListener('click', () => { if (!APP) return; UPD = {s:'checking'}; renderUpd(); APP.checkUpdate().catch(() => {}); SFX.tick && SFX.tick(); });
+document.addEventListener('click', e => { if (e.target.closest('#updInstall, [data-upd-install]') && APP){ $('#updBar').innerHTML = '<span>Installation… le jeu va redémarrer</span>'; APP.installUpdate(); } });
 /* objets au sol plus grands */
 function renderBigItems(){ $('#bigItemsBtn').textContent = 'Objets au sol : ' + (SAVE.bigItems === 0 ? 'taille normale' : 'grands, bien visibles'); }
 $('#bigItemsBtn').addEventListener('click', () => { SAVE.bigItems = SAVE.bigItems === 0 ? 1 : 0; persist(); renderBigItems(); SFX.tick && SFX.tick(); });

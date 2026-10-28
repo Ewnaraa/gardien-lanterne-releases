@@ -1,7 +1,7 @@
 // Gardien de la Lanterne — version de bureau (Electron).
 // Le jeu est exactement la page web (HTML Canvas + JavaScript), servie depuis les fichiers de l'application
 // par une adresse interne « app://gardien/ » : la sauvegarde (localStorage) reste stable d'une version à l'autre.
-const { app, BrowserWindow, protocol, net, Menu, shell, dialog } = require('electron');
+const { app, BrowserWindow, protocol, net, Menu, shell, dialog, ipcMain } = require('electron');
 const path = require('path');
 const { pathToFileURL } = require('url');
 
@@ -21,7 +21,7 @@ function createWindow(){
     backgroundColor: '#050605', title: 'Gardien de la Lanterne', show: false,
     autoHideMenuBar: true,
     icon: path.join(ROOT, 'icon.png'),
-    webPreferences: { contextIsolation: true, nodeIntegration: false, sandbox: true, backgroundThrottling: false, spellcheck: false }
+    webPreferences: { contextIsolation: true, nodeIntegration: false, sandbox: true, backgroundThrottling: false, spellcheck: false, preload: path.join(__dirname, 'preload.js') }
   });
   Menu.setApplicationMenu(null);
   win.once('ready-to-show', () => { win.maximize(); win.show(); });
@@ -36,28 +36,36 @@ function createWindow(){
 }
 
 /* ---------- Mises à jour automatiques (versions publiées sur GitHub) ----------
-   Au lancement : vérifie s'il existe une version plus récente, la télécharge en arrière-plan,
-   puis propose de redémarrer. Si le joueur refuse, elle s'installe toute seule à la fermeture du jeu.
-   La sauvegarde n'est jamais touchée (elle est dans le dossier utilisateur, pas dans le jeu). */
+   Au lancement (puis toutes les 2 h) : cherche une version plus récente et la télécharge en arrière-plan.
+   Le jeu AFFICHE l'avancement (« Mise à jour 0.35.0 : 42 % ») et propose « Redémarrer et installer » quand elle est prête.
+   Si le joueur ne redémarre pas, elle s'installe toute seule à la fermeture. La sauvegarde n'est jamais touchée. */
+let UPD = {s:'idle'};
+const sendUpd = (st) => { UPD = st; if (win && !win.isDestroyed()) win.webContents.send('upd', st); };
+ipcMain.handle('app-version', () => app.getVersion());
 function setupUpdates(){
-  if (!app.isPackaged) return;                                         // pas de mise à jour pendant les essais
-  let autoUpdater;
-  try { ({ autoUpdater } = require('electron-updater')); } catch (e){ return; }
+  let autoUpdater = null;
+  if (app.isPackaged){ try { ({ autoUpdater } = require('electron-updater')); } catch (e){ autoUpdater = null; } }
+  ipcMain.handle('upd-check', async () => {
+    if (!autoUpdater){ sendUpd({s:'dev'}); return UPD; }
+    if (UPD.s === 'progress' || UPD.s === 'ready') { sendUpd(UPD); return UPD; }
+    try { await autoUpdater.checkForUpdates(); } catch (e){ sendUpd({s:'error', msg:String(e && e.message || e).slice(0, 160)}); }
+    return UPD;
+  });
+  ipcMain.handle('upd-install', () => { if (autoUpdater && UPD.s === 'ready') setImmediate(() => autoUpdater.quitAndInstall(true, true)); });
+  if (!autoUpdater) return;
   autoUpdater.autoDownload = true;
   autoUpdater.autoInstallOnAppQuit = true;
-  autoUpdater.on('error', () => {});                                    // hors ligne ou serveur absent : on joue quand même
-  autoUpdater.on('update-downloaded', async (info) => {
-    if (!win) return;
-    const r = await dialog.showMessageBox(win, {
-      type: 'info', buttons: ['Redémarrer maintenant', 'Plus tard'], defaultId: 0, cancelId: 1,
-      title: 'Mise à jour prête', message: 'La version ' + info.version + ' de Gardien de la Lanterne est prête.',
-      detail: 'Redémarre pour l’installer, ou elle s’installera quand tu fermeras le jeu. Ta sauvegarde est conservée.'
-    });
-    if (r.response === 0) setImmediate(() => autoUpdater.quitAndInstall(true, true));
-  });
+  autoUpdater.on('checking-for-update', () => sendUpd({s:'checking'}));
+  autoUpdater.on('update-not-available', (i) => sendUpd({s:'none', v:i && i.version}));
+  autoUpdater.on('update-available', (i) => sendUpd({s:'progress', v:i.version, p:0}));
+  autoUpdater.on('download-progress', (p) => sendUpd({s:'progress', v:UPD.v, p:Math.round(p.percent || 0), mbps:+((p.bytesPerSecond || 0)/1e6).toFixed(1)}));
+  autoUpdater.on('update-downloaded', (i) => sendUpd({s:'ready', v:i.version}));
+  autoUpdater.on('error', (e) => sendUpd({s:'error', msg:String(e && e.message || e).slice(0, 160)}));   // hors ligne : on joue quand même
   autoUpdater.checkForUpdates().catch(() => {});
-  setInterval(() => autoUpdater.checkForUpdates().catch(() => {}), 2*60*60*1000);   // et toutes les 2 h si le jeu reste ouvert
+  setInterval(() => { if (UPD.s !== 'progress' && UPD.s !== 'ready') autoUpdater.checkForUpdates().catch(() => {}); }, 2*60*60*1000);
 }
+// le jeu redemande l'état quand sa page est prête (il a pu manquer les premiers messages)
+ipcMain.on('upd-hello', () => sendUpd(UPD));
 
 app.whenReady().then(() => {
   protocol.handle('app', (req) => {
