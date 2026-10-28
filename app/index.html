@@ -375,7 +375,20 @@ td .w svg{width:16px;height:16px;color:var(--amber);flex:none}
 .ctab[aria-selected="true"]{color:var(--amber);border-color:var(--line-soft);background:var(--panel)}
 .ctab:hover{color:var(--bone)}
 .atabs{grid-column:1/-1}
-.otabs{margin:4px 0 10px}.opane{display:grid;gap:10px;min-height:230px;align-content:start}
+.otabs{margin:4px 0 10px}
+.bindgrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px 18px}
+.bindrow{display:grid;grid-template-columns:1fr auto auto;gap:6px;align-items:center;color:var(--bone);font-size:14px}
+.bindrow button{min-width:64px;background:var(--panel);border:1px solid var(--line);color:var(--amber);border-radius:3px;padding:5px 8px;font:700 13px var(--body);cursor:pointer}
+.bindrow button.wait{border-color:#fff1c8;color:#fff1c8;animation:pulse 1s infinite}
+.bindrow button:hover{border-color:var(--amber)}
+@keyframes pulse{50%{opacity:.5}}
+@media (max-width:720px){.bindgrid{grid-template-columns:1fr}}
+#opts .opane[data-op="gfx"]:has(#advGrid:not([hidden])) .qgrid small{display:none}
+.advgrid{display:grid;grid-template-columns:auto 1fr;gap:6px 12px;align-items:center}
+.advgrid > span{color:var(--bone);font-size:14px}
+.seg{display:flex;flex-wrap:wrap;gap:4px}.seg button{background:var(--panel);border:1px solid var(--line-soft);color:var(--mute);border-radius:3px;padding:4px 9px;font:600 13px var(--body);cursor:pointer}
+.seg button[aria-pressed="true"]{border-color:var(--amber);color:var(--amber);background:rgba(242,184,75,.1)}
+.seg button:hover{color:var(--bone)}.opane{display:grid;gap:10px;min-height:230px;align-content:start}
 .qgrid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}.qgrid .pick{text-align:left}.qgrid .pick small{font-size:13px}
 @media (max-width:720px){.qgrid{grid-template-columns:repeat(2,minmax(0,1fr))}}
 .cpane{display:grid;gap:8px;align-content:start}
@@ -559,6 +572,7 @@ td .w svg{width:16px;height:16px;color:var(--amber);flex:none}
       <button type="button" role="tab" class="ctab" data-ot="son" aria-selected="true">Son</button>
       <button type="button" role="tab" class="ctab" data-ot="jeu" aria-selected="false">Jeu</button>
       <button type="button" role="tab" class="ctab" data-ot="gfx" aria-selected="false">Graphismes</button>
+      <button type="button" role="tab" class="ctab" data-ot="keys" aria-selected="false">Commandes</button>
       <button type="button" role="tab" class="ctab" data-ot="save" aria-selected="false">Sauvegarde</button>
       <button type="button" role="tab" class="ctab" data-ot="admin" aria-selected="false" id="adminTab" hidden>Admin</button>
     </div>
@@ -574,7 +588,12 @@ td .w svg{width:16px;height:16px;color:var(--amber);flex:none}
         <button class="btn ghost small" id="aimOptBtn">Visée : automatique</button>
         <button class="btn ghost small" id="bigItemsBtn">Objets au sol : grands</button>
       </div>
-      <p class="keys"><kbd>Z</kbd><kbd>Q</kbd><kbd>S</kbd><kbd>D</kbd>, <kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> ou flèches · doigt glissé sur mobile · <kbd>Échap</kbd> pause · <kbd>M</kbd> mini-carte · <kbd>1</kbd>–<kbd>4</kbd> choisir · <kbd>R</kbd> relancer · <kbd>B</kbd> bannir · <kbd>clic gauche</kbd> visée à la souris · <kbd>Espace</kbd> ou <kbd>clic droit</kbd> esquive · <kbd>E</kbd> embrasement</p>
+      <p class="mute">Les touches se changent dans l’onglet Commandes.</p>
+    </div>
+    <div class="opane" data-op="keys" hidden>
+      <div class="bindgrid" id="bindGrid"></div>
+      <div class="opts"><button class="btn ghost small" id="bindReset">Rétablir les touches par défaut</button><span class="mute" id="bindHint">Clique sur une touche, puis appuie sur la nouvelle. Échap pour annuler.</span></div>
+      <p class="keys">Toujours actifs : flèches pour se déplacer · <kbd>Échap</kbd> pause · <kbd>clic gauche</kbd> visée à la souris · <kbd>clic droit</kbd> esquive · <kbd>1</kbd>–<kbd>4</kbd> choisir une carte</p>
     </div>
     <div class="opane" data-op="gfx" hidden>
       <div class="sect">Qualité</div>
@@ -584,7 +603,8 @@ td .w svg{width:16px;height:16px;color:var(--amber);flex:none}
         <button class="pick" data-q="moyenne"><b>Moyenne</b><small>Ombre de la lanterne seulement, effets réduits</small></button>
         <button class="pick" data-q="basse"><b>Basse</b><small>Sans ombres ni halo, peu d’effets : pour les PC modestes</small></button>
       </div>
-      <div class="opts"><button class="btn ghost small" id="fpsBtn">Images par seconde : masquées</button></div>
+      <div class="opts"><button class="btn ghost small" id="fpsBtn">Images par seconde : masquées</button><button class="btn ghost small" id="advBtn" aria-expanded="false">Réglages avancés ▾</button></div>
+      <div class="advgrid" id="advGrid" hidden></div>
     </div>
     <div class="opane" data-op="save" hidden>
       <p class="mute">La progression (braises, personnages, succès, journal) est enregistrée sur ce PC.</p>
@@ -1296,7 +1316,22 @@ function wstats(w){
 
 /* ================= Entrées ================= */
 const keys = new Set();
-const KEYMAP = {arrowup:'u',z:'u',w:'u',arrowdown:'d',s:'d',arrowleft:'l',q:'l',a:'l',arrowright:'r',d:'r'};
+/* RACCOURCIS modifiables (Options › Commandes) : 2 touches par action. Les flèches et Échap marchent toujours. */
+const BIND_DEF = {
+  up:['Avancer (haut)', ['z', 'w']], down:['Reculer (bas)', ['s', '']], left:['Aller à gauche', ['q', 'a']], right:['Aller à droite', ['d', '']],
+  dash:['Esquive', [' ', 'shift']], ult:['Embrasement', ['e', '']], mini:['Mini-carte', ['m', '']], pause:['Pause', ['p', '']],
+  reroll:['Relancer les choix', ['r', '']], banish:['Bannir un choix', ['b', '']], skip:['Passer le niveau', ['x', '']]
+};
+const bindOf = a => (SAVE.keys && SAVE.keys[a]) || BIND_DEF[a][1];
+const isK = (a, k) => !!k && bindOf(a).includes(k);
+const KEYMAP = {};
+function rebuildKeys(){
+  for (const k in KEYMAP) delete KEYMAP[k];
+  Object.assign(KEYMAP, {arrowup:'u', arrowdown:'d', arrowleft:'l', arrowright:'r'});
+  for (const [a, dir] of [['up', 'u'], ['down', 'd'], ['left', 'l'], ['right', 'r']]) for (const k of bindOf(a)) if (k) KEYMAP[k] = dir;
+}
+rebuildKeys();
+const keyName = k => ({' ':'Espace', shift:'Maj', control:'Ctrl', alt:'Alt', enter:'Entrée', escape:'Échap', tab:'Tab', backspace:'Retour', arrowup:'↑', arrowdown:'↓', arrowleft:'←', arrowright:'→'})[k] || (k ? k.toUpperCase() : '—');
 addEventListener('keydown', e => {
   const k = e.key.toLowerCase();
   if (state==='menu' && !titleLit){ e.preventDefault(); lightTitle(); return; }
@@ -1306,18 +1341,18 @@ addEventListener('keydown', e => {
     const n = (k==='arrowdown' || k==='s') ? (i+1) % items.length : (i <= 0 ? items.length-1 : i-1);
     items[n].focus(); SFX.tick(); return;
   }
-  if (state==='play' && (k===' ' || k==='shift')){ e.preventDefault(); if (!e.repeat) dash(); return; }
-  if (state==='play' && k==='e'){ ult(); return; }
+  if (state==='play' && isK('dash', k)){ e.preventDefault(); if (!e.repeat) dash(); return; }
+  if (state==='play' && isK('ult', k)){ ult(); return; }
   if (state==='play' && KEYMAP[k]) { keys.add(KEYMAP[k]); if (k.startsWith('arrow')) e.preventDefault(); }
-  if (state==='play' && k==='m'){ toggleMini(); return; }
-  if ((k==='escape' || k==='p') && (state==='play' || state==='pause')) { togglePause(); return; }
+  if (state==='play' && isK('mini', k)){ toggleMini(); return; }
+  if ((k==='escape' || isK('pause', k)) && (state==='play' || state==='pause')) { togglePause(); return; }
   if (state==='arcana' && ['1','2','3'].includes(k)){ const b = $('#arcList').children[+k-1]; if (b) b.click(); return; }
   if (state==='merchant' && k==='escape'){ $('#mLeave').click(); return; }
   if (state==='levelup'){
     if (['1','2','3','4'].includes(k)){ const b = $('#choices').children[+k-1]; if (b) b.click(); }
-    else if (k==='r') $('#rerollBtn').click();
-    else if (k==='b') $('#banishBtn').click();
-    else if (k==='x') $('#skipBtn').click();
+    else if (isK('reroll', k)) $('#rerollBtn').click();
+    else if (isK('banish', k)) $('#banishBtn').click();
+    else if (isK('skip', k)) $('#skipBtn').click();
   } else if (state==='chest' && (k==='enter' || k===' ')) { e.preventDefault(); $('#chestBtn').click(); }
   else if (state==='story' && (k==='enter' || k===' ')) { e.preventDefault(); $('#stBtn').click(); }
   else if (['chars','shop','codex','ach','journal','opts','coop'].includes(state) && k==='escape') goMenu();
@@ -1405,8 +1440,20 @@ function nextPop(){
    QL() : 2 = haute (tout), 1 = moyenne (sans ombres des feux, moins d'effets), 0 = basse (sans ombres ni halo, effets réduits) */
 let QAUTO = 2;
 const QL = () => { const q = SAVE.quality || 'auto'; return q === 'haute' ? 2 : q === 'moyenne' ? 1 : q === 'basse' ? 0 : QAUTO; };
-const QFX = () => [0.35, 0.65, 1][QL()];
-const PCAP = () => (G.enemies.length > 250 ? 0.5 : G.enemies.length > 150 ? 0.75 : 1)*[0.5, 0.75, 1][QL()];   // grosses vagues ou qualité réduite : moins de particules et de chiffres
+/* réglages graphiques AVANCÉS (Options › Graphismes › avancé) : « auto » = suit la qualité ci-dessus */
+const GFX_DEF = {
+  shadows: {label:'Ombres du décor',          opts:[['auto','Auto'],[0,'Aucune'],[1,'Lanterne'],[2,'Toutes les lumières']], q:[0, 1, 2]},
+  actor:   {label:'Ombres des personnages',   opts:[['auto','Auto'],[0,'Non'],[1,'Oui']], q:[0, 1, 1]},
+  bloom:   {label:'Halo lumineux de l’image', opts:[['auto','Auto'],[0,'Non'],[1,'Oui']], q:[0, 1, 1]},
+  fx:      {label:'Effets de sorts',          opts:[['auto','Auto'],[0,'Réduits'],[1,'Normaux'],[2,'Complets'],[3,'Maximum']], q:[0, 1, 2]},
+  parts:   {label:'Particules',               opts:[['auto','Auto'],[0,'Peu'],[1,'Normal'],[2,'Beaucoup']], q:[0, 1, 2]},
+  amb:     {label:'Brume et lucioles',        opts:[['auto','Auto'],[0,'Non'],[1,'Oui']], q:[0, 1, 1]},
+  res:     {label:'Résolution du rendu',      opts:[['auto','Auto'],[0.7,'70 %'],[0.85,'85 %'],[1,'100 %']], q:[null, null, null]},
+  cap:     {label:'Images par seconde max.',  opts:[['auto','Sans limite'],[30,'30'],[60,'60'],[120,'120']], q:[0, 0, 0]}
+};
+const GFX = k => { const v = SAVE.gfx && SAVE.gfx[k]; return v == null || v === 'auto' ? GFX_DEF[k].q[QL()] : v; };
+const QFX = () => [0.35, 0.65, 1, 1.5][GFX('fx')];
+const PCAP = () => (G.enemies.length > 250 ? 0.5 : G.enemies.length > 150 ? 0.75 : 1)*[0.5, 0.75, 1][GFX('parts')];   // grosses vagues ou qualité réduite : moins de particules et de chiffres
 function burst(x, y, col, n, spread){
   for (let i=0;i<n && G.parts.length<600*PCAP();i++){
     const a = Math.random()*TAU, s = rnd(40, 160)*(spread||1);
@@ -1495,7 +1542,7 @@ function killEnemy(e, silent){
   spawnFx('fx_ame', e.x, e.y + e.r*0.5, e.boss ? 150 : e.elite ? 80 : 40, {bottom:true, a:e.boss || e.elite ? 0.9 : 0.5});
   if (e.boss || e.elite) G.stop = Math.max(G.stop || 0, e.boss ? 0.16 : 0.06);
   G.kills++;
-  { const was = G.flame; G.flame = Math.min(100, G.flame + (e.boss ? 35 : e.elite ? 14 : 0.6/(1 + G.t/120))*(hasArc('soleil') ? 2 : 1)); if (was < 100 && G.flame >= 100){ toast('La flamme est prête : touche E'); SFX.rare(); } }
+  { const was = G.flame; G.flame = Math.min(100, G.flame + (e.boss ? 35 : e.elite ? 14 : 0.6/(1 + G.t/120))*(hasArc('soleil') ? 2 : 1)); if (was < 100 && G.flame >= 100){ toast('La flamme est prête : touche ' + keyName(bindOf('ult')[0] || bindOf('ult')[1])); SFX.rare(); } }
   const L = G.st.luck;
   if (e.boss){
     for (let i=0;i<28;i++) G.gems.push({x:e.x+rnd(-90,90), y:e.y+rnd(-90,90), v:6, kind:'xp'});
@@ -2526,7 +2573,7 @@ function draw(now){
     ctx.fill();
   }
   // ombres portées par la lumière (lanterne, braseros) : sous tous les personnages, avant leur dessin
-  if (QL() >= 1){ let n = 0; const cap = Math.round(140*PCAP());
+  if (GFX('actor')){ let n = 0; const cap = Math.round(140*PCAP());
     for (const e of SHQ){ if (n++ > cap) break; castActorShadow(X(e.x), Y(e.y) + e.r*0.85, e.x, e.y + e.r*0.85, e.r*2.4, e.r*0.9, 0.9); }
     if (!p.down) castActorShadow(X(p.x), Y(p.y) + 12, p.x, p.y + 12, 58, 11, 0.85);
     if (G.ally && G.ally.p && !G.ally.p.down) castActorShadow(X(G.ally.p.x), Y(G.ally.p.y) + 12, G.ally.p.x, G.ally.p.y + 12, 58, 11, 0.85);
@@ -2834,7 +2881,7 @@ function draw(now){
   if (G.merchant) edgeArrow(G.merchant.x, G.merchant.y, '#8fe0a0');
 
   drawWeather(now);
-  if (QL() >= 1) gradeBloom();
+  if (GFX('bloom')) gradeBloom();
   // Étalonnage final : vignette, grain, effets d’écran
   // étalonnage de zone : une même teinte enveloppe sol, décor, bâtiments et personnages (cohérence de l'image)
   ctx.save(); ctx.globalCompositeOperation = 'soft-light'; ctx.fillStyle = ZGRADE[G.map] || 'rgb(128,128,128)'; ctx.fillRect(0, 0, W, H); ctx.restore();
@@ -3144,7 +3191,7 @@ let SHADOW_LIGHTS = [];
 function updateShadowLights(lwx, lwy, L){
   const p = G.p, out = [{x:lwx, y:p.y + 10, R:L*1.25, h:44, i:1, own:true}];
   if (G.ally && G.ally.p && !G.ally.p.down) out.push({x:G.ally.p.x + 8*(G.ally.p.face || 1), y:G.ally.p.y + 10, R:L, h:44, i:0.9, own:true});
-  if (!G.room && !reduce && QL() >= 2 && G.enemies.length < 200){
+  if (!G.room && !reduce && GFX('shadows') >= 2 && G.enemies.length < 200){
     const c = [];
     for (const b of G.braz) if (!b.dead) c.push({x:b.x, y:b.y, R:210, h:34, i:0.95, col:'255,140,60', ref:b});
     for (const l of SITE_LIGHTS) if (l.r >= 90 && !l.soft) c.push({x:l.x, y:l.y + 18, R:l.r*1.8, h:70, i:0.62, col:l.col || LIGHT_WARM, ref:l});
@@ -3194,7 +3241,7 @@ function lightPass(X, Y, lx, ly, L, dk, now){
   LHX.globalCompositeOperation = 'source-over'; LHX.globalAlpha = 1; LHX.clearRect(0, 0, lw, lh);
   const hole = lightHole(), R0 = L*1.25;
   LHX.drawImage(hole, (lx - R0)*q, (ly - R0)*q, 2*R0*q, 2*R0*q);
-  if (!G.room && !reduce && QL() >= 1) castShadows(LHX, X, Y, R0, q);
+  if (!G.room && !reduce && GFX('shadows') >= 1) castShadows(LHX, X, Y, R0, q);
   LX.globalCompositeOperation = 'destination-out'; LX.drawImage(LHC, 0, 0);
   const DONE = new Set();
   // 1 bis. les feux les plus proches (braseros, feux de camp, réverbères) projettent eux aussi les ombres du décor
@@ -3256,7 +3303,7 @@ function lightPass(X, Y, lx, ly, L, dk, now){
 /* ombres portées de la lanterne : chaque obstacle (empreinte au sol en ellipse) cache ce qui est derrière lui */
 function castShadows(g, X, Y, R, q, src){
   const p = src || G.p, cx = Math.floor(p.x/OB_CELL), cy = Math.floor(p.y/OB_CELL), seen = new Set(), far = R*2.2;
-  g.save(); g.globalCompositeOperation = 'destination-out'; if (QL() >= 2) g.filter = 'blur(' + Math.max(2, Math.round(7*q)) + 'px)'; g.fillStyle = '#000';
+  g.save(); g.globalCompositeOperation = 'destination-out'; if (GFX('shadows') >= 2) g.filter = 'blur(' + Math.max(2, Math.round(7*q)) + 'px)'; g.fillStyle = '#000';
   g.beginPath();
   const nC = Math.ceil(R/OB_CELL) + 1;
   for (let a = cx - nC; a <= cx + nC; a++) for (let b = cy - nC; b <= cy + nC; b++) for (const ob of obstacleCell(a, b)){
@@ -4026,9 +4073,25 @@ function drawLanternFx(X, Y, now){
   const dg = typeof keeperDanger === 'function' ? keeperDanger() : 0, jit = reduce ? 0 : (Math.sin(now/53)*0.5 + Math.sin(now/31)*0.5)*(0.15 + dg*0.85), k = 1 + jit*0.22;
   const hid = P.lanternHidden ? 0.45 : 1;                              // cachée derrière le Gardien : seul le halo déborde
   const c = P.tint === 'green' ? ['90,230,150', '190,255,210', '120,240,170'] : P.cold ? ['80,140,255', '170,205,255', '110,165,255'] : ['255,150,50', '255,190,100', '255,170,80'];
-  pglow(lx, ly, 14*k, c[0], P.tint ? 0.18 : 0.12);
-  if (hid === 1) pglow(lx, ly, 4.5*k, c[1], 0.3); else pglow(lx, ly, 8*k, c[2], 0.08);
+  if (hid === 1 || P.format !== 'sheet'){
+    pglow(lx, ly, 14*k, c[0], P.tint ? 0.18 : 0.12);
+    if (hid === 1) pglow(lx, ly, 4.5*k, c[1], 0.3); else pglow(lx, ly, 8*k, c[2], 0.08);
+    return;
+  }
+  // lanterne derrière le corps : le halo est dessiné à part, puis la silhouette du personnage y est découpée.
+  // On ne voit plus la lumière « à travers » lui, seulement ce qui déborde autour de sa silhouette.
+  const C = CHARS[pcKey()], sh = C.sheet, R = Math.ceil(16*k + 4), D = Math.min(2, window.devicePixelRatio || 1);
+  if (!LMASK){ LMASK = document.createElement('canvas'); LMASKX = LMASK.getContext('2d'); }
+  const S = Math.ceil(R*2*D); if (LMASK.width !== S){ LMASK.width = LMASK.height = S; }
+  const g = LMASKX; g.setTransform(D, 0, 0, D, 0, 0); g.globalCompositeOperation = 'source-over'; g.clearRect(0, 0, R*2, R*2);
+  const saved = ctx; ctx = g;
+  try { pglow(R, R, 14*k, c[0], (P.tint ? 0.18 : 0.12)*1.3); pglow(R, R, 8*k, c[2], 0.14); } finally { ctx = saved; }
+  const cell = sheetCell(C, P.col, P.row, P.k), fx = X(P.fx), fy = Y(P.fy);
+  g.globalCompositeOperation = 'destination-out';
+  g.drawImage(cell, fx - sh.anchor[0]*P.k - (lx - R), fy - sh.anchor[1]*P.k - (ly - R), sh.frameW*P.k, sh.frameH*P.k);
+  ctx.drawImage(LMASK, lx - R, ly - R, R*2, R*2);
 }
+let LMASK = null, LMASKX = null;
 
 /* ---------- Profondeur : point de référence au sol de chaque élément ---------- */
 function footY(e){ return e.y + e.r*(e.type === 'chauve' || e.type === 'feufollet' ? 1.6 : 0.95); }
@@ -4773,7 +4836,7 @@ function drawCrows(X, Y, now){
 }
 /* nappes de brume, papillons, lucioles : par-dessus la scène */
 function drawAmbientOver(X, Y, now){
-  if (reduce) return;
+  if (reduce || !GFX('amb')) return;
   const p = G.p, t = now/1000;
   if (hasFx('amb_brume') && !G.room){
     const FC2 = 520, dens = G.map === 'marais' ? 0.4 : G.map === 'cimetiere' ? 0.3 : 0.18;
@@ -5079,7 +5142,7 @@ function spawnFx(k, x, y, w, o){
   if (!FX[k] || !G || reduce) return;
   if (!G.fxs) G.fxs = [];
   const cap = (FX_CAP[k] || 20)*PCAP()*QFX();
-  if (G.fxs.length >= [40, 90, 160][QL()]) return;                   // plafond global : la mêlée reste fluide
+  if (G.fxs.length >= [40, 90, 160, 240][GFX('fx')]) return;                   // plafond global : la mêlée reste fluide
   if (k === 'fx_ame' && G.enemies.length > 120 && Math.random() < 0.6) return;   // grosses vagues : une âme sur trois suffit
   let c = 0; for (const f of G.fxs) if (f.k === k) c++;
   if (c >= cap) return;
@@ -6303,7 +6366,7 @@ function goOpts(){
   $('#volR').value = Math.round(SAVE.vol*100); $('#musR').value = Math.round(SAVE.musicVol*100);
   $('#volV').textContent = $('#volR').value + ' %'; $('#musV').textContent = $('#musR').value + ' %';
   resetArmed = false; $('#resetBtn').textContent = 'Effacer la sauvegarde'; $('#resetTxt').textContent = '';
-  renderMute(); renderConceptBtn(); renderDecoPh(); renderFps(); renderQual(); renderBigItems(); optTab(OPT_TAB); focusFirst('opts');
+  BIND_WAIT = null; renderBinds(); renderMute(); renderConceptBtn(); renderDecoPh(); renderFps(); renderQual(); renderBigItems(); optTab(OPT_TAB); focusFirst('opts');
   $('#adminTab').hidden = !SAVE.admin;
 }
 /* onglets des options */
@@ -6318,6 +6381,39 @@ document.addEventListener('click', e => { const t = e.target.closest('[data-ot]'
 /* qualité graphique */
 function renderQual(){ const q = SAVE.quality || 'auto'; for (const b of document.querySelectorAll('#qualGrid [data-q]')) b.setAttribute('aria-pressed', b.dataset.q === q); }
 $('#qualGrid').addEventListener('click', e => { const b = e.target.closest('[data-q]'); if (!b) return; SAVE.quality = b.dataset.q; QAUTO = 2; if (b.dataset.q !== 'auto' && RSCALE < 1){ RSCALE = 1; resize(); } persist(); renderQual(); SFX.tick && SFX.tick(); });
+/* raccourcis modifiables */
+let BIND_WAIT = null;
+function renderHudKeys(){ const d = $('#dashBtn kbd'), u = $('#ultBtn kbd'); if (d) d.textContent = keyName(bindOf('dash')[0] || bindOf('dash')[1]); if (u) u.textContent = keyName(bindOf('ult')[0] || bindOf('ult')[1]); }
+function renderBinds(){
+  renderHudKeys();
+  $('#bindGrid').innerHTML = Object.entries(BIND_DEF).map(([a, [label]]) => `<div class="bindrow"><span>${label}</span>${[0, 1].map(i =>
+    `<button type="button" data-ba="${a}" data-bi="${i}" class="${BIND_WAIT && BIND_WAIT.a === a && BIND_WAIT.i === i ? 'wait' : ''}">${BIND_WAIT && BIND_WAIT.a === a && BIND_WAIT.i === i ? '…' : keyName(bindOf(a)[i])}</button>`).join('')}</div>`).join('');
+}
+$('#bindGrid').addEventListener('click', e => { const b = e.target.closest('[data-ba]'); if (!b) return; BIND_WAIT = {a:b.dataset.ba, i:+b.dataset.bi}; renderBinds(); SFX.tick && SFX.tick(); });
+addEventListener('keydown', e => {
+  if (!BIND_WAIT || state !== 'opts') return;
+  e.preventDefault(); e.stopImmediatePropagation();
+  const k = e.key.toLowerCase(), {a, i} = BIND_WAIT; BIND_WAIT = null;
+  if (k === 'escape' || /^arrow|^[1-4]$/.test(k)){ renderBinds(); return; }       // annuler (flèches et 1–4 sont réservées)
+  SAVE.keys = SAVE.keys || {};
+  for (const o in BIND_DEF){ const L = bindOf(o).slice(); const j = L.indexOf(k); if (j >= 0 && !(o === a && j === i)){ L[j] = ''; SAVE.keys[o] = L; } }   // une touche ne sert qu'à une action
+  const L = bindOf(a).slice(); L[i] = k; SAVE.keys[a] = L;
+  persist(); rebuildKeys(); renderBinds(); SFX.pickup && SFX.pickup();
+}, true);
+$('#bindReset').addEventListener('click', () => { SAVE.keys = {}; BIND_WAIT = null; persist(); rebuildKeys(); renderBinds(); SFX.tick && SFX.tick(); });
+/* réglages graphiques avancés */
+function renderAdv(){
+  const S = SAVE.gfx || {};
+  $('#advGrid').innerHTML = Object.entries(GFX_DEF).map(([k, d]) => `<span>${d.label}</span><span class="seg">${d.opts.map(([v, t]) =>
+    `<button type="button" data-gk="${k}" data-gv="${v}" aria-pressed="${String(S[k] == null ? 'auto' : S[k]) === String(v)}">${t}</button>`).join('')}</span>`).join('');
+}
+$('#advBtn').addEventListener('click', () => { const g = $('#advGrid'); g.hidden = !g.hidden; $('#advBtn').setAttribute('aria-expanded', !g.hidden); $('#advBtn').textContent = 'Réglages avancés ' + (g.hidden ? '▾' : '▴'); if (!g.hidden) renderAdv(); SFX.tick && SFX.tick(); });
+$('#advGrid').addEventListener('click', e => {
+  const b = e.target.closest('[data-gk]'); if (!b) return;
+  SAVE.gfx = SAVE.gfx || {}; const v = b.dataset.gv; SAVE.gfx[b.dataset.gk] = v === 'auto' ? 'auto' : +v;
+  if (b.dataset.gk === 'res' && v === 'auto'){ RSCALE = 1; resize(); }
+  persist(); renderAdv(); SFX.tick && SFX.tick();
+});
 /* objets au sol plus grands */
 function renderBigItems(){ $('#bigItemsBtn').textContent = 'Objets au sol : ' + (SAVE.bigItems === 0 ? 'taille normale' : 'grands, bien visibles'); }
 $('#bigItemsBtn').addEventListener('click', () => { SAVE.bigItems = SAVE.bigItems === 0 ? 1 : 0; persist(); renderBigItems(); SFX.tick && SFX.tick(); });
@@ -6623,6 +6719,7 @@ const FPS = {n:0, sum:0, worst:0, t:0};
 /* résolution adaptative : moyenne sur 1 s en partie ; sous ~48 i/s on baisse (jusqu'à 70 %), au-dessus de ~70 i/s on remonte */
 const ADAPT = {n:0, sum:0, t:0, good:0};
 function adaptRes(rawMs, now){
+  const fr = GFX('res'); if (fr != null){ if (RSCALE !== fr){ RSCALE = fr; resize(); } return; }   // résolution choisie à la main : pas d'ajustement
   if (state !== 'play' || rawMs > 250){ ADAPT.n = 0; ADAPT.sum = 0; ADAPT.t = now; return; }
   ADAPT.n++; ADAPT.sum += rawMs;
   if (now - ADAPT.t < 1000) return;
@@ -6659,6 +6756,7 @@ $('#toMenuBtn').addEventListener('click', goMenu);
 let last = performance.now();
 const RUN_STATES = new Set(['play','levelup','chest','pause','dawn','cine','arcana','merchant']);
 function frame(now){
+  const cap = GFX('cap'); if (cap && now - last < 1000/cap - 2){ requestAnimationFrame(frame); return; }   // limite d'images par seconde
   const raw = now - last, dt = Math.min(0.05, raw/1000); last = now;
   fpsTick(raw, now);
   try {
@@ -6677,6 +6775,7 @@ function frame(now){
 }
 resize();
 retro();
+renderHudKeys();
 renderMute();
 renderFps();
 goMenu();
