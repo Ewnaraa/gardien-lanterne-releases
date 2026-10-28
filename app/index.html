@@ -247,6 +247,21 @@ button.jrow:hover{border-color:var(--amber)}
 .jrow.locked{opacity:.6}
 .jrow small{color:var(--mute);display:block;font-size:13px}
 .jch{font-family:var(--display);color:var(--amber);font-size:20px;margin-top:6px}
+.journal2{display:grid;grid-template-columns:minmax(220px,280px) 1fr;gap:16px;min-height:0}
+.jchaps{display:grid;gap:6px;align-content:start}
+.jchap{display:grid;grid-template-columns:1fr auto;align-items:center;gap:8px;text-align:left;background:var(--panel);border:1px solid var(--line-soft);border-radius:3px;padding:9px 12px;color:var(--bone);cursor:pointer;font:600 15px var(--body)}
+.jchap small{color:var(--mute);font-weight:500}.jchap .jdone{color:var(--amber)}
+.jchap[aria-pressed="true"]{border-color:var(--amber);background:linear-gradient(90deg,rgba(242,184,75,.12),transparent)}
+.jchap .jnew{width:8px;height:8px;border-radius:50%;background:var(--amber);display:inline-block;margin-left:6px;box-shadow:0 0 8px var(--amber)}
+.jpage{display:grid;gap:10px;align-content:start;min-width:0}
+.jbanner{height:clamp(90px,16vh,170px);border-radius:3px;background:#0b0e0c center 40%/cover no-repeat;border:1px solid var(--line-soft);position:relative;overflow:hidden}
+.jbanner::after{content:'';position:absolute;inset:0;background:linear-gradient(0deg,rgba(10,12,11,.92),rgba(10,12,11,.1) 70%)}
+.jbanner h3{position:absolute;left:14px;bottom:8px;margin:0;z-index:1;font-family:var(--display);color:var(--amber);font-size:clamp(20px,2.4vw,28px)}
+.jbanner span{position:absolute;right:14px;bottom:12px;z-index:1;color:var(--bone);font-size:14px}
+.jpages{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.jpages .jrow{align-items:start}.jpages .jrow p{margin:4px 0 0;color:var(--mute);font-size:13px;line-height:1.35;font-style:italic}
+.jpages .jrow .tag{color:var(--amber);font-size:12px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;margin-left:6px}
+@media (max-width:720px){.journal2{grid-template-columns:1fr}.jpages{grid-template-columns:1fr}}
 
 /* Histoire */
 .card.story{max-width:640px}
@@ -360,6 +375,9 @@ td .w svg{width:16px;height:16px;color:var(--amber);flex:none}
 .ctab[aria-selected="true"]{color:var(--amber);border-color:var(--line-soft);background:var(--panel)}
 .ctab:hover{color:var(--bone)}
 .atabs{grid-column:1/-1}
+.otabs{margin:4px 0 10px}.opane{display:grid;gap:10px;min-height:230px;align-content:start}
+.qgrid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}.qgrid .pick{text-align:left}.qgrid .pick small{font-size:13px}
+@media (max-width:720px){.qgrid{grid-template-columns:repeat(2,minmax(0,1fr))}}
 .cpane{display:grid;gap:8px;align-content:start}
 @media (min-width:900px){
   .card.wide{max-width:min(1480px,calc(100vw - 40px));max-height:calc(100vh - 28px);gap:clamp(6px,1.3vh,14px);padding:clamp(14px,2.4vh,26px) clamp(20px,2.6vw,40px)}
@@ -386,8 +404,6 @@ td .w svg{width:16px;height:16px;color:var(--amber);flex:none}
   .arow small{font-size:13px}
   .arow .medal{width:30px;height:30px}
   /* journal : trois colonnes, chaque chapitre reste groupé */
-  #jList{display:block;columns:3;column-gap:14px}
-  #jList > *{break-inside:avoid;margin-bottom:6px}
   .jrow{padding:6px 10px}
   /* fin de partie : tableau à côté des stats si besoin */
   .tablewrap{max-height:34vh;overflow:auto}
@@ -433,6 +449,18 @@ td .w svg{width:16px;height:16px;color:var(--amber);flex:none}
 /* préparation de la veillée : vraies images des lieux et portraits */
 .pick .mapimg{display:block;height:clamp(36px,6vh,96px);border-radius:2px;background:center/cover no-repeat;border:1px solid rgba(0,0,0,.6);filter:saturate(.95)}
 .pick.locked .mapimg{filter:grayscale(.8) brightness(.5)}
+.mapwrap{position:relative;display:block}
+.lvpath{position:absolute;left:8px;right:8px;bottom:6px;display:flex;align-items:center;gap:0}
+.lvlink{flex:1;height:2px;background:repeating-linear-gradient(90deg,rgba(242,184,75,.75) 0 5px,transparent 5px 9px);min-width:6px}
+.lvnode{width:clamp(24px,3.2vh,32px);height:clamp(24px,3.2vh,32px);border-radius:50%;display:grid;place-items:center;flex:none;cursor:pointer;
+  font:700 12px var(--body);color:var(--bone);background:rgba(10,12,11,.88);border:1.5px solid rgba(242,184,75,.65);box-shadow:0 2px 6px rgba(0,0,0,.6);padding:0}
+.lvnode.won{background:linear-gradient(160deg,#5a4318,#2a2010);color:#ffd98a;border-color:#f2b84b}
+.lvnode.lock{opacity:.55;border-color:rgba(200,200,200,.3);font-size:10px;cursor:not-allowed}
+.lvnode[aria-pressed="true"]{background:var(--amber);color:#14110a;border-color:#fff1c8;box-shadow:0 0 0 2px rgba(242,184,75,.35),0 0 14px rgba(242,184,75,.6)}
+.lvnode:hover:not(.lock){border-color:#fff1c8}
+.mapcard .lvname{color:var(--amber);font-weight:600}
+#mapGrid .pick .mapimg{height:clamp(52px,9vh,120px)}
+@media (max-height:820px){#mapGrid .mapcard .relic{display:none}#mapGrid .pick .mapimg{height:clamp(44px,7vh,80px)}.charinfo .mute{display:none}.charinfo{margin:2px 0 0}#chars .pick .portrait{height:clamp(30px,5vh,90px)}}
 .pick .portrait{display:block;height:clamp(38px,6.5vh,120px);border-radius:2px;background:#0b0e0c center 18%/cover no-repeat;border:1px solid rgba(0,0,0,.6);position:relative;overflow:hidden}
 .pick .portrait.ph{display:grid;place-items:center;color:rgba(236,228,207,.5);font-size:11px;letter-spacing:.08em;text-transform:uppercase}
 .pick .portrait.ph svg{width:34px;height:34px;opacity:.75}
@@ -527,20 +555,51 @@ td .w svg{width:16px;height:16px;color:var(--amber);flex:none}
   <div class="card">
     <div class="eyebrow">Réglages</div>
     <h2>Options</h2>
-    <label class="slider">Volume général <input type="range" id="volR" min="0" max="100" step="5"><b id="volV"></b></label>
-    <label class="slider">Musique <input type="range" id="musR" min="0" max="100" step="5"><b id="musV"></b></label>
-    <div class="opts">
-      <button class="btn ghost small" id="muteMenuBtn">Son : activé</button>
-      <button class="btn ghost small" id="numsBtn">Chiffres de dégâts : oui</button>
-      <button class="btn ghost small" id="shakeBtn">Tremblement : oui</button>
-      <button class="btn ghost small" id="aimOptBtn">Visée : automatique</button>
-      <button class="btn ghost small" id="conceptBtn">Ennemis provisoires : placeholders</button>
-      <button class="btn ghost small" id="decoPhBtn">Décor provisoire : masqué</button>
-      <button class="btn ghost small" id="fpsBtn">Images par seconde : masquées</button>
-      <button class="btn ghost small" id="benchBtn">Banc d’essai du Gardien</button>
+    <div class="ctabs otabs" role="tablist">
+      <button type="button" role="tab" class="ctab" data-ot="son" aria-selected="true">Son</button>
+      <button type="button" role="tab" class="ctab" data-ot="jeu" aria-selected="false">Jeu</button>
+      <button type="button" role="tab" class="ctab" data-ot="gfx" aria-selected="false">Graphismes</button>
+      <button type="button" role="tab" class="ctab" data-ot="save" aria-selected="false">Sauvegarde</button>
+      <button type="button" role="tab" class="ctab" data-ot="admin" aria-selected="false" id="adminTab" hidden>Admin</button>
     </div>
-    <p class="keys"><kbd>Z</kbd><kbd>Q</kbd><kbd>S</kbd><kbd>D</kbd>, <kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> ou flèches · doigt glissé sur mobile · <kbd>Échap</kbd> pause · <kbd>M</kbd> mini-carte · <kbd>1</kbd>–<kbd>4</kbd> choisir · <kbd>R</kbd> relancer · <kbd>B</kbd> bannir · <kbd>clic gauche</kbd> visée à la souris · <kbd>Espace</kbd> ou <kbd>clic droit</kbd> esquive · <kbd>E</kbd> embrasement</p>
-    <div class="danger"><button class="btn ghost small" id="resetBtn">Effacer la sauvegarde</button><span class="mute" id="resetTxt"></span></div>
+    <div class="opane" data-op="son">
+      <label class="slider">Volume général <input type="range" id="volR" min="0" max="100" step="5"><b id="volV"></b></label>
+      <label class="slider">Musique <input type="range" id="musR" min="0" max="100" step="5"><b id="musV"></b></label>
+      <div class="opts"><button class="btn ghost small" id="muteMenuBtn">Son : activé</button></div>
+    </div>
+    <div class="opane" data-op="jeu" hidden>
+      <div class="opts">
+        <button class="btn ghost small" id="numsBtn">Chiffres de dégâts : oui</button>
+        <button class="btn ghost small" id="shakeBtn">Tremblement : oui</button>
+        <button class="btn ghost small" id="aimOptBtn">Visée : automatique</button>
+        <button class="btn ghost small" id="bigItemsBtn">Objets au sol : grands</button>
+      </div>
+      <p class="keys"><kbd>Z</kbd><kbd>Q</kbd><kbd>S</kbd><kbd>D</kbd>, <kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> ou flèches · doigt glissé sur mobile · <kbd>Échap</kbd> pause · <kbd>M</kbd> mini-carte · <kbd>1</kbd>–<kbd>4</kbd> choisir · <kbd>R</kbd> relancer · <kbd>B</kbd> bannir · <kbd>clic gauche</kbd> visée à la souris · <kbd>Espace</kbd> ou <kbd>clic droit</kbd> esquive · <kbd>E</kbd> embrasement</p>
+    </div>
+    <div class="opane" data-op="gfx" hidden>
+      <div class="sect">Qualité</div>
+      <div class="qgrid" id="qualGrid">
+        <button class="pick" data-q="auto"><b>Automatique</b><small>Baisse toute seule quand le jeu ralentit (conseillé)</small></button>
+        <button class="pick" data-q="haute"><b>Haute</b><small>Ombres de toutes les lumières, tous les effets</small></button>
+        <button class="pick" data-q="moyenne"><b>Moyenne</b><small>Ombre de la lanterne seulement, effets réduits</small></button>
+        <button class="pick" data-q="basse"><b>Basse</b><small>Sans ombres ni halo, peu d’effets : pour les PC modestes</small></button>
+      </div>
+      <div class="opts"><button class="btn ghost small" id="fpsBtn">Images par seconde : masquées</button></div>
+    </div>
+    <div class="opane" data-op="save" hidden>
+      <p class="mute">La progression (braises, personnages, succès, journal) est enregistrée sur ce PC.</p>
+      <div class="danger"><button class="btn ghost small" id="resetBtn">Effacer la sauvegarde</button><span class="mute" id="resetTxt"></span></div>
+    </div>
+    <div class="opane" data-op="admin" hidden>
+      <p class="mute">Réservé au créateur du jeu. Pour cacher cet onglet : retape le mot secret sur cet écran.</p>
+      <div class="opts">
+        <button class="btn ghost small" id="conceptBtn">Ennemis provisoires : placeholders</button>
+        <button class="btn ghost small" id="decoPhBtn">Décor provisoire : masqué</button>
+        <button class="btn ghost small" id="benchBtn">Banc d’essai du Gardien</button>
+        <button class="btn ghost small" id="admGold">+1 000 braises</button>
+        <button class="btn ghost small" id="admUnlock">Tout débloquer (lieux, gardiens, niveaux)</button>
+      </div>
+    </div>
     <div class="btns"><button class="btn ghost" data-back>Retour</button></div>
   </div>
 </div>
@@ -603,7 +662,7 @@ td .w svg{width:16px;height:16px;color:var(--amber);flex:none}
     <div class="eyebrow" id="jCount">Journal</div>
     <h2>Le journal du Gardien</h2>
     <div class="progress" aria-hidden="true"><i id="jBar"></i></div>
-    <div class="journal" id="jList"></div>
+    <div class="journal2"><nav class="jchaps" id="jChaps" aria-label="Chapitres"></nav><section class="jpage" id="jList"></section></div>
     <div class="btns"><button class="btn ghost" data-back>Retour</button></div>
   </div>
 </div>
@@ -1064,6 +1123,25 @@ const EVENTS = [
   {t:390,k:'cercle'}, {t:420,k:'elite',type:'cracheur'}, {t:420,k:'merchant'}, {t:450,k:'nuee'}, {t:480,k:'elite',type:'noye'},
   {t:510,k:'cercle'}, {t:540,k:'boss',slot:2}, {t:570,k:'nuee'}
 ];
+/* VEILLÉES : 5 niveaux par lieu, de plus en plus durs. Réussir une veillée (atteindre l'aube) ouvre la suivante.
+   dur = durée de la nuit (s) ; hp, dmg, spawn = force et nombre des ombres ; gold = braises gagnées ; boss2 = second boss présent */
+const LEVELS = [
+  {n:'I',   name:'Première veillée', dur:300, hp:0.5,  dmg:0.5,  spawn:0.55, gold:0.7,  xp:1.25, boss2:false, desc:'Courte et douce : pour apprendre'},
+  {n:'II',  name:'Nuit tombante',    dur:420, hp:0.65, dmg:0.65, spawn:0.7,  gold:0.85, xp:1.15, boss2:false, desc:'Un peu plus longue, un premier vrai défi'},
+  {n:'III', name:'Nuit noire',       dur:600, hp:0.8,  dmg:0.8,  spawn:0.85, gold:1,    xp:1.05, boss2:true,  desc:'La nuit entière, les deux boss'},
+  {n:'IV',  name:'Nuit profonde',    dur:600, hp:1,    dmg:1,    spawn:1,    gold:1.25, xp:1,    boss2:true,  desc:'Les ombres à pleine force'},
+  {n:'V',   name:'Nuit sans fin',    dur:600, hp:1.35, dmg:1.25, spawn:1.15, gold:1.6,  xp:1,    boss2:true,  desc:'Pour les gardiens aguerris'}
+];
+const LV = () => LEVELS[(G && G.lv) || 0];
+let selLv = 0;
+const lvOpen = (map, i) => i === 0 || ((SAVE.lv && SAVE.lv[map]) || 0) >= i;          // SAVE.lv[lieu] = nombre de veillées réussies
+const nightLen = () => (G && G.dur) || WIN_TIME;
+/* événements de la nuit ramenés à sa durée (une nuit courte garde son rythme, en plus serré) */
+function nightEvents(lv){
+  const L = LEVELS[lv], k = L.dur/600;
+  return EVENTS.filter(e => L.boss2 || e.k !== 'boss').map(e => Object.assign({}, e, {t:Math.round(e.t*k)}))   // veillées courtes : un seul boss, en fin de nuit
+    .concat(L.boss2 ? [] : [{t:Math.round(L.dur*0.8), k:'boss', slot:1}]).sort((a, b) => a.t - b.t);
+}
 function pickW(list){
   let tot = 0; for (const [,w] of list) tot += w;
   let r = Math.random()*tot; for (const [t,w] of list){ r -= w; if (r <= 0) return t; }
@@ -1161,12 +1239,16 @@ let state = 'menu', G = null, titleLit = false, mX = 0.5, mY = 0.5, lastPtr = 'm
 addEventListener('pointermove', e => { mX = e.clientX/Math.max(1,W); mY = e.clientY/Math.max(1,H); if (e.pointerType === 'mouse') lastPtr = 'mouse'; });
 let selChar = SAVE.lastChar in CH && SAVE.chars[SAVE.lastChar] ? SAVE.lastChar : 'gardien';
 let selMap = SAVE.lastMap in MAPS && SAVE.maps[SAVE.lastMap] ? SAVE.lastMap : 'foret';
+// anciennes sauvegardes : qui a déjà vu l'aube d'un lieu (à l'ancienne difficulté, = veillée IV) garde les veillées I à IV ouvertes
+if (!SAVE.lv){ SAVE.lv = {}; for (const [m, a] of [['foret', 'aube'], ['marais', 'aube_marais'], ['cimetiere', 'cim_aube']]) if (SAVE.ach[a]) SAVE.lv[m] = 3; }
+selLv = (SAVE.lastLv && SAVE.lastLv[selMap]) || 0; if (!lvOpen(selMap, selLv)) selLv = 0;
 
 function newGame(charId, mapId){
   mapId = mapId || 'foret';
   const c = CH[charId];
+  const lv = Math.max(0, Math.min(LEVELS.length - 1, selLv || 0));
   G = {
-    map:mapId, char:charId, hard: !!(SAVE.hard && SAVE.wins > 0),
+    map:mapId, char:charId, hard: !!(SAVE.hard && SAVE.wins > 0), lv, dur:LEVELS[lv].dur, events:nightEvents(lv),
     t:0, kills:0, gold:0, spawnAcc:0, ev:0,
     p:{pc:charId, x:0, y:0, r:12, dashCd:0, dashT:0, dvx:0, dvy:0, hp:100, max:100, face:1, hurt:0, step:0, inv:0, revives:(SAVE.shop.renaissance||0) + (c.mod.revive||0), xp:0, lvl:1, need:needFor(1)},
     weapons:[{id:c.w, lv:1, t:0.3, a:0, stars:0}], passives:[], acq:{[c.w]:0},
@@ -1197,8 +1279,8 @@ function computeStats(){
     amount: Math.floor(lvP('jumelle')),
     crit: 0.03 + (c.crit||0) + 0.05*lvP('oeil') + (hasArc('lune') ? 0.1 : 0),
     armor: (c.armor||0) + (s.armure||0) + lvP('ecorce') + (hasArc('epines') ? 3 : 0),
-    xp: (1 + (c.xp||0) + 0.05*(s.croissance||0) + 0.08*lvP('grimoire'))*(hasArc('moisson') ? 1.35 : 1),
-    gold: (1 + 0.15*(s.fortune||0)) * (G.hard ? 1.5 : 1) * MAPS[G.map].gold * (hasArc('avare') ? 1.6 : 1),
+    xp: (1 + (c.xp||0) + 0.05*(s.croissance||0) + 0.08*lvP('grimoire'))*(hasArc('moisson') ? 1.35 : 1)*LV().xp,
+    gold: (1 + 0.15*(s.fortune||0)) * (G.hard ? 1.5 : 1) * MAPS[G.map].gold * (hasArc('avare') ? 1.6 : 1) * LV().gold,
     luck: (c.luck||0) + 0.05*(s.chance||0) + 0.10*lvP('trefle') + (hasArc('avare') ? 0.15 : 0),
     dur: 1 + (c.dur||0) + 0.10*lvP('pierre'),
     light: SAVE.relics.marais ? 1.25 : 1
@@ -1319,7 +1401,12 @@ function nextPop(){
   el.classList.add('on');
   setTimeout(() => { el.classList.remove('on'); setTimeout(nextPop, 350); }, 3300);
 }
-const PCAP = () => G.enemies.length > 250 ? 0.5 : 1;               // grosses vagues : moitié moins de particules et de chiffres
+/* QUALITÉ graphique : réglage du joueur (auto, haute, moyenne, basse). En « auto », le jeu baisse tout seul quand il rame.
+   QL() : 2 = haute (tout), 1 = moyenne (sans ombres des feux, moins d'effets), 0 = basse (sans ombres ni halo, effets réduits) */
+let QAUTO = 2;
+const QL = () => { const q = SAVE.quality || 'auto'; return q === 'haute' ? 2 : q === 'moyenne' ? 1 : q === 'basse' ? 0 : QAUTO; };
+const QFX = () => [0.35, 0.65, 1][QL()];
+const PCAP = () => (G.enemies.length > 250 ? 0.5 : G.enemies.length > 150 ? 0.75 : 1)*[0.5, 0.75, 1][QL()];   // grosses vagues ou qualité réduite : moins de particules et de chiffres
 function burst(x, y, col, n, spread){
   for (let i=0;i<n && G.parts.length<600*PCAP();i++){
     const a = Math.random()*TAU, s = rnd(40, 160)*(spread||1);
@@ -1356,10 +1443,10 @@ function retro(){
 function makeEnemy(type, x, y, opt){
   opt = opt || {};
   const b = ET[type], el = !!opt.elite;
-  const s = (1 + G.t/110) * (G.hard ? 1.5 : 1) * (el ? 10 : 1) * MAPS[G.map].hp;
+  const s = (1 + G.t/110) * (G.hard ? 1.5 : 1) * (el ? 10 : 1) * MAPS[G.map].hp * LV().hp;
   const e = {
     type, x, y, r:b.r*(el?1.6:1), hp:b.hp*s, max:b.hp*s,
-    spd:b.spd*rnd(.9,1.1)*(G.hard?1.15:1)*(el?.9:1), dmg:b.dmg*(1+G.t/600)*(el?1.5:1),
+    spd:b.spd*rnd(.9,1.1)*(G.hard?1.15:1)*(el?.9:1), dmg:b.dmg*(1+G.t/600)*(el?1.5:1)*LV().dmg,
     xp:b.xp*(1+Math.floor(G.t/180)), col:b.col, eye:b.eye, kb:b.kb*(el?.3:1),
     elite:el, boss:!!b.boss, flash:0, kx:0, ky:0, ph:Math.random()*TAU, atk:0, slowT:0, frz:0,
     dir:opt.dir||null, life:opt.life||0, st:0, tt:0, cd:b.boss?3:rnd(1,2.5), cx:0, cy:0, hT:0, bT:0, born:G.t,
@@ -1798,9 +1885,10 @@ function update(dt){
     return;
   }
   if (!G.room) G.t += dt;                                         // dans une salle, la nuit est suspendue
-  if (G.t >= WIN_TIME){ startDawn(); return; }
+  if (G.t >= nightLen()){ startDawn(); return; }
 
-  while (!G.room && G.ev < EVENTS.length && G.t >= EVENTS[G.ev].t){ runEvent(EVENTS[G.ev]); G.ev++; }
+  const EV = G.events || EVENTS;
+  while (!G.room && G.ev < EV.length && G.t >= EV[G.ev].t){ runEvent(EV[G.ev]); G.ev++; }
 
   const minute = Math.min(9, Math.floor(G.t/60));
   const minCount = 12 + G.t*0.55;
@@ -1809,7 +1897,7 @@ function update(dt){
     const ph = (G.t % 50)/50, wave = 0.62 + 0.9*Math.pow(Math.sin(ph*Math.PI), 2), calm = (G.calmT || 0) > 0 ? 0.15 : 1;
     if (ph > 0.42 && ph < 0.44 && !G.peakSaid && G.t > 40){ G.peakSaid = true; toast('La nuit s’épaissit…'); } else if (ph > 0.6) G.peakSaid = false;
     G.calmT = Math.max(0, (G.calmT || 0) - dt);
-    G.spawnAcc += (1.1 + G.t/24) * wave * calm * (G.enemies.length < minCount ? 2.2 : 1) * dt;
+    G.spawnAcc += (1.1 + G.t/24) * LV().spawn * wave * calm * (G.enemies.length < minCount ? 2.2 : 1) * dt;
     while (G.spawnAcc >= 1){
       G.spawnAcc -= 1;
       let t = pickW(WAVES[minute]);
@@ -2422,11 +2510,13 @@ function draw(now){
   }
   // Ennemis : ombres portées, corps, liserés de lumière
   // ombres regroupées en 4 tons : 4 remplissages au lieu d'un par ennemi
-  const SH = [[], [], [], []];
+  const SH = [[], [], [], []], SHQ = [];
+  updateShadowLights(lwx, lwy, L);
   for (const e of G.enemies){
     const ex = X(e.x), ey = Y(e.y); if (!vis(ex,ey,e.r+40)) continue;
     const ddx = e.x - lwx, ddy = e.y - lwy, d = Math.hypot(ddx,ddy)||1, lit = Math.max(0, 1 - d/L);
-    SH[ET[e.type].ghost ? 0 : 1 + Math.min(2, Math.floor(lit*3))].push([ex + ddx/d*e.r*0.9*lit, ey + e.r*0.85 + ddy/d*e.r*0.35*lit, e.r*(1 + 0.6*lit), e.r*0.38, Math.atan2(ddy,ddx)*0.25*lit]);
+    SH[ET[e.type].ghost ? 0 : 1].push([ex, ey + e.r*0.85, e.r*0.95, e.r*0.34, 0]);   // contact au sol
+    if (!ET[e.type].ghost && e.type !== 'chauve' && e.type !== 'feufollet' && !e.dead) SHQ.push(e);
     DL.push({y:footY(e), k:1, e});
   }
   for (let b = 0; b < 4; b++){
@@ -2435,6 +2525,12 @@ function draw(now){
     for (const s of SH[b]){ ctx.moveTo(s[0] + s[2]*Math.cos(s[4]), s[1] + s[2]*Math.sin(s[4])); ctx.ellipse(s[0], s[1], s[2], s[3], s[4], 0, TAU); }
     ctx.fill();
   }
+  // ombres portées par la lumière (lanterne, braseros) : sous tous les personnages, avant leur dessin
+  if (QL() >= 1){ let n = 0; const cap = Math.round(140*PCAP());
+    for (const e of SHQ){ if (n++ > cap) break; castActorShadow(X(e.x), Y(e.y) + e.r*0.85, e.x, e.y + e.r*0.85, e.r*2.4, e.r*0.9, 0.9); }
+    if (!p.down) castActorShadow(X(p.x), Y(p.y) + 12, p.x, p.y + 12, 58, 11, 0.85);
+    if (G.ally && G.ally.p && !G.ally.p.down) castActorShadow(X(G.ally.p.x), Y(G.ally.p.y) + 12, G.ally.p.x, G.ally.p.y + 12, 58, 11, 0.85);
+    ctx.globalAlpha = 1; }
   for (const c of G.corpses){
     const x = X(c.x), y = Y(c.y); if (!vis(x,y,60)) continue;
     DL.push({y:footY(c), k:2, e:c});
@@ -2500,7 +2596,8 @@ function draw(now){
 
   // Obscurité
   let dk = 1;
-  if (G.t > 540) dk = 1 - 0.45*Math.min(1,(G.t-540)/60);
+  const DAWN0 = nightLen() - 60;
+  if (G.t > DAWN0) dk = 1 - 0.45*Math.min(1,(G.t-DAWN0)/60);
   if (state === 'dawn') dk = 0.55*Math.max(0, 1 - G.dawnT/2.6);
   if (dk > 0.01) lightPass(X, Y, lx, ly, L, dk, now);
 
@@ -2510,8 +2607,8 @@ function draw(now){
   g.addColorStop(0,`rgba(${P.tint},.13)`); g.addColorStop(0.45,`rgba(${P.tint},.05)`); g.addColorStop(1,`rgba(${P.tint},0)`);
   ctx.fillStyle = g; ctx.fillRect(0,0,W,H);
   ctx.globalCompositeOperation = 'lighter';
-  if (G.t > 540 || state === 'dawn'){
-    const k = state === 'dawn' ? 1 : Math.min(1,(G.t-540)/60);
+  if (G.t > DAWN0 || state === 'dawn'){
+    const k = state === 'dawn' ? 1 : Math.min(1,(G.t-DAWN0)/60);
     ctx.fillStyle = `rgba(90,110,150,${0.12*k})`; ctx.fillRect(0,0,W,H);
   }
   g = ctx.createRadialGradient(lx,ly,0,lx,ly,14); g.addColorStop(0,'rgba(255,230,160,.9)'); g.addColorStop(1,'rgba(255,200,120,0)');
@@ -2543,9 +2640,9 @@ function draw(now){
     const gx = X(gm.x), gy0 = Y(gm.y); if (!vis(gx,gy0,20)) continue;
     const tw = reduce ? 1 : 0.75 + 0.25*Math.sin(now/200 + gm.x), gy = gy0 + (reduce ? 0 : Math.sin(now/320 + gm.x*0.7)*1.6);
     const kind = gm.kind === 'coin' ? 'coin' : gm.v >= 10 ? 'big' : gm.v >= 3 ? 'mid' : 'small', cs = crystal(kind);
-    const gr = kind === 'coin' ? 9 : kind === 'big' ? 16 : kind === 'mid' ? 12 : 9;
+    const GS = SAVE.bigItems === 0 ? 1 : 1.35, gr = Math.round((kind === 'coin' ? 9 : kind === 'big' ? 16 : kind === 'mid' ? 12 : 9)*GS);   // option « objets grands »
     ctx.globalAlpha = tw; ctx.drawImage(glow(cs.glow, gr), gx - gr, gy - gr); ctx.globalAlpha = 1;
-    ctx.drawImage(cs.c, gx - cs.w/2, gy - cs.h/2, cs.w, cs.h);
+    ctx.drawImage(cs.c, gx - cs.w*GS/2, gy - cs.h*GS/2, cs.w*GS, cs.h*GS);
     if (!reduce && Math.sin(now/260 + gm.x*1.3) > 0.97){ ctx.fillStyle = '#ffffff'; ctx.fillRect(gx - 4, gy - cs.h/2 - 0.5, 8, 1); ctx.fillRect(gx - 0.5, gy - cs.h/2 - 4, 1, 8); }
   }
   for (const s of G.shots){
@@ -2667,8 +2764,11 @@ function draw(now){
   for (const it of G.items){
     const x = X(it.x), y = Y(it.y); if (!vis(x,y,30)) continue;
     const yy = y + (reduce ? 0 : Math.sin(now/250 + it.x)*2);
-    ctx.fillStyle = 'rgba(242,184,75,.16)'; ctx.beginPath(); ctx.arc(x,y,16,0,TAU); ctx.fill();
-    drawItemAsset(it, x, yy);
+    const IS = SAVE.bigItems === 0 ? 1 : (it.type === 'coffre' ? 1.25 : 1.6), pu = reduce ? 0.5 : 0.5 + 0.5*Math.sin(now/300 + it.x);
+    // repère lumineux : halo qui respire + anneau au sol, pour voir l'objet de loin même dans la mêlée
+    ctx.globalCompositeOperation = 'lighter'; pglow(x, yy - 6*IS, 26*IS, it.type === 'coffre' ? '255,200,110' : '255,225,160', 0.35 + 0.2*pu); ctx.globalCompositeOperation = 'source-over';
+    ctx.strokeStyle = `rgba(255,214,140,${0.25 + 0.3*pu})`; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.ellipse(x, y + 4, 17*IS, 6*IS, 0, 0, TAU); ctx.stroke();
+    if (!drawEnt(it.type === 'coffre' && it.big ? 'chest_big' : ITEM_IDS[it.type], x, yy, IS)) drawItemAsset(it, x, yy);
   }
   drawHerbs(X, Y, now);
   if (G.merchant){
@@ -2734,7 +2834,7 @@ function draw(now){
   if (G.merchant) edgeArrow(G.merchant.x, G.merchant.y, '#8fe0a0');
 
   drawWeather(now);
-  gradeBloom();
+  if (QL() >= 1) gradeBloom();
   // Étalonnage final : vignette, grain, effets d’écran
   // étalonnage de zone : une même teinte enveloppe sol, décor, bâtiments et personnages (cohérence de l'image)
   ctx.save(); ctx.globalCompositeOperation = 'soft-light'; ctx.fillStyle = ZGRADE[G.map] || 'rgb(128,128,128)'; ctx.fillRect(0, 0, W, H); ctx.restore();
@@ -3032,60 +3132,160 @@ function drawEnemyBody(e, ex, ey){
 /* --- Brasero en fer --- */
 
 /* --- Carte de lumière, étalonnage, halo --- */
-let LC = null, LX = null, B1 = null, B1X = null, B2 = null, B2X = null;
+let LC = null, LX = null, B1 = null, B1X = null, B2 = null, B2X = null, LHC = null, LHX = null, CLC = null, CLX = null;
+/* Lumière physique (simplifiée) :
+   - chaque source perce la nuit avec une décroissance en 1/(1+d²), adoucie au bord (plus de « disque » plat) ;
+   - la lanterne est arrêtée par les bâtiments, ruines et statues : ombre portée douce derrière eux ;
+   - la lumière a une couleur : le sol se teinte d'orangé près des flammes, de bleu près des lanternes froides. */
+const LIGHT_WARM = '255,170,95';
+/* sources qui projettent des ombres cette image : la lanterne (et celle du compagnon), puis les 2 feux fixes les plus proches.
+   h = hauteur de la flamme au-dessus du sol (une lanterne basse fait de longues ombres, un brasero haut des ombres courtes) */
+let SHADOW_LIGHTS = [];
+function updateShadowLights(lwx, lwy, L){
+  const p = G.p, out = [{x:lwx, y:p.y + 10, R:L*1.25, h:44, i:1, own:true}];
+  if (G.ally && G.ally.p && !G.ally.p.down) out.push({x:G.ally.p.x + 8*(G.ally.p.face || 1), y:G.ally.p.y + 10, R:L, h:44, i:0.9, own:true});
+  if (!G.room && !reduce && QL() >= 2 && G.enemies.length < 200){
+    const c = [];
+    for (const b of G.braz) if (!b.dead) c.push({x:b.x, y:b.y, R:210, h:34, i:0.95, col:'255,140,60', ref:b});
+    for (const l of SITE_LIGHTS) if (l.r >= 90 && !l.soft) c.push({x:l.x, y:l.y + 18, R:l.r*1.8, h:70, i:0.62, col:l.col || LIGHT_WARM, ref:l});
+    for (const s of c) s.d = Math.hypot(s.x - p.x, s.y - p.y);
+    c.sort((a, b) => a.d - b.d);
+    for (const s of c.slice(0, 2)) if (s.d < 700) out.push(s);
+  }
+  SHADOW_LIGHTS = out;
+}
+let SHADOW_SPR = null;
+function shadowSprite(){                                             // forme d'ombre allongée : bords flous, pleine au pied, pâlit vers le bout
+  if (SHADOW_SPR) return SHADOW_SPR;
+  const c = document.createElement('canvas'); c.width = 160; c.height = 48; const g = c.getContext('2d');
+  g.filter = 'blur(5px)'; g.fillStyle = '#000'; g.beginPath(); g.ellipse(80, 24, 66, 13, 0, 0, TAU); g.fill(); g.filter = 'none';
+  g.globalCompositeOperation = 'destination-in'; const gr = g.createLinearGradient(0, 0, 160, 0);
+  gr.addColorStop(0, 'rgba(0,0,0,1)'); gr.addColorStop(0.35, 'rgba(0,0,0,.85)'); gr.addColorStop(1, 'rgba(0,0,0,0)'); g.fillStyle = gr; g.fillRect(0, 0, 160, 48);
+  return (SHADOW_SPR = c);
+}
+/* ombres des personnages et des ombres-ennemis : étirées à l'opposé de chaque source,
+   plus longues quand la source est basse ou loin, plus pâles quand elle est loin (décroissance en 1/(1+d²)) */
+function castActorShadow(fx, fy, wx, wy, hgt, rad, alpha){
+  if (!SHADOW_LIGHTS.length) return;
+  const s = contactSprite();
+  for (const l of SHADOW_LIGHTS){
+    const dx = wx - l.x, dy = (wy - l.y)*1.6, d = Math.hypot(dx, dy);           // ×1.6 : la profondeur isométrique est écrasée à l'écran
+    if (d > l.R || d < 4) continue;
+    const t = d/l.R, k = l.i/(1 + 6*t*t)*Math.pow(1 - t, 0.8);               // intensité reçue
+    if (k < 0.04) continue;
+    const len = Math.min(rad*7, Math.max(rad*1.4, 1.5*hgt*d/Math.max(12, l.h*2.2 - hgt*0.5)));   // projection : hauteur × distance / hauteur de la flamme
+    const ang = Math.atan2(dy/1.6, dx);
+    ctx.save(); ctx.translate(fx, fy); ctx.rotate(ang); ctx.scale(1, 0.62 + 0.38*Math.abs(Math.cos(ang)));   // vue de 3/4 : l'ombre s'écrase quand elle part vers le haut ou le bas
+    ctx.globalAlpha = Math.min(0.62, alpha*k*1.5);
+    ctx.drawImage(shadowSprite(), -rad*0.5, -rad*1.05, len + rad*0.9, rad*2.1);   // dense au pied, qui s'estompe vers le bout
+    ctx.restore();
+  }
+}
 function lightPass(X, Y, lx, ly, L, dk, now){
   const q = 0.5, lw = Math.max(1, Math.ceil(W*q)), lh = Math.max(1, Math.ceil(H*q));
-  if (!LC){ LC = document.createElement('canvas'); LX = LC.getContext('2d'); }
-  if (LC.width !== lw || LC.height !== lh){ LC.width = lw; LC.height = lh; }
+  if (!LC){ LC = document.createElement('canvas'); LX = LC.getContext('2d'); LHC = document.createElement('canvas'); LHX = LHC.getContext('2d'); CLC = document.createElement('canvas'); CLX = CLC.getContext('2d'); }
+  for (const c of [LC, LHC, CLC]) if (c.width !== lw || c.height !== lh){ c.width = lw; c.height = lh; }
   const A = Math.min(0.93, 0.9*dk)*(1 - 0.72*(G.zap || 0));
   LX.globalCompositeOperation = 'source-over'; LX.clearRect(0, 0, lw, lh);
   LX.fillStyle = `rgba(${NIGHT[G.map]},${A})`; LX.fillRect(0, 0, lw, lh);
-  LX.globalCompositeOperation = 'destination-out';
+  // couleur de la lumière : calque gris neutre (128 = aucun effet), teinté là où une source éclaire
+  CLX.globalCompositeOperation = 'source-over'; CLX.globalAlpha = 1; CLX.fillStyle = 'rgb(128,128,128)'; CLX.fillRect(0, 0, lw, lh);
+  // 1. la lanterne du joueur, avec les ombres des obstacles
+  LHX.globalCompositeOperation = 'source-over'; LHX.globalAlpha = 1; LHX.clearRect(0, 0, lw, lh);
+  const hole = lightHole(), R0 = L*1.25;
+  LHX.drawImage(hole, (lx - R0)*q, (ly - R0)*q, 2*R0*q, 2*R0*q);
+  if (!G.room && !reduce && QL() >= 1) castShadows(LHX, X, Y, R0, q);
+  LX.globalCompositeOperation = 'destination-out'; LX.drawImage(LHC, 0, 0);
+  const DONE = new Set();
+  // 1 bis. les feux les plus proches (braseros, feux de camp, réverbères) projettent eux aussi les ombres du décor
+  for (const s of SHADOW_LIGHTS){
+    if (s.own) continue;
+    const fl = reduce ? 1 : 1 + 0.04*Math.sin(now/90 + s.x);
+    LHX.globalCompositeOperation = 'source-over'; LHX.globalAlpha = 1; LHX.clearRect(0, 0, lw, lh);
+    const sx = X(s.x), sy = Y(s.y) - s.h*0.35, rr = s.R*fl;
+    LHX.globalAlpha = s.i; LHX.drawImage(hole, (sx - rr)*q, (sy - rr)*q, 2*rr*q, 2*rr*q); LHX.globalAlpha = 1;
+    castShadows(LHX, X, Y, rr*0.9, q, s);
+    LX.globalCompositeOperation = 'destination-out'; LX.drawImage(LHC, 0, 0);
+    LHX.globalCompositeOperation = 'source-in'; LHX.fillStyle = `rgb(${s.col})`; LHX.fillRect(0, 0, lw, lh);
+    CLX.globalAlpha = 0.5; CLX.drawImage(LHC, 0, 0); CLX.globalAlpha = 1;
+    DONE.add(s.ref);
+  }
+  const tint = typeof guardianPose === 'function' && guardianReady() ? (P => P.tint === 'green' ? '120,235,160' : P.cold ? '140,180,255' : LIGHT_WARM)(guardianPose(now)) : LIGHT_WARM;
+  LHX.globalCompositeOperation = 'source-in'; LHX.fillStyle = `rgb(${tint})`; LHX.fillRect(0, 0, lw, lh);   // la même tache, colorée (ombres comprises)
+  CLX.globalAlpha = 0.55; CLX.drawImage(LHC, 0, 0); CLX.globalAlpha = 1;
   let n = 0;
-  const hole = lightHole();                                          // tache de lumière précalculée (même dégradé), posée avec une opacité
-  const add = (x, y, r, i) => {
+  const add = (x, y, r, i, col) => {
     if (n > 180 || i <= 0.01 || x < -r || y < -r || x > W + r || y > H + r) return; n++;
     LX.globalAlpha = Math.min(1, i); LX.drawImage(hole, (x-r)*q, (y-r)*q, 2*r*q, 2*r*q);
+    if (col && r > 40){ CLX.globalAlpha = Math.min(0.6, i*0.5); CLX.drawImage(tintDot(col), (x-r*0.8)*q, (y-r*0.8)*q, 1.6*r*q, 1.6*r*q); }
   };
   const px = X(G.p.x), py = Y(G.p.y);
-  add(lx, ly, L*1.12, 1); add(px, py, 80, 0.5);
+  add(px, py, 80, 0.5);
   if (G.ally && G.ally.p){ const R = coopSwap(() => keeperRig(now), true); add(X(R.lx), Y(R.ly), L*1.0, 0.95); }   // la lanterne du compagnon éclaire aussi
-  for (const b of G.braz) if (!b.dead) add(X(b.x), Y(b.y) - 12, 200 + (reduce ? 0 : Math.sin(now/90 + b.x)*10), 0.95);
-  for (const z of G.zones) if (z.burn) add(X(z.x), Y(z.y), z.R*2.4, 0.7*Math.min(1, z.life));
+  for (const b of G.braz) if (!b.dead && !DONE.has(b)) add(X(b.x), Y(b.y) - 12, 200 + (reduce ? 0 : Math.sin(now/90 + b.x)*10), 0.95, '255,140,60');
+  for (const z of G.zones) if (z.burn) add(X(z.x), Y(z.y), z.R*2.4, 0.7*Math.min(1, z.life), '255,120,50');
   for (const s of G.shots){
-    if (s.kind === 'bolt') add(X(s.x), Y(s.y), s.ev ? 90 : 64, 0.6);
+    if (s.kind === 'bolt') add(X(s.x), Y(s.y), s.ev ? 90 : 64, 0.6, '170,210,255');
     else if (s.kind === 'sickle') add(X(s.x), Y(s.y), 60, 0.45);
-    else if (s.kind === 'meteor'){ const k = Math.min(1, s.age/s.T); add(X(s.x) + (1-k)*170, Y(s.y) - (1-k)*340, 100, 0.75); }
+    else if (s.kind === 'meteor'){ const k = Math.min(1, s.age/s.T); add(X(s.x) + (1-k)*170, Y(s.y) - (1-k)*340, 100, 0.75, '255,150,70'); }
   }
   for (const w of G.weapons){
     if ((w.id === 'halo' || w.id === 'couronne') && w.R) for (let i=0;i<w.n;i++){ const a = w.a + i*TAU/w.n; add(px + Math.cos(a)*w.R, py + Math.sin(a)*w.R, 64, 0.55); }
     if ((w.id === 'rayon' || w.id === 'phare') && w.active > 0 && w.len) for (let i=0;i<w.n;i++){ const a = w.a + i*TAU/w.n; for (let dd=40; dd<=w.len; dd+=70) add(px + Math.cos(a)*dd, py + Math.sin(a)*dd, 90, 0.55); }
   }
-  for (const b of G.bolts) for (const pt of b.pts) add(X(pt[0]), Y(pt[1]), 120, Math.min(1, b.life*5));
+  for (const b of G.bolts) for (const pt of b.pts) add(X(pt[0]), Y(pt[1]), 120, Math.min(1, b.life*5), '180,200,255');
   for (const r of G.rings){ const k = 1 - r.life/0.45; add(X(r.x), Y(r.y), r.R*(0.4 + 0.8*k), 0.55*(1-k)); }
   for (const s of G.slashes) add(px + Math.cos(s.ang)*s.w*0.6, py + Math.sin(s.ang)*s.w*0.6, s.w*1.1, 0.5*s.life/0.22);
-  if (G.merchant) add(X(G.merchant.x) + 56, Y(G.merchant.y) - 30, 210, 0.9);
+  if (G.merchant) add(X(G.merchant.x) + 56, Y(G.merchant.y) - 30, 210, 0.9, '140,255,170');
   for (const l of decoLights) if (l.hole) add(l.x, l.y, l.r*2.6, 0.85);
-  for (const l of SITE_LIGHTS) add(X(l.x), Y(l.y), l.r*1.8, 0.62 + (reduce ? 0 : 0.05*Math.sin(now/170 + l.x)));   // les lieux se repèrent dans la nuit              // lanternes des bâtiments
+  for (const l of SITE_LIGHTS) if (!DONE.has(l)) add(X(l.x), Y(l.y), l.r*1.8, 0.62 + (reduce ? 0 : 0.05*Math.sin(now/170 + l.x)), l.col || LIGHT_WARM);   // les lieux se repèrent dans la nuit              // lanternes des bâtiments
   if (G.fxs) for (const f of G.fxs){                                                 // effets peints lumineux
-    if (f.k === 'fx_explosion' || f.k === 'fx_embrasement' || f.k === 'fx_niveau'){ const k = f.age/f.dur; add(X(f.follow ? G.p.x : f.x), Y(f.follow ? G.p.y : f.y), f.w*0.7, 0.8*(1 - k)); }
+    if (f.k === 'fx_explosion' || f.k === 'fx_embrasement' || f.k === 'fx_niveau'){ const k = f.age/f.dur; add(X(f.follow ? G.p.x : f.x), Y(f.follow ? G.p.y : f.y), f.w*0.7, 0.8*(1 - k), f.k === 'fx_niveau' ? '255,230,160' : '255,140,60'); }
   }
   if (G.relic) add(X(G.relic.x), Y(G.relic.y), 140, 0.75);
   for (const it of G.items) if (it.type === 'coffre') add(X(it.x), Y(it.y), 80, 0.55);
-  for (const l of decoLights) add(l.x, l.y, l.r, l.i);
+  for (const l of decoLights) add(l.x, l.y, l.r, l.i, l.col);
   for (const e of G.enemies){ const L2 = ELIGHT[e.type]; if (L2) add(X(e.x), Y(e.y) - (e.boss ? e.r*0.6 : 0), L2[0], L2[1]); }
   for (const gv of G.graves) add(X(gv.x), Y(gv.y), 60, 0.45);
   let gc = 0;
   for (const gm of G.gems){ if (gc > 70) break; const x = X(gm.x), y = Y(gm.y); if (x < 0 || y < 0 || x > W || y > H) continue; gc++; add(x, y, gm.v >= 10 ? 60 : 34, 0.45); }
-  LX.globalAlpha = 1; LX.globalCompositeOperation = 'source-over';
+  LX.globalAlpha = 1; LX.globalCompositeOperation = 'source-over'; CLX.globalAlpha = 1;
   ctx.drawImage(LC, 0, 0, W, H);
+  ctx.save(); ctx.globalCompositeOperation = 'soft-light'; ctx.globalAlpha = Math.min(1, 0.35 + dk*0.65); ctx.drawImage(CLC, 0, 0, W, H); ctx.restore();   // la couleur des sources sur le décor
+}
+/* ombres portées de la lanterne : chaque obstacle (empreinte au sol en ellipse) cache ce qui est derrière lui */
+function castShadows(g, X, Y, R, q, src){
+  const p = src || G.p, cx = Math.floor(p.x/OB_CELL), cy = Math.floor(p.y/OB_CELL), seen = new Set(), far = R*2.2;
+  g.save(); g.globalCompositeOperation = 'destination-out'; if (QL() >= 2) g.filter = 'blur(' + Math.max(2, Math.round(7*q)) + 'px)'; g.fillStyle = '#000';
+  g.beginPath();
+  const nC = Math.ceil(R/OB_CELL) + 1;
+  for (let a = cx - nC; a <= cx + nC; a++) for (let b = cy - nC; b <= cy + nC; b++) for (const ob of obstacleCell(a, b)){
+    if (seen.has(ob) || ob.rx < 12) continue; seen.add(ob);
+    const s = ob.rx/ob.ry, dx = p.x - ob.x, dy = (p.y - ob.y)*s, d = Math.hypot(dx, dy);
+    if (d <= ob.rx*1.05 || d > R + ob.rx) continue;                     // trop loin, ou on est collé dessus
+    const ang = Math.atan2(dy, dx), beta = Math.acos(ob.rx/d);
+    const T = [ang + beta, ang - beta].map(t => [ob.x + Math.cos(t)*ob.rx, ob.y + Math.sin(t)*ob.rx/s]);
+    const out = T.map(([x, y]) => { const ux = x - p.x, uy = y - p.y, l = Math.hypot(ux, uy) || 1; return [x + ux/l*far, y + uy/l*far]; });
+    // l'ombre part du centre de l'obstacle (sa face éclairée reste visible) et s'étend loin derrière
+    g.moveTo(X(ob.x)*q, Y(ob.y)*q); g.lineTo(X(T[0][0])*q, Y(T[0][1])*q); g.lineTo(X(out[0][0])*q, Y(out[0][1])*q);
+    g.lineTo(X(out[1][0])*q, Y(out[1][1])*q); g.lineTo(X(T[1][0])*q, Y(T[1][1])*q); g.closePath();
+  }
+  g.globalAlpha = 0.82; g.fill(); g.restore();
+}
+const TINT_CACHE = new Map();
+function tintDot(col){
+  let c = TINT_CACHE.get(col); if (c) return c;
+  c = document.createElement('canvas'); c.width = c.height = 64; const g = c.getContext('2d'), gr = g.createRadialGradient(32, 32, 0, 32, 32, 32);
+  gr.addColorStop(0, `rgba(${col},1)`); gr.addColorStop(0.45, `rgba(${col},0.45)`); gr.addColorStop(1, `rgba(${col},0)`);
+  g.fillStyle = gr; g.fillRect(0, 0, 64, 64); TINT_CACHE.set(col, c); return c;
 }
 let LHOLE = null;
 function lightHole(){
   if (LHOLE) return LHOLE;
   const c = document.createElement('canvas'); c.width = c.height = 128;
+  // décroissance « physique » : 1/(1 + (d/d0)²), ramenée à zéro en douceur au bord (pas de coupure nette)
   const g = c.getContext('2d'), gr = g.createRadialGradient(64, 64, 0, 64, 64, 64);
-  gr.addColorStop(0, 'rgba(0,0,0,1)'); gr.addColorStop(0.4, 'rgba(0,0,0,0.6)'); gr.addColorStop(1, 'rgba(0,0,0,0)');
+  for (let i = 0; i <= 16; i++){ const t = i/16, a = 1/(1 + 3*t*t)*Math.pow(1 - t*t, 1.5)*1.05; gr.addColorStop(t, `rgba(0,0,0,${Math.min(1, a).toFixed(3)})`); }
   g.fillStyle = gr; g.fillRect(0, 0, 128, 128);
   return LHOLE = c;
 }
@@ -4843,21 +5043,34 @@ const FX = {};                                                      // nom → {
 async function loadFxSheets(){
   const M = ASSET_DATA.manifest; if (!M || !M.fx) return;
   await Promise.all(Object.keys(M.fx).map(k => loadImageOnce(ASSET_ROOT + M.fx[k].file)
-    .then(img => { FX[k] = Object.assign({img}, M.fx[k]); }).catch(() => {})));
+    .then(img => { FX[k] = Object.assign({img}, M.fx[k]); fxMips(FX[k]); }).catch(() => {})));
+}
+/* versions réduites (½, ¼) de chaque bande d'effet : un effet affiché petit ne relit plus la grande image */
+function fxMips(F){
+  F.mips = [];
+  let src = F.img, w = F.w, h = F.h;
+  for (let s = 0; s < 2 && w > 48; s++){
+    const c = document.createElement('canvas'); w = Math.round(w/2); h = Math.round(h/2); c.width = w*F.n; c.height = h;
+    const g = c.getContext('2d'); g.imageSmoothingQuality = 'high'; g.drawImage(src, 0, 0, c.width, c.height);
+    F.mips.push({img:c, w, h}); src = c;
+  }
 }
 const hasFx = k => !!FX[k];
 /* dessine l'image i de l'effet, centrée en (x, y), largeur w (hauteur proportionnelle) */
 function fxDraw(k, i, x, y, w, o){
   const F = FX[k]; if (!F) return false;
   o = o || {};
-  const h = o.h || w*F.h/F.w, fi = Math.max(0, Math.min(F.n - 1, i|0));
-  ctx.save();
+  const h = o.h || w*F.h/F.w, fi = Math.max(0, Math.min(F.n - 1, i|0)), m = Math.max(w, h);
+  if (x < -m || y < -m || x > W + m || y > H + m) return true;         // hors de l'écran : rien à dessiner
+  const a = o.a == null ? 1 : Math.max(0, Math.min(1, o.a)); if (a < 0.02) return true;
+  const ga = ctx.globalAlpha, op = ctx.globalCompositeOperation, M = (o.rot || o.flip) ? ctx.getTransform() : null;
   if (F.mode === 'add') ctx.globalCompositeOperation = 'lighter';
-  ctx.globalAlpha = o.a == null ? 1 : Math.max(0, Math.min(1, o.a));
-  ctx.translate(x, y); if (o.rot) ctx.rotate(o.rot); if (o.flip) ctx.scale(-1, 1);
+  ctx.globalAlpha = a;                                              // opacité absolue (comme avant)
   const ay = o.bottom ? -h : -h/2;                                  // bottom : l'effet part du sol
-  ctx.drawImage(F.img, fi*F.w, 0, F.w, F.h, -w/2, ay, w, h);
-  ctx.restore(); return true;
+  let S = F; if (F.mips) for (const mp of F.mips) if (mp.w >= w*1.15 && mp.h >= h*1.15) S = mp;   // la plus petite version encore assez grande
+  if (M){ ctx.translate(x, y); if (o.rot) ctx.rotate(o.rot); if (o.flip) ctx.scale(-1, 1); ctx.drawImage(S.img, fi*S.w, 0, S.w, S.h, -w/2, ay, w, h); ctx.setTransform(M); }
+  else ctx.drawImage(S.img, fi*S.w, 0, S.w, S.h, x - w/2, y + ay, w, h);   // sans rotation : pas de changement de repère
+  ctx.globalAlpha = ga; ctx.globalCompositeOperation = op; return true;
 }
 const fxLoopFrame = (k, t) => FX[k] ? Math.floor(t*FX[k].fps) % FX[k].n : 0;
 /* effets ponctuels dans le monde (impact, coup critique, âme, explosion…) */
@@ -4865,7 +5078,9 @@ const FX_CAP = {fx_impact:24, fx_crit:12, fx_ame:22, fx_explosion:14, fx_soin:2,
 function spawnFx(k, x, y, w, o){
   if (!FX[k] || !G || reduce) return;
   if (!G.fxs) G.fxs = [];
-  const cap = (FX_CAP[k] || 20)*(typeof PCAP === 'function' ? PCAP() : 1);
+  const cap = (FX_CAP[k] || 20)*PCAP()*QFX();
+  if (G.fxs.length >= [40, 90, 160][QL()]) return;                   // plafond global : la mêlée reste fluide
+  if (k === 'fx_ame' && G.enemies.length > 120 && Math.random() < 0.6) return;   // grosses vagues : une âme sur trois suffit
   let c = 0; for (const f of G.fxs) if (f.k === k) c++;
   if (c >= cap) return;
   G.fxs.push(Object.assign({k, x, y, w, age:0, dur:(o && o.dur) || FX[k].n/FX[k].fps, own:G.p}, o));
@@ -5081,15 +5296,15 @@ function talCount(k, n, p){ p = p || G.p; p.tc = p.tc || {}; p.tc[k] = (p.tc[k] 
 /* succès de maîtrise : un par personnage, vérifiés pour le joueur de ce PC */
 const TAL_ACH = [
   {id:'m_gardien',    ch:'gardien',    name:'Le Phare d’Orme',      cond:'Atteindre l’aube avec Le Gardien'},
-  {id:'m_herboriste', ch:'herboriste', name:'Main verte',           cond:'Cueillir 25 touffes de soin en une nuit', k:'herbe', n:25},
-  {id:'m_sonneuse',   ch:'sonneuse',   name:'Glas funèbre',         cond:'Repousser 600 ombres avec ta cloche en une nuit', k:'glas', n:600},
-  {id:'m_faucheur',   ch:'faucheur',   name:'Grande moisson',       cond:'Faucher 250 ombres en une nuit', k:'moisson', n:250},
-  {id:'m_vagabonde',  ch:'vagabonde',  name:'Insaisissable',        cond:'Esquiver 120 fois en une nuit', k:'dash', n:120},
-  {id:'m_conteuse',   ch:'conteuse',   name:'Mille et une nuits',   cond:'Atteindre le niveau 35 avec La Conteuse', lvl:35},
-  {id:'m_braisier',   ch:'braisier',   name:'Terre brûlée',         cond:'Dissiper 300 ombres avec tes braises en une nuit', k:'braises', n:300},
-  {id:'m_astronome',  ch:'astronome',  name:'Pluie d’étoiles',      cond:'Dissiper 120 ombres avec les étoiles filantes en une nuit', k:'etoile', n:120},
-  {id:'m_fossoyeuse', ch:'fossoyeuse', name:'Pelle et pioche',      cond:'Récupérer 400 PV par tes pelletées en une nuit', k:'pelle', n:400},
-  {id:'m_revenant',   ch:'revenant',   name:'Increvable',           cond:'Devenir spectre 6 fois en une nuit', k:'ghost', n:6}
+  {id:'m_herboriste', ch:'herboriste', name:'Main verte',           cond:'Cueillir 15 touffes de soin en une nuit', k:'herbe', n:15},
+  {id:'m_sonneuse',   ch:'sonneuse',   name:'Glas funèbre',         cond:'Repousser 350 ombres avec ta cloche en une nuit', k:'glas', n:350},
+  {id:'m_faucheur',   ch:'faucheur',   name:'Grande moisson',       cond:'Faucher 150 ombres en une nuit', k:'moisson', n:150},
+  {id:'m_vagabonde',  ch:'vagabonde',  name:'Insaisissable',        cond:'Esquiver 80 fois en une nuit', k:'dash', n:80},
+  {id:'m_conteuse',   ch:'conteuse',   name:'Mille et une nuits',   cond:'Atteindre le niveau 28 avec La Conteuse', lvl:28},
+  {id:'m_braisier',   ch:'braisier',   name:'Terre brûlée',         cond:'Dissiper 180 ombres avec tes braises en une nuit', k:'braises', n:180},
+  {id:'m_astronome',  ch:'astronome',  name:'Pluie d’étoiles',      cond:'Dissiper 70 ombres avec les étoiles filantes en une nuit', k:'etoile', n:70},
+  {id:'m_fossoyeuse', ch:'fossoyeuse', name:'Pelle et pioche',      cond:'Récupérer 250 PV par tes pelletées en une nuit', k:'pelle', n:250},
+  {id:'m_revenant',   ch:'revenant',   name:'Increvable',           cond:'Devenir spectre 4 fois en une nuit', k:'ghost', n:4}
 ];
 for (const a of TAL_ACH) ACH.push({id:a.id, name:a.name, cond:a.cond, rw:'Maîtrise : le don « ' + TAL[a.ch].name + ' » est renforcé', gold:150, apply:() => {}, tal:a.ch});
 const hasMastery = id => !!(SAVE.ach && SAVE.ach['m_' + id]);
@@ -5449,7 +5664,7 @@ function coopTick(now){                                                    // ap
 
 /* ---------------- côté invité : appliquer l'état reçu ---------------- */
 function guestBegin(m){
-  prewarmMap(m.map); selMap = m.map;
+  prewarmMap(m.map); selMap = m.map; selLv = m.lv || 0;
   newGame(coopMyChar(), m.map); G.guest = true; G.allyName = 'Hôte';
   G.ally = {p:{x:0, y:0, r:12, face:1, hp:100, max:100, vx:0, vy:0}, weapons:[], passives:[], st:{}};
   state = 'play'; keys.clear(); setHud(true); show(null); G.buildDirty = true; renderMute(); music(m.map);
@@ -5589,7 +5804,7 @@ function hud(){
   hudEls.lvl.textContent = 'Niv. ' + p.lvl;
   hudEls.kills.textContent = num(G.kills);
   hudEls.gold.textContent = num(G.gold);
-  hudEls.clock.textContent = fmt(WIN_TIME - G.t);
+  hudEls.clock.textContent = fmt(nightLen() - G.t);
   hudEls.hp.style.width = Math.max(0, p.hp/p.max*100) + '%';
   const dmax = dashMax();
   hudEls.dash.style.setProperty('--p', Math.max(0, Math.min(1, 1 - p.dashCd/dmax))); hudEls.dash.classList.toggle('ready', p.dashCd <= 0);
@@ -5942,9 +6157,11 @@ function renderPause(){
   $('#pauseEyebrow').textContent = 'Pause · ' + m.name;
   const ob = ['<h3>Objectifs de la nuit</h3>'];
   const row = (ok, txt, prog) => ob.push(`<div class="obj ${ok?'ok':''}"><i>${ok?'✓':''}</i><span>${txt}</span>${prog ? `<b>${prog}</b>` : ''}</div>`);
-  row(false, 'Tenir jusqu’à l’aube', fmt(G.t) + ' / 10:00');
-  row(G.bossKilled.has(m.boss1), 'Vaincre ' + lcFirst(ET[m.boss1].name), G.t < 300 ? 'à 5:00' : '');
-  row(G.bossKilled.has(m.boss2), 'Vaincre ' + lcFirst(ET[m.boss2].name), G.t < 540 ? 'à 9:00' : '');
+  $('#pauseEyebrow').textContent = 'Pause · ' + m.name + ' · Veillée ' + LV().n;
+  row(false, 'Tenir jusqu’à l’aube', fmt(G.t) + ' / ' + fmt(nightLen()));
+  const bt = slot => { const e = (G.events || EVENTS).find(x => x.k === 'boss' && x.slot === slot); return e && G.t < e.t ? 'à ' + fmt(e.t) : ''; };
+  row(G.bossKilled.has(m.boss1), 'Vaincre ' + lcFirst(ET[m.boss1].name), bt(1));
+  if (LV().boss2) row(G.bossKilled.has(m.boss2), 'Vaincre ' + lcFirst(ET[m.boss2].name), bt(2));
   if (G.relicFound) row(true, 'Relique trouvée : ' + m.relic.name);
   else if (SAVE.relics[G.map]) row(true, 'Relique du lieu déjà obtenue');
   else row(false, 'Trouver la relique cachée', G.relic ? num(Math.hypot(G.relic.x-G.p.x, G.relic.y-G.p.y)/10) + ' m' : '');
@@ -6001,6 +6218,7 @@ function showStory(ids, done){
   storyNext = () => {
     if (i >= ids.length){ storyNext = null; done(); return; }
     const s = storyDef(ids[i++]);
+    SAVE.storyRead = SAVE.storyRead || {}; if (!SAVE.storyRead[s.id]){ SAVE.storyRead[s.id] = 1; persist(); }   // page lue : plus « nouvelle »
     $('#stCh').textContent = s.ch; $('#stTitle').textContent = s.title;
     const art = STORY_ART[s.id]; $('#stArt').hidden = !art; if (art) $('#stArt').src = PA[art];
     $('#stText').innerHTML = s.text.map(t => `<p>${t}</p>`).join('');
@@ -6015,7 +6233,7 @@ $('#stBtn').addEventListener('click', () => { if (storyNext) storyNext(); });
 function finish(win, quit){
   if (NET.role === 'host' && G && G.ally){ NET.send({t:'end', win:!!win}); }
   state = 'end'; joy = null; keys.clear();
-  const t = Math.min(G.t, WIN_TIME);
+  const t = Math.min(G.t, nightLen());
   const gain = Math.round(G.gold * G.st.gold);
   const prevBest = SAVE.best, isBest = t > prevBest;
   SAVE.braises += gain; SAVE.runs++; SAVE.kills += G.kills;
@@ -6024,6 +6242,7 @@ function finish(win, quit){
   if (win){
     SAVE.wins++;
     unlockAch('aube');
+    { SAVE.lv = SAVE.lv || {}; const was = SAVE.lv[G.map] || 0; SAVE.lv[G.map] = Math.max(was, G.lv + 1); if (SAVE.lv[G.map] > was && G.lv + 1 < LEVELS.length) G.lvUnlocked = LEVELS[G.lv + 1]; }
     if (talOf(G.p) === 'gardien' && !G.guest) unlockAch('m_gardien');
     if (G.map === 'foret') storyUnlock('ch1');
     if (G.map === 'marais'){ unlockAch('aube_marais'); storyUnlock('ch2'); }
@@ -6031,11 +6250,11 @@ function finish(win, quit){
     if (G.hard) unlockAch('hard');
   }
   persist();
-  $('#endEyebrow').textContent = (win ? 'Victoire' : isBest && prevBest > 0 ? 'Nouveau record' : quit ? 'Abandon' : 'Fin de partie') + ' · ' + MAPS[G.map].name;
+  $('#endEyebrow').textContent = (win ? 'Victoire' : isBest && prevBest > 0 ? 'Nouveau record' : quit ? 'Abandon' : 'Fin de partie') + ' · ' + MAPS[G.map].name + ' · Veillée ' + LV().n;
   $('#endTitle').textContent = win ? 'L’aube est là' : 'La lanterne s’est éteinte';
   $('#endText').textContent = win
-    ? 'Le soleil se lève et les dernières ombres fondent dans la rosée. Tu as tenu toute la nuit.' + (SAVE.wins === 1 ? ' Le mode Nuit sans lune est débloqué.' : '')
-    : `Les ombres t’ont rattrapé à ${fmt(WIN_TIME - t)} de l’aube.` + (isBest ? ' C’est ta meilleure nuit.' : ` Ton record : ${fmt(SAVE.best)} tenues.`);
+    ? 'Le soleil se lève et les dernières ombres fondent dans la rosée. Tu as tenu toute la nuit.' + (G.lvUnlocked ? ` La veillée ${G.lvUnlocked.n} « ${G.lvUnlocked.name} » s’ouvre.` : '') + (SAVE.wins === 1 ? ' Le mode Nuit sans lune est débloqué.' : '')
+    : `Les ombres t’ont rattrapé à ${fmt(nightLen() - t)} de l’aube.` + (isBest ? ' C’est ta meilleure nuit.' : ` Ton record : ${fmt(SAVE.best)} tenues.`);
   $('#eTime').textContent = fmt(t); $('#eLvl').textContent = G.p.lvl; $('#eKills').textContent = num(G.kills); $('#eGold').textContent = '+' + num(gain);
   const rows = Object.entries(G.dmgBy).filter(([,d]) => d > 0).sort((a,b) => b[1]-a[1]);
   const label = id => WD[id] ? WD[id].name : ({brasier:'La Tour embrasée', brume:'La Papesse', epines:'Le Chariot', mat:'Le Mat', embrasement:'Embrasement', aube:'Éclat d’aube', sanctuaire:'Sanctuaire', renaissance:'Renaissance', tal_glas:'Glas (don)', tal_braises:'Traînée de braises (don)', tal_etoile:'Étoile filante (don)', tal_moisson:'Moisson (don)'})[id] || id;
@@ -6084,8 +6303,38 @@ function goOpts(){
   $('#volR').value = Math.round(SAVE.vol*100); $('#musR').value = Math.round(SAVE.musicVol*100);
   $('#volV').textContent = $('#volR').value + ' %'; $('#musV').textContent = $('#musR').value + ' %';
   resetArmed = false; $('#resetBtn').textContent = 'Effacer la sauvegarde'; $('#resetTxt').textContent = '';
-  renderMute(); renderConceptBtn(); renderDecoPh(); renderFps(); focusFirst('opts');
+  renderMute(); renderConceptBtn(); renderDecoPh(); renderFps(); renderQual(); renderBigItems(); optTab(OPT_TAB); focusFirst('opts');
+  $('#adminTab').hidden = !SAVE.admin;
 }
+/* onglets des options */
+let OPT_TAB = 'son';
+function optTab(t){
+  if (t === 'admin' && !SAVE.admin) t = 'son';
+  OPT_TAB = t;
+  for (const b of document.querySelectorAll('#opts [data-ot]')) b.setAttribute('aria-selected', b.dataset.ot === t);
+  for (const p of document.querySelectorAll('#opts [data-op]')) p.hidden = p.dataset.op !== t;
+}
+document.addEventListener('click', e => { const t = e.target.closest('[data-ot]'); if (!t) return; SFX.tick && SFX.tick(); optTab(t.dataset.ot); });
+/* qualité graphique */
+function renderQual(){ const q = SAVE.quality || 'auto'; for (const b of document.querySelectorAll('#qualGrid [data-q]')) b.setAttribute('aria-pressed', b.dataset.q === q); }
+$('#qualGrid').addEventListener('click', e => { const b = e.target.closest('[data-q]'); if (!b) return; SAVE.quality = b.dataset.q; QAUTO = 2; if (b.dataset.q !== 'auto' && RSCALE < 1){ RSCALE = 1; resize(); } persist(); renderQual(); SFX.tick && SFX.tick(); });
+/* objets au sol plus grands */
+function renderBigItems(){ $('#bigItemsBtn').textContent = 'Objets au sol : ' + (SAVE.bigItems === 0 ? 'taille normale' : 'grands, bien visibles'); }
+$('#bigItemsBtn').addEventListener('click', () => { SAVE.bigItems = SAVE.bigItems === 0 ? 1 : 0; persist(); renderBigItems(); SFX.tick && SFX.tick(); });
+/* accès admin : réservé au créateur. Sur l'écran des options, taper le mot secret au clavier affiche (ou cache) l'onglet. */
+const ADMIN_WORD = 'veilleur';
+let ADMIN_BUF = '';
+addEventListener('keydown', e => {
+  if (state !== 'opts' || e.key.length !== 1) return;
+  ADMIN_BUF = (ADMIN_BUF + e.key.toLowerCase()).slice(-ADMIN_WORD.length);
+  if (ADMIN_BUF === ADMIN_WORD){ ADMIN_BUF = ''; SAVE.admin = SAVE.admin ? 0 : 1; persist(); $('#adminTab').hidden = !SAVE.admin; optTab(SAVE.admin ? 'admin' : 'son'); toast(SAVE.admin ? 'Accès admin activé' : 'Accès admin masqué'); }
+});
+$('#admGold').addEventListener('click', () => { SAVE.braises += 1000; persist(); toast('+1 000 braises'); SFX.gold && SFX.gold(); });
+$('#admUnlock').addEventListener('click', () => {
+  for (const id in CH) SAVE.chars[id] = 1; for (const id in MAPS) SAVE.maps[id] = 1;
+  if (typeof LEVELS !== 'undefined') for (const m in LEVELS) LEVELS[m].forEach((_, i) => { SAVE.lv = SAVE.lv || {}; SAVE.lv[m + i] = Math.max(SAVE.lv[m + i] || 0, 1); });
+  persist(); toast('Tout est débloqué'); SFX.rare && SFX.rare();
+});
 $('#volR').addEventListener('input', e => { SAVE.vol = e.target.value/100; $('#volV').textContent = e.target.value + ' %'; applyVolume(); persist(); });
 $('#volR').addEventListener('change', () => SFX.pickup());
 $('#musR').addEventListener('input', e => {
@@ -6106,11 +6355,18 @@ function goChars(){
   $('#mapGrid').innerHTML = Object.entries(MAPS).map(([id,m]) => {
     const open = !!SAVE.maps[id], req = m.req ? achDef(m.req) : null;
     const relic = SAVE.relics[id] ? `Relique trouvée : ${m.relic.name}` : 'Une relique se cache loin du départ';
-    return `<button type="button" class="pick ${open?'':'locked'}" data-map="${id}" aria-pressed="${id===selMap}">
-      ${MAP_ART(id) ? `<span class="mapimg" style="background-image:url(${MAP_ART(id)})"></span>` : `<span class="band" style="background:linear-gradient(120deg,${m.band[0]},${m.band[1]})"></span>`}
-      <b>${m.name}</b><small>${m.desc}</small>
-      ${open ? `<span class="diff">Ombres ×${dec(m.hp)} PV · braises ×${dec(m.gold)}</span><span class="relic">${relic}</span>` : `<span class="cost">Verrouillé · ${req.cond}</span>`}
-    </button>`;
+    const done = (SAVE.lv && SAVE.lv[id]) || 0, cur = id === selMap ? selLv : (SAVE.lastLv && SAVE.lastLv[id] != null ? SAVE.lastLv[id] : Math.min(done, LEVELS.length - 1));
+    // chemin des 5 veillées, posé sur l'illustration du lieu
+    const path = open ? `<span class="lvpath">${LEVELS.map((L, i) => {
+      const ok = lvOpen(id, i), won = done > i;
+      return `<button type="button" class="lvnode ${won ? 'won' : ''} ${ok ? '' : 'lock'}" data-map="${id}" data-lv="${i}" aria-pressed="${id === selMap && i === selLv}" title="Veillée ${L.n} · ${L.name}${ok ? '' : ' (réussis la précédente pour l’ouvrir)'}">${ok ? L.n : '🔒'}</button>`;
+    }).join('<i class="lvlink"></i>')}</span>` : '';
+    const L = LEVELS[id === selMap ? selLv : cur];
+    return `<div role="button" tabindex="0" class="pick mapcard ${open?'':'locked'}" data-map="${id}" aria-pressed="${id===selMap}">
+      <span class="mapwrap">${MAP_ART(id) ? `<span class="mapimg" style="background-image:url(${MAP_ART(id)})"></span>` : `<span class="band" style="background:linear-gradient(120deg,${m.band[0]},${m.band[1]})"></span>`}${path}</span>
+      <b>${m.name}</b>
+      ${open ? `<span class="diff"><b class="lvname">Veillée ${L.n} · ${L.name}</b> — ${fmt(L.dur)} · ombres ×${dec(+(m.hp*L.hp).toFixed(2))} · braises ×${dec(+(m.gold*L.gold).toFixed(2))}</span><span class="relic">${L.desc}${done >= LEVELS.length ? ' · lieu maîtrisé ✓' : ''} · ${relic}</span>` : `<span class="cost">Verrouillé · ${req.cond}</span>`}
+    </div>`;
   }).join('');
   $('#charGrid').innerHTML = Object.entries(CH).map(([id,c]) => {
     const owned = !!SAVE.chars[id];
@@ -6144,10 +6400,15 @@ $('#charGrid').addEventListener('click', e => {
 });
 $('#mapGrid').addEventListener('click', e => {
   const b = e.target.closest('[data-map]'); if (!b || !SAVE.maps[b.dataset.map]) return;
-  selMap = b.dataset.map; SAVE.lastMap = selMap; persist();
-  for (const el of $('#mapGrid').children) el.setAttribute('aria-pressed', el.dataset.map === selMap);
-  newGame(selChar, selMap);
+  const map = b.dataset.map; SAVE.lastLv = SAVE.lastLv || {};
+  if (b.dataset.lv != null){                                          // une étape du chemin : on choisit la veillée
+    const i = +b.dataset.lv; if (!lvOpen(map, i)){ toast('Réussis la veillée ' + LEVELS[i - 1].n + ' pour ouvrir celle-ci'); return; }
+    selLv = i;
+  } else if (map !== selMap) selLv = SAVE.lastLv[map] != null ? SAVE.lastLv[map] : Math.min((SAVE.lv && SAVE.lv[map]) || 0, LEVELS.length - 1);
+  selMap = map; SAVE.lastMap = selMap; SAVE.lastLv[map] = selLv; persist(); SFX.tick && SFX.tick();
+  newGame(selChar, selMap); goChars();
 });
+$('#mapGrid').addEventListener('keydown', e => { if ((e.key === 'Enter' || e.key === ' ') && e.target.matches('.mapcard')){ e.preventDefault(); e.target.click(); } });
 $('#goBtn').addEventListener('click', () => {
   const c = CH[selChar];
   if (!SAVE.chars[selChar]){
@@ -6160,7 +6421,7 @@ $('#goBtn').addEventListener('click', () => {
 $('#hardBox').addEventListener('change', e => { SAVE.hard = e.target.checked ? 1 : 0; persist(); });
 
 /* ---------- Échoppe : le personnage en grand (modèle 3D qui tourne), ses statistiques, les achats ---------- */
-let shopChar = null, SC_RAF = 0, SC_DIR = 0, SC_DRAG = null, SC_PREVIEW = null;
+let shopChar = null, SC_RAF = 0, SC_DIR = 1, SC_DRAG = null, SC_PREVIEW = null;
 function charStats(cid, shop){
   const c = CH[cid].mod, s = shop;
   return [
@@ -6204,7 +6465,7 @@ function scDraw(now){
     const c = CH[shopChar]; g.fillStyle = c.cloak; g.globalAlpha = 0.35; g.beginPath(); g.ellipse(cx, fy - h*0.33, w*0.16, h*0.33, 0, 0, TAU); g.fill(); g.globalAlpha = 1;
     g.fillStyle = 'rgba(236,228,207,.45)'; g.font = `600 ${Math.round(14*d)}px "Barlow Semi Condensed", sans-serif`; g.textAlign = 'center'; g.fillText('Modèle à venir', cx, fy - h*0.33); return;
   }
-  if (!SC_DRAG) SC_DIR = (SC_DIR + 1/60*0.5) % 16;                     // tourne lentement : un tour en ~30 s, ou à la main
+  // le personnage reste de face ; on le fait tourner à la main (glisser) si on veut le voir de dos
   const L = sh.dirOrder.length, DIRS = ['s','sse','se','ese','e','ene','ne','nne','n','nnw','nw','wnw','w','wsw','sw','ssw'];
   const dname = DIRS[Math.floor(((SC_DIR % 16) + 16) % 16)], row = Math.max(0, sh.dirOrder.indexOf(L === 16 ? dname : dname.length === 3 ? dname.slice(1) : dname));
   const a = sh.anims.idle, fi = Math.floor(now/1000*(a.fps || 4)) % a.frames;
@@ -6247,7 +6508,7 @@ $('#shopGrid').addEventListener('click', e => {
 });
 let G_CODEX_TAB = 0;
 let G_ACH_TAB = 0;
-document.addEventListener('click', e => { const t = e.target.closest('.ctab'); if (!t) return; SFX.tick && SFX.tick(); if (t.dataset.at != null){ G_ACH_TAB = +t.dataset.at; goAch(); return; } G_CODEX_TAB = +t.dataset.ct; goCodex(); });
+document.addEventListener('click', e => { const t = e.target.closest('.ctab'); if (!t || t.dataset.ot) return; SFX.tick && SFX.tick(); if (t.dataset.at != null){ G_ACH_TAB = +t.dataset.at; goAch(); return; } G_CODEX_TAB = +t.dataset.ct; goCodex(); });
 function goCodex(){
   state = 'codex'; show('codex');
   const unlockOf = { corbeaux:'roi', cendres:'lvl30', rayon:'aube' };
@@ -6282,22 +6543,43 @@ function goAch(){
   $('#achList').innerHTML = `<div class="ctabs atabs" role="tablist"><button type="button" role="tab" class="ctab" data-at="0" aria-selected="${tab === 0}">Succès · ${cnt(gen)}</button><button type="button" role="tab" class="ctab" data-at="1" aria-selected="${tab === 1}">Maîtrises des gardiens · ${cnt(mas)}</button></div>` + (tab === 0 ? gen : mas).map(row).join('');
   focusFirst('ach');
 }
+/* JOURNAL : à gauche les chapitres (avec leur avancement), à droite le chapitre choisi — illustration, pages trouvées
+   (un extrait, à lire), pages manquantes (où les trouver). Les pages d'un même chapitre sont toujours regroupées. */
+let J_CHAP = null;
+const chapOf = s => s.ch;
+const chapters = () => { const out = []; for (const s of STORY) if (!out.includes(chapOf(s))) out.push(chapOf(s)); return out; };
+const isNewPage = id => SAVE.story[id] && !(SAVE.storyRead && SAVE.storyRead[id]) && id !== 'prologue';
+function chapArt(ch){
+  const zone = /Forêt/.test(ch) ? 'foret' : /Marais/.test(ch) ? 'marais' : /Cimetière/.test(ch) ? 'cimetiere' : null;
+  if (zone && MAP_ART(zone)) return MAP_ART(zone);                    // l'illustration du lieu (grande, nette)
+  for (const s of STORY) if (chapOf(s) === ch && SAVE.story[s.id] && STORY_ART[s.id] && PA[STORY_ART[s.id]]) return PA[STORY_ART[s.id]];
+  return zone ? MAP_ART(zone) : (MAP_ART('foret') || null);
+}
 function goJournal(){
   state = 'journal'; show('journal');
   const got = STORY.filter(s => SAVE.story[s.id]).length;
   $('#jCount').textContent = `${got} / ${STORY.length} pages`;
   $('#jBar').style.width = (got/STORY.length*100) + '%';
-  let last = '', h = '';
-  STORY.forEach((s, i) => {
-    const chap = s.ch.split(' · ')[0];
-    if (chap !== last){ h += `<div class="jch">${s.ch.includes('·') ? s.ch : chap}</div>`; last = chap; }
-    if (SAVE.story[s.id]) h += `<button type="button" class="jrow" data-page="${s.id}"><span class="seal">${i+1}</span><span><b>${s.title}</b><small>Lire la page</small></span></button>`;
-    else h += `<div class="jrow locked"><span class="seal">?</span><span><b>Page manquante</b><small>${s.hint}</small></span></div>`;
-  });
-  $('#jList').innerHTML = h;
+  const CH = chapters();
+  if (!J_CHAP || !CH.includes(J_CHAP)) J_CHAP = CH.find(c => STORY.some(s => chapOf(s) === c && isNewPage(s.id))) || CH[0];
+  $('#jChaps').innerHTML = CH.map(c => {
+    const L = STORY.filter(s => chapOf(s) === c), n = L.filter(s => SAVE.story[s.id]).length, nw = L.some(s => isNewPage(s.id));
+    return `<button type="button" class="jchap" data-chap="${c}" aria-pressed="${c === J_CHAP}"><span>${c.replace(' · ', ' — ')}${nw ? '<i class="jnew" title="Nouvelle page"></i>' : ''}</span><small class="${n === L.length ? 'jdone' : ''}">${n}/${L.length}</small></button>`;
+  }).join('');
+  const L = STORY.filter(s => chapOf(s) === J_CHAP), n = L.filter(s => SAVE.story[s.id]).length, art = chapArt(J_CHAP);
+  const strip = t => t.replace(/<[^>]+>/g, '');
+  $('#jList').innerHTML = `<div class="jbanner" style="${art ? `background-image:url(${art})` : ''}"><h3>${J_CHAP}</h3><span>${n} page${n > 1 ? 's' : ''} sur ${L.length}</span></div>
+    <div class="jpages">${L.map(s => {
+      const i = STORY.indexOf(s);
+      if (!SAVE.story[s.id]) return `<div class="jrow locked"><span class="seal">?</span><span><b>Page manquante</b><small>Pour la trouver : ${lcFirst(s.hint)}</small></span></div>`;
+      const ex = strip(s.text[0]); return `<button type="button" class="jrow" data-page="${s.id}"><span class="seal">${i + 1}</span><span><b>${s.title}${isNewPage(s.id) ? '<span class="tag">nouvelle</span>' : ''}</b><p>« ${ex.length > 110 ? ex.slice(0, 107).trim() + '…' : ex} »</p></span></button>`;
+    }).join('')}</div>
+    ${n > 1 ? `<div class="btns"><button type="button" class="btn small" id="jReadAll">Lire le chapitre (${n} pages)</button></div>` : ''}`;
   focusFirst('journal');
 }
+$('#jChaps').addEventListener('click', e => { const b = e.target.closest('[data-chap]'); if (!b) return; J_CHAP = b.dataset.chap; SFX.tick && SFX.tick(); goJournal(); });
 $('#jList').addEventListener('click', e => {
+  if (e.target.closest('#jReadAll')){ showStory(STORY.filter(s => chapOf(s) === J_CHAP && SAVE.story[s.id]).map(s => s.id), goJournal); return; }
   const b = e.target.closest('[data-page]'); if (!b) return;
   showStory([b.dataset.page], goJournal);
 });
@@ -6316,7 +6598,7 @@ function beginRun(){
   const go = () => {
     prewarmMap(selMap);
     newGame(selChar, selMap); state = 'play'; keys.clear();
-    if (NET.role === 'host' && NET.allyHello && (NET.conn || NET.bc)){ makeAlly(NET.allyHello.char, NET.allyHello.shop); G.allyName = 'Compagnon'; NET.send({t:'start', map:selMap}); }
+    if (NET.role === 'host' && NET.allyHello && (NET.conn || NET.bc)){ makeAlly(NET.allyHello.char, NET.allyHello.shop); G.allyName = 'Compagnon'; NET.send({t:'start', map:selMap, lv:selLv}); }
     setHud(true); show(null); G.buildDirty = true; renderMute(); music(selMap);
     if (availArc().length >= 3) openArcana(true);
     requestAnimationFrame(() => $('#fade').classList.remove('on'));
@@ -6345,8 +6627,9 @@ function adaptRes(rawMs, now){
   ADAPT.n++; ADAPT.sum += rawMs;
   if (now - ADAPT.t < 1000) return;
   const avg = ADAPT.sum/ADAPT.n; ADAPT.n = 0; ADAPT.sum = 0; ADAPT.t = now;
-  if (avg > 21 && RSCALE > 0.7){ RSCALE = Math.max(0.7, RSCALE - 0.15); ADAPT.good = 0; resize(); }
-  else if (avg < 14.5 && RSCALE < 1){ if (++ADAPT.good >= 3){ RSCALE = Math.min(1, RSCALE + 0.1); ADAPT.good = 0; resize(); } }
+  if (avg > 21 && QAUTO > 0 && (SAVE.quality || 'auto') === 'auto'){ QAUTO--; ADAPT.good = 0; }        // d'abord moins d'effets…
+  else if (avg > 21 && RSCALE > (QL() === 0 ? 0.6 : 0.7)){ RSCALE = Math.max(QL() === 0 ? 0.6 : 0.7, RSCALE - 0.15); ADAPT.good = 0; resize(); }   // …puis une image un peu moins fine
+  else if (avg < 14.5 && (RSCALE < 1 || QAUTO < 2)){ if (++ADAPT.good >= 3){ if (RSCALE < 1){ RSCALE = Math.min(1, RSCALE + 0.1); resize(); } else QAUTO++; ADAPT.good = 0; } }
   else ADAPT.good = 0;
 }
 function fpsTick(rawMs, now){
