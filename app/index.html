@@ -602,6 +602,7 @@ td .w svg{width:16px;height:16px;color:var(--amber);flex:none}
       <div class="opts"><button class="btn ghost small" id="muteMenuBtn">Son : activé</button></div>
     </div>
     <div class="opane" data-op="jeu" hidden>
+      <label class="slider">Luminosité de la nuit <input type="range" id="lumR" min="0" max="100" step="5"><b id="lumV"></b></label>
       <div class="opts">
         <button class="btn ghost small" id="numsBtn">Chiffres de dégâts : oui</button>
         <button class="btn ghost small" id="shakeBtn">Tremblement : oui</button>
@@ -818,6 +819,10 @@ const fmt = s => { s = Math.max(0, Math.floor(s)); return Math.floor(s/60)+':'+S
 const num = n => Math.round(n).toLocaleString('fr-FR');
 const pct = v => (v >= 0 ? '+' : '−') + Math.round(Math.abs(v)*100) + ' %';
 const dec = v => String(v).replace('.', ',');
+/* luminosité de la nuit (Options › Jeu) : 0 = nuit d'encre, 0,5 = normal, 1 = nuit claire */
+const LUM = () => (typeof SAVE !== 'undefined' && SAVE && SAVE.lum != null) ? SAVE.lum : 0.5;
+const LUM_DARK = () => 1 - 0.45*LUM();            // opacité de la nuit hors de la lumière : ×1 → ×0,55
+const LUM_RAD = () => 1 + 0.4*LUM();              // portée de la lanterne : ×1 → ×1,4
 const lcFirst = s => s.charAt(0).toLowerCase() + s.slice(1);
 const mod = (a,n) => ((a%n)+n)%n;
 
@@ -1334,7 +1339,7 @@ function computeStats(){
     speed: 1 + (c.speed||0) + 0.04*(s.celerite||0) + 0.08*lvP('bottes') + (hasArc('vagabond') ? 0.15 : 0),
     maxhp: (100 + (c.maxhp||0) + 10*(s.vitalite||0) + 20*lvP('coeur') - (hasArc('moisson') ? 20 : 0))*(hasDefi('fragile') ? 0.7 : 1),
     regen: hasDefi('fragile') ? 0 : (c.regen||0) + 0.2*(s.recup||0) + 0.4*lvP('seve'),
-    magnet: 70 * (1 + 0.2*(s.attraction||0) + 0.3*lvP('chant')) * (SAVE.relics.marais ? 1.15 : 1),
+    magnet: 105 * (1 + 0.2*(s.attraction||0) + 0.3*lvP('chant')) * (SAVE.relics.marais ? 1.15 : 1),
     amount: Math.floor(lvP('jumelle')),
     crit: 0.03 + (c.crit||0) + 0.05*lvP('oeil') + (hasArc('lune') ? 0.1 : 0),
     armor: (c.armor||0) + (s.armure||0) + lvP('ecorce') + (hasArc('epines') ? 3 : 0),
@@ -2583,7 +2588,7 @@ function draw(now){
   const RIG = keeperRig(now), lwx = RIG.lx, lwy = RIG.ly;
   const lx = X(lwx), ly = Y(lwy);
   const flick = reduce ? 0 : Math.sin(now/90)*4 + Math.sin(now/37)*2;
-  const L = (240 + Math.min(90, p.lvl*2.5))*G.st.light*(G.map === 'marais' ? 0.86 : 1) + flick;
+  const L = (270 + Math.min(90, p.lvl*2.5))*LUM_RAD()*G.st.light*(G.map === 'marais' ? 0.86 : 1) + flick;
 
   // Sol peint
   drawGround(ox, oy);
@@ -3019,7 +3024,7 @@ function draw(now){
   // Étalonnage final : vignette, grain, effets d’écran
   // étalonnage de zone : une même teinte enveloppe sol, décor, bâtiments et personnages (cohérence de l'image)
   if (QL() >= 1){ ctx.save(); ctx.globalCompositeOperation = 'soft-light'; ctx.fillStyle = ZGRADE[G.map] || 'rgb(128,128,128)'; ctx.fillRect(0, 0, W, H); ctx.restore(); }
-  ctx.drawImage(vignetteSprite(), 0, 0, W, H);
+  ctx.globalAlpha = 1 - 0.5*LUM(); ctx.drawImage(vignetteSprite(), 0, 0, W, H); ctx.globalAlpha = 1;   // vignette plus légère quand la nuit est réglée plus claire
   if (G.freeze > 0){ ctx.fillStyle = `rgba(120,170,230,${0.1*Math.min(1,G.freeze)})`; ctx.fillRect(0,0,W,H); }
   if (p.hurt > 0){ ctx.fillStyle = 'rgba(217,83,74,.12)'; ctx.fillRect(0,0,W,H); }
   if (state === 'play' && p.hp/p.max < 0.3){
@@ -3366,7 +3371,7 @@ function lightPass(X, Y, lx, ly, L, dk, now){
   const q = 0.5, lw = Math.max(1, Math.ceil(W*q)), lh = Math.max(1, Math.ceil(H*q));
   if (!LC){ LC = document.createElement('canvas'); LX = LC.getContext('2d'); LHC = document.createElement('canvas'); LHX = LHC.getContext('2d'); CLC = document.createElement('canvas'); CLX = CLC.getContext('2d'); }
   for (const c of [LC, LHC, CLC]) if (c.width !== lw || c.height !== lh){ c.width = lw; c.height = lh; }
-  const A = Math.min(0.93, 0.9*dk)*(1 - 0.72*(G.zap || 0));
+  const A = Math.min(0.93, 0.9*dk)*LUM_DARK()*(1 - 0.72*(G.zap || 0));
   LX.globalCompositeOperation = 'source-over'; LX.clearRect(0, 0, lw, lh);
   LX.fillStyle = `rgba(${NIGHT[G.map]},${A})`; LX.fillRect(0, 0, lw, lh);
   // couleur de la lumière : calque gris neutre (128 = aucun effet), teinté là où une source éclaire
@@ -6561,6 +6566,7 @@ $('#menu').addEventListener('pointerdown', () => { if (!titleLit) lightTitle(); 
 function goOpts(){
   state = 'opts'; show('opts');
   $('#volR').value = Math.round(SAVE.vol*100); $('#musR').value = Math.round(SAVE.musicVol*100);
+  $('#lumR').value = Math.round(LUM()*100); renderLum();
   $('#volV').textContent = $('#volR').value + ' %'; $('#musV').textContent = $('#musR').value + ' %';
   resetArmed = false; $('#resetBtn').textContent = 'Effacer la sauvegarde'; $('#resetTxt').textContent = '';
   BIND_WAIT = null; renderBinds(); renderUpd(); renderMute(); renderConceptBtn(); renderDecoPh(); renderFps(); renderQual(); renderBigItems(); optTab(OPT_TAB); focusFirst('opts');
@@ -6699,6 +6705,8 @@ $('#admUnlock').addEventListener('click', () => {
 });
 $('#volR').addEventListener('input', e => { SAVE.vol = e.target.value/100; $('#volV').textContent = e.target.value + ' %'; applyVolume(); persist(); });
 $('#volR').addEventListener('change', () => SFX.pickup());
+function renderLum(){ const v = +$('#lumR').value; $('#lumV').textContent = v < 25 ? 'très sombre' : v < 45 ? 'sombre' : v < 60 ? 'normale' : v < 80 ? 'claire' : 'très claire'; }
+$('#lumR').addEventListener('input', e => { SAVE.lum = +e.target.value/100; persist(); renderLum(); });
 $('#musR').addEventListener('input', e => {
   const was = SAVE.musicVol; SAVE.musicVol = e.target.value/100; $('#musV').textContent = e.target.value + ' %'; persist();
   if (SAVE.musicVol === 0) musicStop(); else if (was === 0 || !MUS.gain){ MUS.mood = null; music('menu'); } else applyVolume();
