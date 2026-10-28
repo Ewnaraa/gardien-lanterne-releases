@@ -48,6 +48,7 @@ svg.pi{border-radius:20%;overflow:hidden;color:initial}
 .slot.pas{color:var(--spectre)}
 .slot.evo{border-color:var(--amber);box-shadow:0 0 10px rgba(242,184,75,.45)}
 .slot.empty{background:rgba(12,18,15,.35);border-style:dashed}
+.slot.lock{background:rgba(12,18,15,.25);border-color:rgba(236,228,207,.06)}.slot.lock::after{content:'';width:8px;height:6px;border:1.5px solid rgba(236,228,207,.28);border-radius:1px;margin-top:5px;box-shadow:0 -5px 0 -2px transparent}.slot.lock::before{content:'';position:absolute;width:6px;height:5px;border:1.5px solid rgba(236,228,207,.28);border-bottom:0;border-radius:4px 4px 0 0;top:7px}
 .slot em{position:absolute;right:-3px;bottom:-4px;font-style:normal;font-size:10px;font-weight:700;background:var(--night);border-radius:3px;padding:0 3px;color:var(--bone);line-height:13px}
 .clock{font-family:var(--display);font-size:30px;color:var(--amber);line-height:1;font-variant-numeric:tabular-nums;text-shadow:0 0 14px rgba(242,184,75,.35);
   padding:5px 16px 6px;background:rgba(10,14,12,.8);border:1px solid var(--line);border-radius:3px;box-shadow:0 0 0 3px rgba(10,14,12,.6)}
@@ -395,7 +396,7 @@ td .w svg{width:16px;height:16px;color:var(--amber);flex:none}
 .eqrow b{font-weight:600}.eqrow small{display:block;color:var(--mute);font-size:12px;line-height:1.25}.eqrow small.ready{color:var(--amber);font-weight:600}
 .eqrow.evo{border-color:rgba(242,184,75,.45)}.eqrow.empty{opacity:.4;border-style:dashed}
 .eqrow .ico{width:26px;height:26px}
-.eqfree{display:flex;align-items:center;gap:5px;padding:3px 6px}.eqfree i{width:14px;height:14px;border:1px dashed var(--line);border-radius:2px;opacity:.6}.eqfree.pas i{border-radius:50%}.eqfree small{color:var(--mute);font-size:12px;margin-left:4px}.eqrow .lvtag{color:var(--amber)}
+.eqfree{display:flex;align-items:center;gap:5px;padding:3px 6px}.eqfree i{width:14px;height:14px;border:1px dashed var(--line);border-radius:2px;opacity:.6}.eqfree.pas i{border-radius:50%}.eqfree i.lk{border-style:solid;border-color:rgba(236,228,207,.12);background:rgba(0,0,0,.35);opacity:.8}.eqfree small{color:var(--mute);font-size:12px;margin-left:4px}.eqrow .lvtag{color:var(--amber)}
 .pips{display:flex;gap:2px}.pips i{width:6px;height:10px;border-radius:1px;background:rgba(255,255,255,.12)}.pips i.on{background:var(--amber)}
 .eqrow .ico.pas + span + .pips i.on{background:#9fc4ff}
 #chars .card{position:relative}
@@ -728,6 +729,7 @@ td .w svg{width:16px;height:16px;color:var(--amber);flex:none}
     <div class="eyebrow" id="luEyebrow">Niveau 2</div>
     <h2>La flamme grandit</h2>
     <div class="choices" id="choices"></div>
+    <label class="toggle" id="autoPickWrap" hidden><input type="checkbox" id="autoPickBox"> Tout est au max : toujours faire ce choix (la fenêtre ne s’ouvrira plus de la partie)</label>
     <div class="lubar">
       <button class="btn ghost small" id="rerollBtn">Relancer</button>
       <button class="btn ghost small" id="banishBtn">Bannir</button>
@@ -741,6 +743,7 @@ td .w svg{width:16px;height:16px;color:var(--amber);flex:none}
     <div class="eyebrow" id="chestEyebrow">Coffre d’élite</div>
     <h2 id="chestTitle">Le coffre s’ouvre</h2>
     <div class="chest-items" id="chestItems"></div>
+    <label class="toggle" id="autoChestWrap" hidden><input type="checkbox" id="autoChestBox"> Tout est au max : ne plus ouvrir cette fenêtre pour les coffres (braises ajoutées directement)</label>
     <div class="btns"><button class="btn" id="chestBtn">Continuer</button></div>
   </div>
 </div>
@@ -773,7 +776,7 @@ td .w svg{width:16px;height:16px;color:var(--amber);flex:none}
       <div class="list" id="buildList"></div>
       <div class="kv" id="statList"></div>
     </div>
-    <div class="btns"><button class="btn" id="resumeBtn">Reprendre</button><button class="btn ghost" id="quitBtn">Abandonner</button></div>
+    <div class="btns"><button class="btn" id="resumeBtn">Reprendre</button><button class="btn ghost" id="pauseOptsBtn">Options</button><button class="btn ghost" id="quitBtn">Abandonner</button></div>
   </div>
 </div>
 
@@ -819,6 +822,12 @@ const fmt = s => { s = Math.max(0, Math.floor(s)); return Math.floor(s/60)+':'+S
 const num = n => Math.round(n).toLocaleString('fr-FR');
 const pct = v => (v >= 0 ? '+' : '−') + Math.round(Math.abs(v)*100) + ' %';
 const dec = v => String(v).replace('.', ',');
+/* cache d'images plafonné en mémoire : au-delà du budget (en Mo), les plus anciennes sont jetées */
+function capCache(map, key, c, mb){
+  const sz = (o => o && o.width ? o.width*o.height*4 : 0);
+  map.set(key, c); map.bytes = (map.bytes || 0) + sz(c.c || c);
+  while (map.bytes > mb*1e6 && map.size > 1){ const k0 = map.keys().next().value, o = map.get(k0); map.delete(k0); map.bytes -= sz(o && (o.c || o)); }
+}
 /* luminosité de la nuit (Options › Jeu) : 0 = nuit d'encre, 0,5 = normal, 1 = nuit claire */
 const LUM = () => (typeof SAVE !== 'undefined' && SAVE && SAVE.lum != null) ? SAVE.lum : 0.5;
 const LUM_DARK = () => 1 - 0.45*LUM();            // opacité de la nuit hors de la lumière : ×1 → ×0,55
@@ -1086,9 +1095,20 @@ const SH = {
   chance:     {name:'Bonne étoile',  max:3, cost:160, txt:'+5 % de chance (raretés, coffres)'},
   relance:    {name:'Relance',       max:3, cost:140, txt:'+1 relance par partie'},
   exil:       {name:'Exil',          max:3, cost:140, txt:'+1 bannissement par partie'},
-  renaissance:{name:'Renaissance',   max:1, cost:960, txt:'Te relève une fois par partie'}
+  renaissance:{name:'Renaissance',   max:1, cost:960, txt:'Te relève une fois par partie'},
+  fourreau:   {name:'Fourreau de sorts', max:1, cost:450, txt:'+1 emplacement de sort (le 4e)'},
+  reliure:    {name:'Reliure de talents', max:1, cost:450, txt:'+1 emplacement de talent (le 4e)'}
 };
 const shopCost = id => SH[id].cost * ((SAVE.shop[id]||0) + 1);
+/* EMPLACEMENTS : 3 sorts et 3 talents au départ, jusqu'à 6 chacun.
+   4e : achat à l'échoppe · 5e : un succès · 6e : une quête (atteindre une aube) */
+const SLOT_SRC = {
+  w:[{k:'shop', id:'fourreau', txt:'Échoppe : Fourreau de sorts'}, {k:'ach', id:'evo1', txt:'Succès « Métamorphose » : faire évoluer un sort'}, {k:'ach', id:'aube_marais', txt:'Quête : atteindre l’aube dans le Marais des Brumes'}],
+  p:[{k:'shop', id:'reliure', txt:'Échoppe : Reliure de talents'}, {k:'ach', id:'lvl30', txt:'Succès « Flamme vive » : atteindre le niveau 30'}, {k:'ach', id:'cim_aube', txt:'Quête : atteindre l’aube au Cimetière d’Orme'}]
+};
+const slotOk = s => s.k === 'shop' ? (SAVE.shop[s.id]||0) > 0 : !!SAVE.ach[s.id];
+const slotsOf = t => 3 + SLOT_SRC[t].filter(slotOk).length;
+const maxW = () => (G && G.slotsW) || 6, maxP = () => (G && G.slotsP) || 6;
 
 /* ================= Raretés ================= */
 const RAR = [
@@ -1140,7 +1160,7 @@ const TIPS = [
   'Les cartes qui brillent sont plus rares, et bien plus fortes.',
   'Ta lanterne grandit avec toi. Plus tu montes, plus tu vois loin.',
   'Une relique dort dans chaque lieu, loin du point de départ.',
-  'Regarde la mini-carte : les points dorés sont des coffres.',
+  'Les coffres ne tombent que des boss. Les élites lâchent fioles et bourses.',
   'Un colporteur passe parfois dans la nuit. Garde quelques braises pour lui.',
   'Un clic gauche et tes sorts visent ton curseur. Re-clique pour revenir à la visée automatique.',
   'Espace ou clic droit : une roulade, et rien ne peut te toucher pendant ce temps.',
@@ -1207,15 +1227,15 @@ function pickW(list){
   let r = Math.random()*tot; for (const [t,w] of list){ r -= w; if (r <= 0) return t; }
   return list[0][0];
 }
-const needFor = l => Math.floor(5 + (l-1)*10 + Math.max(0,l-20)*9 + Math.max(0,l-40)*14);
+const needFor = l => Math.floor(5 + (l-1)*10 + Math.max(0,l-20)*16 + Math.max(0,l-40)*70);   // fin de partie plus lente : build complet vers 11-14 min
 
 /* ================= Succès ================= */
 const ACH = [
   {id:'survie5',  name:'Tenir bon',          cond:'Tenir 5 minutes en une partie', rw:'Ouvre le Marais des Brumes', gold:60, apply:() => { SAVE.maps.marais = 1; }},
-  {id:'evo1',     name:'Métamorphose',       cond:'Faire évoluer un sort', rw:'Débloque le talent Trèfle à quatre feuilles', gold:80, apply:() => { SAVE.unl.trefle = 1; }},
+  {id:'evo1',     name:'Métamorphose',       cond:'Faire évoluer un sort', rw:'Débloque le talent Trèfle à quatre feuilles et le 5e emplacement de sort', gold:80, apply:() => { SAVE.unl.trefle = 1; }},
   {id:'roi',      name:'Régicide',           cond:'Vaincre le Roi des Ombres', rw:'Débloque le sort Corbeaux', gold:100, apply:() => { SAVE.unl.corbeaux = 1; }},
   {id:'kills1000',name:'Mille lueurs',       cond:'Dissiper 1 000 ombres en une partie', rw:'Débloque le talent Pierre de lune', gold:100, apply:() => { SAVE.unl.pierre = 1; }},
-  {id:'lvl30',    name:'Flamme vive',        cond:'Atteindre le niveau 30', rw:'Débloque le sort Pluie de cendres', gold:120, apply:() => { SAVE.unl.cendres = 1; }},
+  {id:'lvl30',    name:'Flamme vive',        cond:'Atteindre le niveau 30', rw:'Débloque le sort Pluie de cendres et le 5e emplacement de talent', gold:120, apply:() => { SAVE.unl.cendres = 1; }},
   {id:'aube',     name:'Première aube',      cond:'Atteindre l’aube', rw:'Débloque le sort Rayon lunaire', gold:150, apply:() => { SAVE.unl.rayon = 1; }},
   {id:'braseros', name:'Pyromane',           cond:'Briser 12 braseros en une partie', rw:'+1 relance à chaque partie', gold:60, apply:() => { SAVE.bonus.rerolls++; }},
   {id:'rare',     name:'Main heureuse',      cond:'Choisir une amélioration légendaire', rw:'+1 relance à chaque partie', gold:80, apply:() => { SAVE.bonus.rerolls++; }},
@@ -1224,8 +1244,8 @@ const ACH = [
   {id:'evo4',     name:'Alchimiste',         cond:'Découvrir 4 évolutions', rw:'Débloque L’Astronome', gold:200, apply:() => { SAVE.chars.astronome = 1; }},
   {id:'mere',     name:'Matricide',          cond:'Vaincre la Mère des Ombres', rw:'+1 bannissement à chaque partie', gold:200, apply:() => { SAVE.bonus.banish++; }},
   {id:'horreur',  name:'Œil pour œil',       cond:'Vaincre l’Horreur aux mille yeux', rw:'+5 % de dégâts pour toujours', gold:300, apply:() => { SAVE.bonus.might = (SAVE.bonus.might||0) + 0.05; }},
-  {id:'aube_marais', name:'Brume dissipée',  cond:'Atteindre l’aube dans le Marais des Brumes', rw:'Ouvre le Cimetière d’Orme', gold:200, apply:() => { SAVE.maps.cimetiere = 1; }},
-  {id:'cim_aube', name:'Repos éternel',      cond:'Atteindre l’aube au Cimetière d’Orme', rw:'Débloque La Fossoyeuse', gold:300, apply:() => { SAVE.chars.fossoyeuse = 1; }},
+  {id:'aube_marais', name:'Brume dissipée',  cond:'Atteindre l’aube dans le Marais des Brumes', rw:'Ouvre le Cimetière d’Orme et le 6e emplacement de sort', gold:200, apply:() => { SAVE.maps.cimetiere = 1; }},
+  {id:'cim_aube', name:'Repos éternel',      cond:'Atteindre l’aube au Cimetière d’Orme', rw:'Débloque La Fossoyeuse et le 6e emplacement de talent', gold:300, apply:() => { SAVE.chars.fossoyeuse = 1; }},
   {id:'relic_foret',     name:'Clé d’ambre',       cond:'Remporter l’épreuve de la relique de la Forêt des Lueurs', rw:'Un 4e choix à chaque niveau', gold:150, apply:() => { SAVE.relics.foret = 1; }},
   {id:'relic_marais',    name:'Lanterne d’argent', cond:'Remporter l’épreuve de la relique du Marais des Brumes', rw:'Lumière +25 % et attraction +15 % pour toujours', gold:150, apply:() => { SAVE.relics.marais = 1; }},
   {id:'relic_cimetiere', name:'Cloche des morts',  cond:'Remporter l’épreuve de la relique du Cimetière d’Orme', rw:'Débloque Le Revenant', gold:150, apply:() => { SAVE.relics.cimetiere = 1; SAVE.chars.revenant = 1; }},
@@ -1309,7 +1329,7 @@ function newGame(charId, mapId){
   const c = CH[charId];
   const lv = Math.max(0, Math.min(LEVELS.length - 1, selLv || 0));
   G = {
-    map:mapId, char:charId, hard: !!(SAVE.wins > 0 && (SAVE.defis ? SAVE.defis.lune : SAVE.hard)), defis:SAVE.wins > 0 ? Object.assign({}, SAVE.defis || (SAVE.hard ? {lune:1} : {})) : {}, lv, dur:LEVELS[lv].dur, events:nightEvents(lv),
+    map:mapId, char:charId, hard: !!(SAVE.wins > 0 && (SAVE.defis ? SAVE.defis.lune : SAVE.hard)), defis:SAVE.wins > 0 ? Object.assign({}, SAVE.defis || (SAVE.hard ? {lune:1} : {})) : {}, lv, dur:LEVELS[lv].dur, events:nightEvents(lv), slotsW:slotsOf('w'), slotsP:slotsOf('p'),
     t:0, kills:0, gold:0, spawnAcc:0, ev:0,
     p:{pc:charId, x:0, y:0, r:12, dashCd:0, dashT:0, dvx:0, dvy:0, hp:100, max:100, face:1, hurt:0, step:0, inv:0, revives:(SAVE.shop.renaissance||0) + (c.mod.revive||0), xp:0, lvl:1, need:needFor(1)},
     weapons:[{id:c.w, lv:1, t:0.3, a:0, stars:0}], passives:[], acq:{[c.w]:0},
@@ -1399,7 +1419,7 @@ addEventListener('keydown', e => {
     else if (isK('skip', k)) $('#skipBtn').click();
   } else if (state==='chest' && (k==='enter' || k===' ')) { e.preventDefault(); $('#chestBtn').click(); }
   else if (state==='story' && (k==='enter' || k===' ')) { e.preventDefault(); $('#stBtn').click(); }
-  else if (['chars','shop','codex','ach','journal','opts','coop'].includes(state) && k==='escape') goMenu();
+  else if (['chars','shop','codex','ach','journal','opts','coop'].includes(state) && k==='escape') backFromScreen();
 });
 addEventListener('keyup', e => { const k = KEYMAP[e.key.toLowerCase()]; if (k) keys.delete(k); });
 addEventListener('blur', () => keys.clear());
@@ -1607,9 +1627,9 @@ function killEnemy(e, silent){
     if (e.type === 'horreur'){ unlockAch('horreur'); storyUnlock('horreur'); }
   } else if (e.elite){
     if (e.aff === 'explosif'){ G.bombs = G.bombs || []; G.bombs.push({x:e.x, y:e.y, R:95, t:0, max:0.9}); toast('Il va exploser !'); }
-    G.items.push({type:'coffre', x:e.x, y:e.y});
-    G.gems.push({x:e.x+10, y:e.y, v:e.xp*6, kind:'xp'});
-    for (let i=0;i<4;i++) G.gems.push({x:e.x+rnd(-30,30), y:e.y+rnd(-30,30), v:3, kind:'coin'});
+    G.items.push({type:Math.random() < 0.45 ? 'fiole' : 'bourse', x:e.x, y:e.y});   // les coffres sont réservés aux boss
+    G.gems.push({x:e.x+10, y:e.y, v:e.xp*8, kind:'xp'});
+    for (let i=0;i<6;i++) G.gems.push({x:e.x+rnd(-30,30), y:e.y+rnd(-30,30), v:3, kind:'coin'});
     SFX.boom();
   } else {
     G.gems.push({x:e.x, y:e.y, v:e.xp, kind:'xp'});
@@ -2355,6 +2375,11 @@ function update(dt){
   }
   G.gems = G.gems.filter(g => !g.dead);
   for (const it of G.items){
+    if (it.type !== 'coffre'){                                             // les objets sont attirés comme les lueurs (pas les coffres)
+      const gp = G.ally ? coopNearest(it.x, it.y, p) : p, mg = gp === p ? st.magnet : (G.ally.st.magnet || st.magnet);
+      const dx = gp.x - it.x, dy = gp.y - it.y, d = Math.hypot(dx, dy) || 1;
+      if (it.pull || d < mg){ it.pull = (it.pull || 0) + dt; const sp = 260 + 900*Math.min(1, it.pull); it.x += dx/d*Math.min(d, sp*dt); it.y += dy/d*Math.min(d, sp*dt); }
+    }
     if ((it.x-p.x)**2 + (it.y-p.y)**2 < (p.r+14)**2){ it.dead = true; takeItem(it); if (state !== 'play') break; }
     else if (G.ally && (it.x-G.ally.p.x)**2 + (it.y-G.ally.p.y)**2 < 26*26){ it.dead = true; if (it.type === 'coffre') takeItem(it); else withAlly(() => takeItem(it)); if (state !== 'play') break; }
   }
@@ -2486,6 +2511,11 @@ const PAL = {
   cimetiere:{ground:'#23272a', blot:['#2c3134','#191c1f','#33393e','#272a26'], speck:'#4b5058', fog:'160,160,185', dark:'6,6,10', tint:'236,188,150', tree:'#0d0e12', canopy:'#15161c', canopy2:'#1c1e26', fly:'205,190,255'}
 };
 const texCache = {};
+/* si le navigateur retire la mémoire du dessin (écran noir), on vide les caches pour repartir proprement */
+addEventListener('load', () => { const cv = document.getElementById('c'); if (!cv) return;
+  cv.addEventListener('contextlost', e => { e.preventDefault(); for (const m of [ESPR, ANIM_CACHE, SHEET_CACHE, LIP_CACHE]){ m.clear(); m.bytes = 0; } for (const k in GLOWS) delete GLOWS[k]; });
+  cv.addEventListener('contextrestored', () => { VIG = null; });
+});
 const ZGRADE = {foret:'rgb(124,128,104)', marais:'rgb(104,124,130)', cimetiere:'rgb(116,112,134)'};   // gris moyen légèrement teinté par zone
 let VIG = null;
 function vignetteSprite(){                                           // vignette précalculée (au lieu d'un dégradé par image)
@@ -2555,7 +2585,7 @@ function drawWeaponVis(px, py, now){                                    // halos
       const ev = w.id === 'couronne';
       for (let i=0;i<w.n;i++){
         const a = w.a + i*TAU/w.n, x = px + Math.cos(a)*w.R, y = py + Math.sin(a)*w.R;
-        if (hasFx('fx_braise')){ fxDraw('fx_braise', fxLoopFrame('fx_braise', now/1000 + i*0.31), x, y, w.orb*(ev ? 6.5 : 5.2), {rot:a + Math.PI/4}); if (ev) ctx.drawImage(glow('255,220,140', w.orb*1.4), x - w.orb*1.4, y - w.orb*1.4); continue; }
+        if (hasFx('fx_braise')){ fxDraw('fx_braise', fxLoopFrame('fx_braise', now/1000 + i*0.31), x, y, w.orb*(ev ? 6.5 : 5.2), {rot:a + Math.PI/4}); if (ev) ctx.drawImage(glow('255,220,140'), x - w.orb*1.4, y - w.orb*1.4, w.orb*2.8, w.orb*2.8); continue; }
         ctx.fillStyle = ev ? 'rgba(255,190,80,.35)' : 'rgba(232,103,58,.3)'; ctx.beginPath(); ctx.arc(x,y,w.orb*1.5,0,TAU); ctx.fill();
         ctx.fillStyle = ev ? '#fff0b0' : '#ffb36b'; ctx.beginPath(); ctx.arc(x,y,w.orb*0.55,0,TAU); ctx.fill();
       }
@@ -2806,7 +2836,7 @@ function draw(now){
     const tw = reduce ? 1 : 0.75 + 0.25*Math.sin(now/200 + gm.x), gy = gy0 + (reduce ? 0 : Math.sin(now/320 + gm.x*0.7)*1.6);
     const kind = gm.kind === 'coin' ? 'coin' : gm.v >= 10 ? 'big' : gm.v >= 3 ? 'mid' : 'small', cs = crystal(kind);
     const GS = SAVE.bigItems === 0 ? 1 : 1.35, gr = Math.round((kind === 'coin' ? 9 : kind === 'big' ? 16 : kind === 'mid' ? 12 : 9)*GS);   // option « objets grands »
-    ctx.globalAlpha = tw; ctx.drawImage(glow(cs.glow, gr), gx - gr, gy - gr); ctx.globalAlpha = 1;
+    ctx.globalAlpha = tw; ctx.drawImage(glow(cs.glow), gx - gr, gy - gr, gr*2, gr*2); ctx.globalAlpha = 1;
     ctx.drawImage(cs.c, gx - cs.w*GS/2, gy - cs.h*GS/2, cs.w*GS, cs.h*GS);
     if (!reduce && Math.sin(now/260 + gm.x*1.3) > 0.97){ ctx.fillStyle = '#ffffff'; ctx.fillRect(gx - 4, gy - cs.h/2 - 0.5, 8, 1); ctx.fillRect(gx - 0.5, gy - cs.h/2 - 4, 1, 8); }
   }
@@ -2815,18 +2845,18 @@ function draw(now){
     if (s.kind === 'bolt' && hasFx('fx_eclat')){
       const a = Math.atan2(s.vy, s.vx), len = s.ev ? 96 : 70;
       fxDraw('fx_eclat', 2 + (Math.floor(now/70 + s.x*0.1) & 1), x - Math.cos(a)*len*0.38, y - Math.sin(a)*len*0.38, len, {rot:a});
-      if (s.ev) ctx.drawImage(glow('200,220,255', 16), x - 16, y - 16);
+      if (s.ev) ctx.drawImage(glow('200,220,255'), x - 16, y - 16, 32, 32);
     } else if (s.kind === 'bolt'){
       const sp = Math.hypot(s.vx, s.vy) || 1, ux = s.vx/sp, uy = s.vy/sp, len = s.ev ? 36 : 26;
       const tg = ctx.createLinearGradient(x, y, x - ux*len, y - uy*len);
       tg.addColorStop(0, s.ev ? 'rgba(210,225,255,.85)' : 'rgba(255,214,140,.8)'); tg.addColorStop(1, 'rgba(255,200,120,0)');
       ctx.strokeStyle = tg; ctx.lineWidth = s.ev ? 5 : 3.5; ctx.lineCap = 'round'; ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x - ux*len, y - uy*len); ctx.stroke(); ctx.lineCap = 'butt';
-      const gs = s.ev ? 18 : 13; ctx.drawImage(glow(s.ev ? '200,220,255' : '255,206,120', gs), x - gs, y - gs);
+      const gs = s.ev ? 18 : 13; ctx.drawImage(glow(s.ev ? '200,220,255' : '255,206,120'), x - gs, y - gs, gs*2, gs*2);
       const rot = now/110 + s.x*0.01, R1 = s.ev ? 7.5 : 5.5, R2 = R1*0.3;
       ctx.fillStyle = '#fffaf0'; ctx.beginPath(); for (let k=0;k<8;k++){ const a = rot + k*Math.PI/4, rr = k%2 ? R2 : R1; ctx.lineTo(x + Math.cos(a)*rr, y + Math.sin(a)*rr); } ctx.closePath(); ctx.fill();
     } else if (s.kind === 'sickle' && hasFx('fx_faucille')){
       if (s.trail) s.trail.forEach((q,i) => { ctx.fillStyle = s.ev ? `rgba(242,200,110,${0.05*(i+1)})` : `rgba(220,220,230,${0.04*(i+1)})`; ctx.beginPath(); ctx.arc(X(q.x), Y(q.y), s.r*1.1, 0, TAU); ctx.fill(); });
-      if (s.ev) ctx.drawImage(glow('255,210,120', s.r*1.6), x - s.r*1.6, y - s.r*1.6);
+      if (s.ev) ctx.drawImage(glow('255,210,120'), x - s.r*1.6, y - s.r*1.6, s.r*3.2, s.r*3.2);
       fxDraw('fx_faucille', 0, x, y, s.r*3.4, {rot:s.spin});
     } else if (s.kind === 'sickle'){
       if (s.trail) s.trail.forEach((q,i) => { ctx.fillStyle = s.ev ? `rgba(169,230,200,${0.05*(i+1)})` : `rgba(255,200,120,${0.05*(i+1)})`; ctx.beginPath(); ctx.arc(X(q.x), Y(q.y), s.r*1.1, 0, TAU); ctx.fill(); });
@@ -3296,7 +3326,7 @@ function enemySprite(e, variant){
   g.globalCompositeOperation = 'source-atop';
   if (variant === 'w'){ g.fillStyle = 'rgba(246,239,220,.92)'; g.fillRect(0, 0, S, S); }
   g.globalCompositeOperation = 'source-over';
-  s = {c, S}; ESPR.set(key, s);
+  s = {c, S}; capCache(ESPR, key, s, 140);
   if (ESPR.size > 1400) ESPR.delete(ESPR.keys().next().value);
   return s;
 }
@@ -3513,14 +3543,16 @@ function gradeBloom(){
 function prewarmMap(map){ groundTex(map); fogCanvas(map); decoSet(map); treeSet(map); }
 
 /* --- Lueurs et cristaux --- */
+/* une seule image par couleur (128 px), dessinée à la taille voulue : avant, chaque rayon différent créait une nouvelle image
+   et certaines lueurs changent de taille à chaque instant (boss, orbes) -> la mémoire montait sans fin */
 const GLOWS = {};
-function glow(col, r){
-  const k = col + '|' + r; if (GLOWS[k]) return GLOWS[k];
-  const S = Math.ceil(r*2), c = document.createElement('canvas'); c.width = c.height = S;
+function glow(col){
+  if (GLOWS[col]) return GLOWS[col];
+  const r = 64, S = 128, c = document.createElement('canvas'); c.width = c.height = S;
   const g = c.getContext('2d'), gr = g.createRadialGradient(r, r, 0, r, r, r);
   gr.addColorStop(0, `rgba(${col},.85)`); gr.addColorStop(0.22, `rgba(${col},.32)`); gr.addColorStop(1, `rgba(${col},0)`);
   g.fillStyle = gr; g.fillRect(0, 0, S, S);
-  return GLOWS[k] = c;
+  return GLOWS[col] = c;
 }
 /* tache douce en cache (dégradé radial simple), dessinée avec une opacité : remplace un dégradé recréé à chaque image */
 const SOFT = {};
@@ -3618,7 +3650,7 @@ function drawEyes(e, ex, ey){
   const col = frozen ? '#cfe9ff' : e.eye;
   const d = FACING.has(e.type) ? (Math.sign(G.p.x - e.x) || 1) : 1;
   const gl = EGLOW[e.type];
-  if (gl) for (const [gx, gy, gr, gc, ga] of gl){ const R = gr*e.r; ctx.globalAlpha = ga; ctx.drawImage(glow(gc, R), ex + d*gx*e.r - R, ey + gy*e.r + by - R, R*2, R*2); ctx.globalAlpha = 1; }
+  if (gl) for (const [gx, gy, gr, gc, ga] of gl){ const R = gr*e.r; ctx.globalAlpha = ga; ctx.drawImage(glow(gc), ex + d*gx*e.r - R, ey + gy*e.r + by - R, R*2, R*2); ctx.globalAlpha = 1; }
   if (!cfg){
     const dir = Math.sign(G.p.x - e.x) || 1, s = e.r/13, ey2 = ey + by - (e.type === 'squelette' ? e.r*0.52 : e.r*0.25);
     ctx.fillStyle = col; ctx.beginPath(); ctx.arc(ex+dir*2*s-3.5*s, ey2, 1.8*s, 0, TAU); ctx.arc(ex+dir*2*s+3.5*s, ey2, 1.8*s, 0, TAU); ctx.fill();
@@ -3699,7 +3731,7 @@ function paintReady(){
     if (!PAINT_ART_OLD[t]) PAINT_ART_OLD[t] = ART[t] || null;
     ART[t] = (e, x, y) => paintBody(e, x, y);
   }
-  ESPR.clear();
+  ESPR.clear(); ESPR.bytes = 0;
 }
 
 /* géométrie d'un sprite, relative au centre de l'ennemi (pieds sur la ligne de sol) */
@@ -3735,7 +3767,7 @@ function paintBody(e, x, y){
 }
 
 /* lueurs vivantes (après la passe de lumière) : yeux, gorge, sceau, couronne, regards */
-function pglow(x, y, R, col, a){ if (R < 0.5 || a <= 0.01) return; ctx.globalAlpha = Math.min(1, a); ctx.drawImage(glow(col, R), x - R, y - R, R*2, R*2); ctx.globalAlpha = 1; }
+function pglow(x, y, R, col, a){ if (R < 0.5 || a <= 0.01) return; ctx.globalAlpha = Math.min(1, a); ctx.drawImage(glow(col), x - R, y - R, R*2, R*2); ctx.globalAlpha = 1; }
 function pdot(x, y, R, col, a){ ctx.globalAlpha = a; ctx.fillStyle = col; ctx.beginPath(); ctx.arc(x, y, R, 0, TAU); ctx.fill(); ctx.globalAlpha = 1; }
 function paintGlow(e, ex, ey, now){
   if (PLEVEL[PDEF[e.type].img] !== 'concept') return paintGlowGeneric(e, ex, ey, now);
@@ -4093,7 +4125,7 @@ function sheetCell(C, col, row, k){
   c = document.createElement('canvas'); c.width = Math.max(1, Math.round(sh.frameW*k*d)); c.height = Math.max(1, Math.round(sh.frameH*k*d));
   const g = c.getContext('2d'); g.imageSmoothingQuality = 'high';
   g.drawImage(C.sheetImg, col*sh.frameW, row*sh.frameH, sh.frameW, sh.frameH, 0, 0, c.width, c.height);
-  SHEET_CACHE.set(key, c); if (SHEET_CACHE.size > 700) SHEET_CACHE.delete(SHEET_CACHE.keys().next().value);
+  capCache(SHEET_CACHE, key, c, 120);
   return c;
 }
 /* ---------- Pose complète (os, crochet, lanterne) : calculée une fois par image ---------- */
@@ -4323,7 +4355,7 @@ function resolveEntity(id, e, M){
   return tryNext(0);
 }
 /* Recharge la sélection d'images (après changement d'option) : les fichiers restent en cache, rien n'est retéléchargé. */
-function reloadArt(){ for (const k in PVIEWS) delete PVIEWS[k]; for (const k in ANIM) delete ANIM[k]; ANIM_CACHE.clear(); for (const k in PIMG) if (k !== 'c_gardien') delete PIMG[k]; for (const k in PLEVEL) delete PLEVEL[k]; for (const k in ASSET_IMG) delete ASSET_IMG[k]; ASSETS_READY = false; GROUND_CACHE.clear(); LIP_CACHE.clear(); return loadArtManifest(); }
+function reloadArt(){ for (const k in PVIEWS) delete PVIEWS[k]; for (const k in ANIM) delete ANIM[k]; ANIM_CACHE.clear(); ANIM_CACHE.bytes = 0; for (const k in PIMG) if (k !== 'c_gardien') delete PIMG[k]; for (const k in PLEVEL) delete PLEVEL[k]; for (const k in ASSET_IMG) delete ASSET_IMG[k]; ASSETS_READY = false; GROUND_CACHE.clear(); LIP_CACHE.clear(); LIP_CACHE.bytes = 0; return loadArtManifest(); }
 async function loadArtManifest(){
   try { await loadDataOnce(ASSET_ROOT + 'manifest.js'); } catch(e){ console.warn('[assets] manifeste introuvable'); return; }
   const M = ASSET_DATA.manifest; if (!M) return;
@@ -4429,7 +4461,7 @@ async function loadAnim(id, e){
   const st = {};
   for (const s in e.anim.states) st[s] = await Promise.all(e.anim.states[s].map(f => loadImageOnce(ASSET_ROOT + e.folder + f).then(img => ({img, f, gap:e.anim.frames[f].gap}))));
   ANIM[id] = {states:st, refH:e.anim.refH, cycle:new Set(e.anim.cycle || []), fps:e.anim.fps || null};   // « cycle » : vraie boucle (rendu 3D), sinon aller-retour
-  ESPR.clear();
+  ESPR.clear(); ESPR.bytes = 0;
 }
 function animOf(type){ const D = PDEF[type]; return D && ANIM[D.img] && ANIM_H[D.img] ? D.img : null; }
 /* état d'animation : déplacement, annonce d'attaque, attaque, dégâts */
@@ -4481,7 +4513,7 @@ function animCanvas(fr, k, frozen){
   c = document.createElement('canvas'); c.width = Math.ceil(w*d); c.height = Math.ceil(h*d); c.lw = w; c.lh = h;
   const g = c.getContext('2d'); g.imageSmoothingQuality = 'high'; g.drawImage(fr.img, 0, 0, c.width, c.height);
   if (frozen){ g.globalCompositeOperation = 'source-atop'; g.fillStyle = 'rgba(120,170,235,.45)'; g.fillRect(0, 0, c.width, c.height); }
-  ANIM_CACHE.set(key, c); if (ANIM_CACHE.size > 900) ANIM_CACHE.delete(ANIM_CACHE.keys().next().value);
+  capCache(ANIM_CACHE, key, c, 260);
   return c;
 }
 const ANIM_FLOAT = {spectre:[3.5, 1.6], feufollet:[3, 2.6], chauve:[2, 4.2]};   // flottement (amplitude px, vitesse)
@@ -4693,7 +4725,7 @@ function sinkLip(id, wx, wy, half, depth){
   mg.globalCompositeOperation = 'destination-out';                     // dentelures : quelques mottes plus hautes, d'autres plus basses
   for (let i = 0; i < 9; i++){ const xx = hash(i + wx*0.01, wy*0.01)*w, rr = 3 + hash(wx*0.02, i)*5; mg.globalAlpha = 0.6; mg.beginPath(); mg.ellipse(xx, up*0.35, rr*1.6, rr, 0, 0, TAU); mg.fill(); }
   g.drawImage(m, 0, 0, w, h);
-  L = {c, w, h, up}; LIP_CACHE.set(key, L); if (LIP_CACHE.size > 400) LIP_CACHE.delete(LIP_CACHE.keys().next().value);
+  L = {c, w, h, up}; capCache(LIP_CACHE, key, L, 80);
   return L;
 }
 function drawSink(id, wx, wy, sx, sy, half, depth){
@@ -5684,7 +5716,7 @@ async function coopJoin(){
   if (code.length !== 5){ coopStatus('Le code fait 5 lettres.', true); return; }
   coopReset(); NET.role = 'guest'; NET.code = code;
   coopStatus('Connexion au salon ' + code + '…');
-  const hello = () => NET.send({t:'hello', char:coopMyChar(), shop:SAVE.shop, name:'Compagnon', mast:Object.keys(SAVE.ach).filter(k => k.startsWith('m_'))});
+  const hello = () => NET.send({t:'hello', char:coopMyChar(), shop:SAVE.shop, slots:{w:slotsOf('w'), p:slotsOf('p')}, name:'Compagnon', mast:Object.keys(SAVE.ach).filter(k => k.startsWith('m_'))});
   if (COOP_LOCAL()){ coopBC(); hello(); return; }
   try { await loadPeer(); } catch(e){ coopStatus('Impossible de charger la connexion réseau.', true); return; }
   const peer = NET.peer = new Peer();
@@ -5733,7 +5765,7 @@ function coopMsg(m){
 }
 
 /* ---------------- logique à deux (hôte) ---------------- */
-const CTX_KEYS = ['p', 'weapons', 'passives', 'st', 'char', 'banished', 'rerolls', 'banishes'];
+const CTX_KEYS = ['p', 'weapons', 'passives', 'st', 'char', 'banished', 'rerolls', 'banishes', 'slotsW', 'slotsP'];
 function coopSwap(fn, drawOnly){                                         // le compagnon devient temporairement « le joueur »
   const A = G.ally, keys = drawOnly ? ['p', 'weapons'] : CTX_KEYS;
   const swap = () => { for (const k of keys){ const t = G[k]; G[k] = A[k]; A[k] = t; } };   // vrai échange : pendant le tour du compagnon, G.ally.* désigne l'hôte
@@ -5746,7 +5778,8 @@ function makeAlly(charId, shop){
   G.allyShop = shop || {};
   G.ally = {char:charId, input:{mx:0, my:0, aim:null},
     p:{pc:charId, x:60, y:30, r:12, dashCd:0, dashT:0, dvx:0, dvy:0, hp:100, max:100, face:1, hurt:0, step:0, inv:0, revives:(shop && shop.renaissance || 0) + (c.mod.revive || 0), xp:0, lvl:1, need:needFor(1)},
-    weapons:[{id:c.w, lv:1, t:0.6, a:0, stars:0}], passives:[], st:{}, banished:new Set(), rerolls:0, banishes:0};
+    weapons:[{id:c.w, lv:1, t:0.6, a:0, stars:0}], passives:[], st:{}, banished:new Set(), rerolls:0, banishes:0,
+    slotsW:(NET.allyHello && NET.allyHello.slots && NET.allyHello.slots.w) || 3, slotsP:(NET.allyHello && NET.allyHello.slots && NET.allyHello.slots.p) || 3};
   G.ally.p.mast = !!(NET.allyHello && NET.allyHello.mast && NET.allyHello.mast.includes('m_' + charId));   // maîtrise du compagnon (son propre succès)
   withAlly(() => { computeStats(); G.p.hp = G.p.max; });
 }
@@ -5976,6 +6009,7 @@ function coopLevelNext(){
 }
 function guestLevel(m){
   if (!G || !G.guest) return;
+  if (!m.choices.length && G.autoPick){ NET.send({t:'pick', c:{k:'x', id:G.autoPick}}); return; }   // choix automatique demandé
   state = 'levelup'; joy = null; keys.clear(); SFX.level();
   G.banishMode = false; G.rerolls = 0; G.banishes = 0;
   $('#luEyebrow').textContent = 'Niveau ' + m.lvl;
@@ -6023,11 +6057,17 @@ function hud(){
   } else hudEls.bossbar.hidden = true;
   if (G.buildDirty){ renderSlots(); G.buildDirty = false; }
 }
+/* ligne « emplacements libres / à débloquer » du menu pause */
+function freeRow(n, max, t){
+  const free = Math.max(0, max - n), lock = 6 - Math.max(max, n); if (!free && !lock) return '';
+  const next = SLOT_SRC[t].find(s => !slotOk(s));
+  return `<div class="eqfree ${t === 'p' ? 'pas' : ''}">${'<i></i>'.repeat(free)}${'<i class="lk"></i>'.repeat(lock)}<small>${free ? free + ' libre' + (free > 1 ? 's' : '') : ''}${free && lock ? ' · ' : ''}${lock ? lock + ' à débloquer' + (next ? ' (prochain : ' + next.txt + ')' : '') : ''}</small></div>`;
+}
 function renderSlots(){
   let h = '';
   for (let i=0;i<6;i++){
     const w = G.weapons[i];
-    if (!w){ h += '<span class="slot empty"></span>'; continue; }
+    if (!w){ h += i >= maxW() ? '<span class="slot lock" title="Emplacement à débloquer"></span>' : '<span class="slot empty"></span>'; continue; }
     const tc = tierCol(w.stars||0);
     h += `<span class="slot ${WD[w.id].evolved?'evo':''}" title="${WD[w.id].name}" ${tc && !WD[w.id].evolved ? `style="border-color:${tc}"` : ''}>${icon(w.id)}<em>${WD[w.id].evolved?'★':w.lv}</em></span>`;
   }
@@ -6035,7 +6075,7 @@ function renderSlots(){
   h = '';
   for (let i=0;i<6;i++){
     const q = G.passives[i];
-    if (!q){ h += '<span class="slot empty"></span>'; continue; }
+    if (!q){ h += i >= maxP() ? '<span class="slot lock" title="Emplacement à débloquer"></span>' : '<span class="slot empty"></span>'; continue; }
     const tc = tierCol(q.stars||0);
     h += `<span class="slot pas" title="${PD[q.id].name}" ${tc ? `style="border-color:${tc}"` : ''}>${icon(q.id)}<em>${q.lv}</em></span>`;
   }
@@ -6146,8 +6186,8 @@ function levelChoices(){
   const pool = [];
   for (const w of G.weapons){ const d = WD[w.id]; if (!d.evolved && w.lv < d.max) pool.push({k:'w', id:w.id, lv:w.lv}); }
   for (const q of G.passives){ if (q.lv < PD[q.id].max) pool.push({k:'p', id:q.id, lv:q.lv}); }
-  if (G.weapons.length < 6) for (const id of availW()) if (!hasWeapon(id)) pool.push({k:'w', id, lv:0});
-  if (G.passives.length < 6) for (const id of availP()) if (!hasPassive(id)) pool.push({k:'p', id, lv:0});
+  if (G.weapons.length < maxW()) for (const id of availW()) if (!hasWeapon(id)) pool.push({k:'w', id, lv:0});
+  if (G.passives.length < maxP()) for (const id of availP()) if (!hasPassive(id)) pool.push({k:'p', id, lv:0});
   const f = pool.filter(c => !G.banished.has(c.id));
   for (const c of f){ c.r = Math.random() - (c.lv > 0 ? 0.2 : 0); c.rar = rollRarity(); if (isTal('conteuse') && G.p.mast) c.rar = Math.max(c.rar, rollRarity()); }   // Conteuse maîtrisée : cartes plus rares
   f.sort((a,b) => a.r - b.r);
@@ -6156,7 +6196,17 @@ function levelChoices(){
   if (isTal('conteuse')) n = Math.max(n, 4);
   return f.slice(0, n);
 }
+/* tout est au max et le joueur a choisi « toujours ce choix » : on applique sans ouvrir la fenêtre */
+function autoBonus(id){ if (id === 'repas'){ G.p.hp = Math.min(G.p.max, G.p.hp + 40); floatText && floatText(G.p.x, G.p.y - 40, '+40 PV', '#8fc27a'); } else { G.gold += 25; floatText && floatText(G.p.x, G.p.y - 40, '+25 braises', '#f2b84b'); } }
 function openLevelUp(){
+  if (G.autoPick && !G.guest && !levelChoices().length){
+    if (G.ally && NET.role === 'host'){                                      // à deux : on attend quand même le choix du compagnon
+      state = 'levelup'; joy = null; keys.clear(); $('#luEyebrow').textContent = 'Niveau ' + (G.p.lvl - G.pending + 1);
+      show('levelup'); coopOfferAlly(); autoBonus(G.autoPick); afterLevel(); return;
+    }
+    while (G.pending > 0){ autoBonus(G.autoPick); G.pending--; }
+    show(null); state = 'play'; keys.clear(); return;
+  }
   G.p.joyUntil = performance.now() + 1700;
   state = 'levelup'; joy = null; keys.clear(); SFX.level();
   G.banishMode = false;
@@ -6169,6 +6219,8 @@ let lastChoices = [];
 function renderChoices(choices){
   lastChoices = choices;
   const box = $('#choices'); box.innerHTML = '';
+  const onlyBonus = !choices.length;
+  $('#autoPickWrap').hidden = !onlyBonus; $('#autoPickBox').checked = false;
   if (!choices.length) choices = [{k:'x', id:'repas'}, {k:'x', id:'or'}];
   if (choices.some(c => c.rar >= 2)) SFX.rare();
   choices.forEach((c, idx) => {
@@ -6200,6 +6252,7 @@ function renderChoices(choices){
   $('#banishBtn').textContent = G.banishMode ? 'Annuler le bannissement' : `Bannir (${G.banishes})`; $('#banishBtn').disabled = G.banishes <= 0 && !G.banishMode;
 }
 function choose(c){
+  if (c.k === 'x' && $('#autoPickBox').checked && !$('#autoPickWrap').hidden){ G.autoPick = c.id; toast('Choix automatique : ' + (c.id === 'repas' ? 'Repas chaud' : 'Sac de braises')); }
   if (G.guest){                                                         // coop : l'invité envoie son choix à l'hôte
     NET.send({t:'pick', c:{k:c.k, id:c.id, lv:c.lv, rar:c.rar || 0}});
     $('#choices').innerHTML = '<div class="coopwait">Choix envoyé. En attente de l’hôte…</div>'; return;
@@ -6254,6 +6307,7 @@ function altarFx(A){
 function showEvoReveal(res, title){
   state = 'chest'; joy = null; keys.clear(); SFX.chest(); SFX.rare && SFX.rare();
   $('#chestEyebrow').textContent = 'Autel de braises';
+  $('#autoChestWrap').hidden = true;
   $('#chestTitle').textContent = title;
   $('#chestItems').innerHTML = res.map((r,i) =>
     `<div class="reveal evo" style="animation-delay:${i*0.25}s"><span class="ico evo">${icon(r.ico)}</span><span class="txt"><span class="tag new">${r.tag}</span><b>${r.name}</b><small>${r.txt}</small></span></div>`).join('');
@@ -6288,7 +6342,12 @@ function spinReveal(){
     }, 70 + i*8);
   });
 }
+const chestHasUse = () => G.weapons.some(canEvolve) || G.weapons.some(w => !WD[w.id].evolved && w.lv < WD[w.id].max) || G.passives.some(q => q.lv < PD[q.id].max);
 function openChest(big){
+  if (G.autoChest && !chestHasUse()){                                       // tout est au max : braises ajoutées sans fenêtre
+    const count = big ? 3 : 1, bonus = 25*count + (big ? 40 : 10 + Math.floor(Math.random()*10)) + (hasArc('couronne') ? 20 : 0);
+    G.gold += bonus; SAVE.stats.chests = (SAVE.stats.chests||0) + 1; SFX.chest(); floatText(G.p.x, G.p.y - 46, '+' + bonus + ' braises', '#f2b84b', true); return;
+  }
   state = 'chest'; joy = null; keys.clear(); SFX.chest();
   SAVE.stats.chests = (SAVE.stats.chests||0) + 1;
   const res = [], count = big ? 3 : (Math.random() < 0.15 + G.st.luck*0.6 ? 3 : 1);
@@ -6312,7 +6371,8 @@ function openChest(big){
   const bonus = (big ? 40 : 10 + Math.floor(Math.random()*10)) + (hasArc('couronne') ? 20 : 0);
   G.gold += bonus;
   G.buildDirty = true;
-  $('#chestEyebrow').textContent = big ? 'Coffre du boss' : 'Coffre d’élite';
+  $('#chestEyebrow').textContent = big ? 'Coffre du boss' : 'Coffret scellé';
+  $('#autoChestWrap').hidden = chestHasUse(); $('#autoChestBox').checked = false;
   $('#chestTitle').textContent = res.some(r => r.evo) ? 'Une évolution !' : 'Le coffre s’ouvre';
   $('#chestItems').innerHTML = res.map((r,i) =>
     `<div class="reveal ${r.evo?'evo':''}" style="animation-delay:${i*0.25}s"><span class="ico ${r.pas?'pas':''} ${r.evo?'evo':''}">${icon(r.ico)}</span><span class="txt"><span class="tag ${r.evo?'new':''}">${r.tag}</span><b>${r.name}</b><small>${r.txt}</small></span></div>`
@@ -6323,6 +6383,8 @@ function openChest(big){
 let chestSkip = false;
 $('#chestBtn').addEventListener('click', () => {
   if (document.querySelector('#chestItems .reveal.spin')){ chestSkip = true; return; }
+  if (!$('#autoChestWrap').hidden && $('#autoChestBox').checked) G.autoChest = true;
+  $('#autoChestWrap').hidden = true;
   show(null); state = 'play';
   if (G.guest){ keys.clear(); G.buildDirty = true; return; }
   if (G.arcPending > 0 && openArcana(false)) return;
@@ -6357,7 +6419,7 @@ const MERCH = [
   {id:'relance', name:'Dés pipés',         ico:'trefle',   cost:30, txt:'+2 relances.'},
   {id:'exil',    name:'Sceau d’exil',      ico:'grimoire', cost:30, txt:'+1 bannissement.'},
   {id:'xp',      name:'Bocal de lucioles', ico:'chant',    cost:55, txt:'Monte immédiatement d’un niveau.'},
-  {id:'coffre',  name:'Coffret scellé',    ico:'bourse',   cost:75, txt:'S’ouvre comme un coffre d’élite.'}
+  {id:'coffre',  name:'Coffret scellé',    ico:'bourse',   cost:75, txt:'Un petit coffre à ouvrir sur-le-champ (les vrais coffres sont gardés par les boss).'}
 ];
 const mCost = it => Math.round(it.cost * (1 + 0.6*(G.mbuys[it.id]||0)) * (1 + G.t/900));
 function openMerchant(){ state = 'merchant'; joy = null; keys.clear(); SFX.gold(); renderMerchant(); show('merchant'); focusFirst('merchant'); }
@@ -6419,7 +6481,7 @@ function renderPause(){
   // équipement : sorts et talents bien séparés, niveau en points, et où en est chaque évolution
   const pips = (lv, max) => `<span class="pips">${Array.from({length:max}, (_, i) => `<i class="${i < lv ? 'on' : ''}"></i>`).join('')}</span>`;
   const stars = n => n ? ` <span style="color:${tierCol(n)}">${'★'.repeat(Math.min(n, 6))}</span>` : '';
-  const rows = [`<h3>Sorts <small>${G.weapons.length} / 6</small></h3>`];
+  const rows = [`<h3>Sorts <small>${G.weapons.length} / ${maxW()}</small></h3>`];
   for (const w of G.weapons){
     const d = WD[w.id];
     if (d.evolved){ rows.push(`<div class="eqrow evo"><span class="ico evo">${icon(w.id)}</span><span><b>${d.name}${stars(w.stars)}</b><small>Sort évolué</small></span><b class="lvtag">★</b></div>`); continue; }
@@ -6428,13 +6490,13 @@ function renderPause(){
       : `<small>Évolution « ${WD[d.evo].name} » : sort ${wOk ? '✓' : ROMAN[w.lv] + '/' + ROMAN[d.max]} · ${P.name} ${pOk ? '✓' : pl ? ROMAN[pl] + '/' + ROMAN[P.max] : 'à prendre'}</small>`;
     rows.push(`<div class="eqrow"><span class="ico">${icon(w.id)}</span><span><b>${d.name}${stars(w.stars)}</b>${evo}</span>${pips(w.lv, d.max)}</div>`);
   }
-  if (G.weapons.length < 6) rows.push(`<div class="eqfree">${'<i></i>'.repeat(6 - G.weapons.length)}<small>${6 - G.weapons.length} emplacement${G.weapons.length < 5 ? 's' : ''} libre${G.weapons.length < 5 ? 's' : ''}</small></div>`);
-  rows.push(`<h3>Talents <small>${G.passives.length} / 6</small></h3>`);
+  rows.push(freeRow(G.weapons.length, maxW(), 'w'));
+  rows.push(`<h3>Talents <small>${G.passives.length} / ${maxP()}</small></h3>`);
   for (const q of G.passives){
     const P = PD[q.id], wid = ALL_W.find(id => WD[id].pair === q.id), owned = wid && hasWeapon(wid);
     rows.push(`<div class="eqrow"><span class="ico pas">${icon(q.id)}</span><span><b>${P.name}${stars(q.stars)}</b><small>${owned ? 'Fait évoluer ' + WD[wid].name : P.txt}</small></span>${pips(q.lv, P.max)}</div>`);
   }
-  if (G.passives.length < 6) rows.push(`<div class="eqfree pas">${'<i></i>'.repeat(6 - G.passives.length)}<small>${6 - G.passives.length} emplacement${G.passives.length < 5 ? 's' : ''} libre${G.passives.length < 5 ? 's' : ''}</small></div>`);
+  rows.push(freeRow(G.passives.length, maxP(), 'p'));
   if (G.arcs.length){ rows.push('<h3>Arcanes</h3>'); for (const id of G.arcs){ const a = arcDef(id); rows.push(`<div class="eqrow"><span class="ico evo">${icon(a.ico)}</span><span><b>${a.n} · ${a.name}</b><small>${a.txt}</small></span></div>`); } }
   $('#buildList').innerHTML = rows.join('');
   const s = G.st;
@@ -6960,7 +7022,14 @@ $('#jList').addEventListener('click', e => {
   const b = e.target.closest('[data-page]'); if (!b) return;
   showStory([b.dataset.page], goJournal);
 });
-document.querySelectorAll('[data-back]').forEach(b => b.addEventListener('click', goMenu));
+document.querySelectorAll('[data-back]').forEach(b => b.addEventListener('click', backFromScreen));
+/* options ouvertes depuis la pause : « Retour » ramène à la partie en pause */
+let OPTS_PAUSE = false;
+function backFromScreen(){
+  if (state === 'opts' && OPTS_PAUSE && G){ OPTS_PAUSE = false; state = 'pause'; renderPause(); show('pause'); focusFirst('pause'); return; }
+  OPTS_PAUSE = false; goMenu();
+}
+$('#pauseOptsBtn').addEventListener('click', () => { OPTS_PAUSE = true; goOpts(); });
 
 function startRun(){
   audioInit();
@@ -7056,7 +7125,7 @@ function frame(now){
     else if (G && G.guest && RUN_STATES.has(state)) guestApply(0);
     else if (state === 'cine') updateCine(dt);
     pm('logique');
-    if ((MENU_STATES.has(state) && !(state === 'story' && G.t > 0)) || state === 'fading') drawTitle(now, dt);
+    if ((MENU_STATES.has(state) && !(state === 'story' && G.t > 0) && !(state === 'opts' && OPTS_PAUSE)) || state === 'fading') drawTitle(now, dt);
     else draw(now);
     pm('final'); if (RUN_STATES.has(state)){ hud(); drawMini(); } pm('interface');
     if (PROF.on){ PROF.n++; PROF.cpu = (PROF.cpu || 0) + (performance.now() - t0); }
