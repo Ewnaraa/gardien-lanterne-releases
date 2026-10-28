@@ -1664,22 +1664,27 @@ function relicTrial(dt){
    Rester dans sa flamme quelques secondes forge l'évolution (un coffre la fait aussi, s'il vient avant). */
 const ALTAR_R = 80, ALTAR_NEED = 4;
 function altarStep(dt){
-  const p = G.p, ready = G.weapons.some(canEvolve);
+  const p = G.p, meReady = G.weapons.some(canEvolve), allyReady = !!(G.ally && withAlly(() => G.weapons.some(canEvolve))), ready = meReady || allyReady;
   if (!G.altar){
     if (G.altarCd > 0){ G.altarCd -= dt; return; }
     if (!ready || G.room) return;
     const a = Math.random()*TAU, o = {x:p.x + Math.cos(a)*560, y:p.y + Math.sin(a)*560*0.62};
     collideWorld(o, 70);
     G.altar = {x:o.x, y:o.y, t:0};
-    toast('Un autel de braises s’allume : ton sort peut évoluer'); SFX.rare && SFX.rare();
+    toast(meReady ? 'Un autel de braises s’allume : ton sort peut évoluer' : 'Un autel de braises s’allume pour ton compagnon'); SFX.rare && SFX.rare();
+    if (G.ally) NET.send({t:'toast', s:allyReady ? 'Un autel de braises s’allume : ton sort peut évoluer' : 'Un autel de braises s’allume pour l’hôte'});
     if (!SAVE.altarSeen){ SAVE.altarSeen = 1; persist(); dialog('Ysolde', 'Ton sort et son talent sont à leur sommet. Va à l’autel de braises et reste dans sa flamme : elle forgera ton arme.', 5); }
     return;
   }
   if (!ready){ G.altar = null; return; }                                  // un coffre a déjà fait l'évolution
-  const A = G.altar, d = Math.hypot(A.x - p.x, (A.y - p.y)/0.62);
-  A.t = d < ALTAR_R ? A.t + dt : Math.max(0, A.t - dt*0.7);
-  if (d < ALTAR_R && Math.random() < dt*14) burst(A.x + rnd(-30, 30), A.y + rnd(-14, 8), '#ff9a4a', 1, 0.9);
-  if (A.t >= ALTAR_NEED){ G.altar = null; G.altarCd = 2; openAltar(A); }
+  const A = G.altar, inA = q => !q.down && Math.hypot(A.x - q.x, (A.y - q.y)/0.62) < ALTAR_R;
+  const inMe = meReady && inA(p), inAlly = allyReady && inA(G.ally.p);     // chacun forge son propre sort
+  A.tm = inMe ? (A.tm || 0) + dt : Math.max(0, (A.tm || 0) - dt*0.7);
+  A.ta = inAlly ? (A.ta || 0) + dt : Math.max(0, (A.ta || 0) - dt*0.7);
+  A.t = Math.max(A.tm, A.ta);                                              // ce que l'on voit : la forge la plus avancée
+  if ((inMe || inAlly) && Math.random() < dt*14) burst(A.x + rnd(-30, 30), A.y + rnd(-14, 8), '#ff9a4a', 1, 0.9);
+  if (A.ta >= ALTAR_NEED){ A.ta = 0; G.altarCd = 2; if (!meReady) G.altar = null; allyAltar(A); return; }
+  if (A.tm >= ALTAR_NEED){ A.tm = 0; G.altarCd = 2; if (!allyReady) G.altar = null; openAltar(A); }
 }
 function runEvent(ev){
   const minute = Math.min(9, Math.floor(G.t/60)), m = MAPS[G.map];
@@ -5717,6 +5722,8 @@ function coopMsg(m){
     else if (m.t === 'lvldone'){ if (G && G.guest && state === 'levelup'){ show(null); state = 'play'; } }
     else if (m.t === 'end' && G && G.guest){ G.guest = false; finish(!!m.win, false); }
     else if (m.t === 'toast') toast(m.s);
+    else if (m.t === 'evo') guestEvo(m);
+    else if (m.t === 'endless') guestEndless(m);
   }
 }
 
@@ -5841,7 +5848,7 @@ function coopSnapshot(){
     tx:G.texts.filter(near).slice(-30).map(t => [R0(t.x), R0(t.y), t.v, R1(t.life), t.col || 0, t.big ? 1 : 0]),
     de:!slow ? null : G.decals.filter(near).slice(-50).flatMap(d => [R0(d.x), R0(d.y), R0(d.r), R0(d.life), R0(d.max), R0(d.seed), d.kind === 'scorch' ? 1 : 0]),
     gv:G.graves.map(g => pickF(g, ['x', 'y', 't'])), bm:(G.bombs || []).map(b => pickF(b, ['x', 'y', 'R', 't', 'max'])),
-    bfx:G.bfx || null, mer:G.merchant ? pickF(G.merchant, ['x', 'y', 'life']) : null, rel:G.relic ? pickF(G.relic, ['x', 'y', 'name', 'phase', 't', 'free']) : null, alt:G.altar ? pickF(G.altar, ['x', 'y', 't']) : null,
+    bfx:G.bfx || null, mer:G.merchant ? pickF(G.merchant, ['x', 'y', 'life']) : null, rel:G.relic ? pickF(G.relic, ['x', 'y', 'name', 'phase', 't', 'free']) : null, alt:G.altar ? pickF(G.altar, ['x', 'y', 't']) : null, eT0:G.endless ? R1(G.endlessT0) : null,
     brk:[...G.broken].slice(-200), room:G.room ? {id:G.room.d.room, ex:R1(G.room.exitT || 0)} : null,
     vl:G.vlit ? [...G.vlit].map(([k, s]) => [k, [...s]]) : [], vs:G.vsafe ? [...G.vsafe] : [], seen:G.sitesSeen ? [...G.sitesSeen] : []};
 }
@@ -5910,7 +5917,7 @@ function guestApply(dt){
   G.fxs = m.fx.map(f => ({k:f[0], x:f[1], y:f[2], w:f[3], age:f[4], dur:f[5], bottom:!!f[6], rot:f[7], a:f[8], f0:f[9]})); G.texts = m.tx.map(t => ({x:t[0], y:t[1], v:t[2], life:t[3], col:t[4] || null, big:!!t[5]}));
   if (m.de){ G.decals = []; } for (let i = 0; m.de && i < m.de.length; i += 7) G.decals.push({x:m.de[i], y:m.de[i+1], r:m.de[i+2], life:m.de[i+3], max:m.de[i+4], seed:m.de[i+5], kind:m.de[i+6] ? 'scorch' : 'ink'}); G.graves = m.gv; G.bombs = m.bm; G.bfx = m.bfx || G.bfx;
   if (m.gm) G.gems = []; for (let i = 0; m.gm && i < m.gm.length; i += 3){ const c = m.gm[i+2]; G.gems.push({x:m.gm[i], y:m.gm[i+1], v:c === 3 ? 10 : c === 2 ? 3 : 1, kind:c === 1 ? 'coin' : 'xp'}); }
-  G.merchant = m.mer ? Object.assign(G.merchant || {}, m.mer) : null; G.relic = m.rel; G.altar = m.alt || null;
+  G.merchant = m.mer ? Object.assign(G.merchant || {}, m.mer) : null; G.relic = m.rel; G.altar = m.alt || null; if (m.eT0 != null){ G.endless = true; G.endlessT0 = m.eT0; }
   for (const b of m.brk) G.broken.add(b);
   G.room = m.room ? {R:roomDef(m.room.id), d:{room:m.room.id, key:''}, exitT:m.room.ex} : null;
   G.vlit = new Map(m.vl.map(([kk, s]) => [kk, new Set(s)])); G.vsafe = new Set(m.vs); G.sitesSeen = new Set(m.seen);
@@ -6225,22 +6232,43 @@ $('#skipBtn').addEventListener('click', () => { if (G.guest){ choose({k:'x', id:
 /* Coffres */
 function evolveWeapon(w){
   const old = w.id; w.id = WD[old].evo; w.t = 0;
+  if (G.ctxAlly) return w.id;                                              // sort du compagnon : c'est lui qui note la découverte, chez lui
   G.acq[w.id] = G.acq[old] != null ? G.acq[old] : G.t; G.dmgBy[w.id] = (G.dmgBy[w.id]||0) + (G.dmgBy[old]||0); delete G.dmgBy[old];
-  const fresh = !SAVE.evos[w.id]; SAVE.evos[w.id] = 1; persist();
-  unlockAch('evo1'); if (Object.keys(SAVE.evos).length >= 4) unlockAch('evo4');
-  return {ico:w.id, name:WD[w.id].name, tag: fresh ? 'Évolution découverte !' : 'Évolution !', txt:WD[w.id].intro, evo:true};
+  return evoCredit(w.id);
 }
-function openAltar(A){
-  state = 'chest'; joy = null; keys.clear(); SFX.chest(); SFX.rare && SFX.rare();
-  const res = G.weapons.filter(canEvolve).map(evolveWeapon);                  // tous les sorts prêts sont forgés d'un coup
-  G.buildDirty = true; G.flash = 0.4; G.shake = Math.max(G.shake, 0.5);
+function evoCredit(id){                                                    // découverte enregistrée dans la sauvegarde de celui qui a forgé
+  const fresh = !SAVE.evos[id]; SAVE.evos[id] = 1; persist();
+  unlockAch('evo1'); if (Object.keys(SAVE.evos).length >= 4) unlockAch('evo4');
+  return {ico:id, name:WD[id].name, tag: fresh ? 'Évolution découverte !' : 'Évolution !', txt:WD[id].intro, evo:true};
+}
+function altarFx(A){
+  G.flash = 0.4; G.shake = Math.max(G.shake, 0.5);
   burst(A.x, A.y, '#ff9a4a', 40, 1.6); G.rings.push({x:A.x, y:A.y, R:220, life:0.45, lv:true});
   query(A.x, A.y, 260, e => { const dx = e.x - A.x, dy = e.y - A.y, d = Math.hypot(dx, dy)||1; e.kx += dx/d*420*e.kb; e.ky += dy/d*420*e.kb; });
+}
+function showEvoReveal(res, title){
+  state = 'chest'; joy = null; keys.clear(); SFX.chest(); SFX.rare && SFX.rare();
   $('#chestEyebrow').textContent = 'Autel de braises';
-  $('#chestTitle').textContent = res.length > 1 ? 'Deux sorts forgés !' : 'La flamme forge ton sort';
+  $('#chestTitle').textContent = title;
   $('#chestItems').innerHTML = res.map((r,i) =>
     `<div class="reveal evo" style="animation-delay:${i*0.25}s"><span class="ico evo">${icon(r.ico)}</span><span class="txt"><span class="tag new">${r.tag}</span><b>${r.name}</b><small>${r.txt}</small></span></div>`).join('');
   show('chest'); focusFirst('chest'); chestSkip = false; spinReveal();
+}
+function allyAltar(A){                                                     // hôte : le compagnon a forgé (la nuit s'arrête un instant pour les deux)
+  const ids = withAlly(() => G.weapons.filter(canEvolve).map(evolveWeapon));
+  altarFx(A); NET.send({t:'evo', ids});
+  showEvoReveal(ids.map(id => ({ico:id, name:WD[id].name, tag:'Ton compagnon forge son sort', txt:WD[id].intro})), 'Ton compagnon forge son sort');
+}
+function guestEvo(m){                                                      // invité : c'est mon sort qui vient d'évoluer
+  if (!G || !G.guest) return;
+  const res = m.ids.map(evoCredit);
+  showEvoReveal(res, res.length > 1 ? 'Deux sorts forgés !' : 'La flamme forge ton sort');
+}
+function openAltar(A){
+  const res = G.weapons.filter(canEvolve).map(evolveWeapon);                  // tous les sorts prêts sont forgés d'un coup
+  G.buildDirty = true; altarFx(A);
+  if (G.ally) NET.send({t:'toast', s:'L’hôte a forgé ' + res.map(r => r.name).join(' et ')});
+  showEvoReveal(res, res.length > 1 ? 'Deux sorts forgés !' : 'La flamme forge ton sort');
 }
 function spinReveal(){
   if (reduce) return;
@@ -6291,6 +6319,7 @@ let chestSkip = false;
 $('#chestBtn').addEventListener('click', () => {
   if (document.querySelector('#chestItems .reveal.spin')){ chestSkip = true; return; }
   show(null); state = 'play';
+  if (G.guest){ keys.clear(); G.buildDirty = true; return; }
   if (G.arcPending > 0 && openArcana(false)) return;
   if (G.pending > 0) openLevelUp();
 });
@@ -6469,7 +6498,7 @@ function finish(win, quit){
   SAVE.braises += gain; SAVE.runs++; SAVE.kills += G.kills;
   SAVE.stats.time = (SAVE.stats.time||0) + t; SAVE.stats.gold = (SAVE.stats.gold||0) + gain;
   if (isBest) SAVE.best = t;
-  $('#endlessBtn').hidden = !(win && !G.ally && !G.guest);              // en solo, on peut continuer après l'aube
+  $('#endlessBtn').hidden = !(win && !G.guest && !quit && NET.role !== 'guest');                // après l'aube on peut continuer (en coop, c'est l'hôte qui décide)
   if (win){
     SAVE.wins++;
     unlockAch('aube');
@@ -6484,7 +6513,7 @@ function finish(win, quit){
   $('#endEyebrow').textContent = (win ? 'Victoire' : isBest && prevBest > 0 ? 'Nouveau record' : quit ? 'Abandon' : 'Fin de partie') + ' · ' + MAPS[G.map].name + ' · Veillée ' + LV().n;
   $('#endTitle').textContent = win ? 'L’aube est là' : 'La lanterne s’est éteinte';
   $('#endText').textContent = win
-    ? 'Le soleil se lève et les dernières ombres fondent dans la rosée. Tu as tenu toute la nuit.' + (G.lvUnlocked ? ` La veillée ${G.lvUnlocked.n} « ${G.lvUnlocked.name} » s’ouvre.` : '') + (SAVE.wins === 1 ? ' Le mode Nuit sans lune est débloqué.' : '')
+    ? 'Le soleil se lève et les dernières ombres fondent dans la rosée. Tu as tenu toute la nuit.' + (NET.role === 'guest' ? ' L’hôte peut relancer la nuit en mode sans fin.' : '') + (G.lvUnlocked ? ` La veillée ${G.lvUnlocked.n} « ${G.lvUnlocked.name} » s’ouvre.` : '') + (SAVE.wins === 1 ? ' Les Défis de la nuit sont débloqués.' : '')
     : `Les ombres t’ont rattrapé à ${fmt(nightLen() - t)} de l’aube.` + (isBest ? ' C’est ta meilleure nuit.' : ` Ton record : ${fmt(SAVE.best)} tenues.`);
   $('#eTime').textContent = fmt(t); $('#eLvl').textContent = G.p.lvl; $('#eKills').textContent = num(G.kills); $('#eGold').textContent = '+' + num(gain);
   const rows = Object.entries(G.dmgBy).filter(([,d]) => d > 0).sort((a,b) => b[1]-a[1]);
@@ -6616,11 +6645,21 @@ document.addEventListener('click', e => { if (e.target.closest('#updInstall, [da
 /* MODE SANS FIN : après l'aube, on peut repartir dans la nuit. Les ombres deviennent de plus en plus fortes et nombreuses,
    une élite toutes les 45 s, un boss toutes les 2 min 30. Les braises gagnées après l'aube s'ajoutent à la mort. */
 function startEndless(){
-  if (!G || G.ally || G.guest) return;
+  if (!G || G.guest) return;
+  if (G.ally && NET.role !== 'host') return;                               // compagnon parti entre-temps
   Object.assign(G, {endless:true, endlessT0:G.t, dur:Infinity, events:[], ev:0, goldCont:G.gold, killsCont:G.kills, enEl:30, enBoss:150, enNuee:75, enBossN:0, calmT:3, dawnT:0});
   G.enemies = G.enemies.filter(e => !e.dead);
+  for (const q of G.ally ? [G.p, G.ally.p] : [G.p]) if (q.down){ q.down = false; q.hp = q.max*0.5; q.inv = 2; }   // à l'aube, tout le monde se relève
+  if (G.ally) NET.send({t:'endless', t0:G.endlessT0});
   state = 'play'; keys.clear(); setHud(true); show(null); music(G.map);
-  toast('La nuit retombe… jusqu’où tiendras-tu ?'); SFX.boss && SFX.boss();
+  toast(G.ally ? 'La nuit retombe… jusqu’où tiendrez-vous ?' : 'La nuit retombe… jusqu’où tiendras-tu ?'); SFX.boss && SFX.boss();
+}
+function guestEndless(m){                                                  // invité : l'hôte relance la nuit
+  if (!G || NET.role !== 'guest' || state !== 'end') return;
+  Object.assign(G, {guest:true, endless:true, endlessT0:m.t0, goldCont:G.gold, killsCont:G.kills, dawnT:0});
+  NET.snapA = NET.snapB = null;
+  state = 'play'; keys.clear(); setHud(true); show(null); music(G.map); G.buildDirty = true;
+  toast('La nuit retombe… jusqu’où tiendrez-vous ?'); SFX.boss && SFX.boss();
 }
 $('#endlessBtn').addEventListener('click', startEndless);
 function endlessStep(dt){
@@ -6637,7 +6676,7 @@ function finishEndless(){
   $('#endlessBtn').hidden = true;
   $('#endEyebrow').textContent = 'Mode sans fin · ' + MAPS[G.map].name + ' · Veillée ' + LV().n;
   $('#endTitle').textContent = 'La nuit a fini par gagner';
-  $('#endText').textContent = `Tu as tenu ${fmt(extra)} après l’aube.` + (isBest ? ' C’est ton record dans ce lieu !' : ` Ton record ici : ${fmt(best)}.`) + ` Braises gagnées après l’aube : ${num(gain)}.`;
+  $('#endText').textContent = (G.ally ? `Vous avez tenu ${fmt(extra)} après l’aube.` : `Tu as tenu ${fmt(extra)} après l’aube.`) + (isBest ? (G.ally ? ' C’est votre record dans ce lieu !' : ' C’est ton record dans ce lieu !') : ` Ton record ici : ${fmt(best)}.`) + ` Braises gagnées après l’aube : ${num(gain)}.`;
   $('#eTime').textContent = '+' + fmt(extra); $('#eLvl').textContent = G.p.lvl; $('#eKills').textContent = num(G.kills); $('#eGold').textContent = '+' + num(gain);
   setHud(false); $('#dialog').classList.remove('on'); state = 'end'; show('end'); focusFirst('end');
 }
